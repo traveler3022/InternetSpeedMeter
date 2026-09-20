@@ -208,15 +208,15 @@ object SpeedNotification {
         val canvas = Canvas(bmp)
         val speed = FormatUtils.formatSpeedForIcon(bytesPerSec, bits)
 
-        val valuePaint = textPaint(66f)
-        fitWidth(valuePaint, speed.value, size - 2f)
+        val valuePaint = textPaint(67f)
+        fitWidth(valuePaint, speed.value, size - 4f)
 
         val unitText = speed.unit + "/s"
-        val unitPaint = textPaint(40f)
-        fitWidth(unitPaint, unitText, size - 1f)
+        val unitPaint = textPaint(38f)
+        fitWidth(unitPaint, unitText, size - 2f)
 
-        canvas.drawText(speed.value, size / 2f, 58f, valuePaint)
-        canvas.drawText(unitText, size / 2f, 96f, unitPaint)
+        canvas.drawText(speed.value, size / 2f, 56f, valuePaint)
+        canvas.drawText(unitText, size / 2f, 94f, unitPaint)
         return bmp
     }
 
