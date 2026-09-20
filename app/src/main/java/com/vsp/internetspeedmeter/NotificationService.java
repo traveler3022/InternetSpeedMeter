@@ -166,7 +166,11 @@ public class NotificationService {
         lastWifiStr = wifiStr;
         lastTotalStr = totalStr;
         lastDbWriteMs = now;
-        usageRepository.update(new Usage(myDate, mobileStr, wifiStr, totalStr));
+        // Insert, not update: @Update is a no-op when today's row does not exist yet,
+        // which is exactly the case on the first launch of a new day, so a whole day of
+        // usage used to be dropped. The date is the primary key and the DAO replaces on
+        // conflict, so this is an upsert.
+        usageRepository.insert(new Usage(myDate, mobileStr, wifiStr, totalStr));
     }
 
     private void checkDateRollover() {

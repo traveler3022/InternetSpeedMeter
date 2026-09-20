@@ -1,119 +1,49 @@
 package com.vsp.internetspeedmeter.Room;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Log;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.lifecycle.LiveData;
 
-import static com.vsp.internetspeedmeter.MainActivity.TAG;
-
 public class UsageRepository {
 
-    private UsageDao usageDao;
-    private LiveData<List<Usage>> allUsage;
+    /**
+     * AsyncTask, which this used to spawn per write, is deprecated since API 30 and
+     * its shared pool gives no ordering guarantee. A single serial executor keeps the
+     * daily row's writes in order and off the main thread.
+     */
+    static final ExecutorService DB_EXECUTOR = Executors.newSingleThreadExecutor();
+
+    private final UsageDao usageDao;
+    private final LiveData<List<Usage>> allUsage;
 
     public UsageRepository(Context context) {
-
         UsageDatabase database = UsageDatabase.getInstance(context);
         usageDao = database.usageDao();
-        Log.e(TAG, "UsageRepository: "+database.usageDao());
         allUsage = usageDao.getAllUsage();
-
-
     }
 
+    /** Upsert: the date is the primary key and the DAO replaces on conflict. */
     public void insert(Usage usage) {
-
-        new InsertUsageAsyncTask(usageDao).execute(usage);
-
+        DB_EXECUTOR.execute(() -> usageDao.insert(usage));
     }
 
     public void update(Usage usage) {
-        new UpdateUsageAsyncTask(usageDao).execute(usage);
-
+        DB_EXECUTOR.execute(() -> usageDao.update(usage));
     }
 
     public void delete(Usage usage) {
-        new DeleteUsageAsyncTask(usageDao).execute(usage);
-
+        DB_EXECUTOR.execute(() -> usageDao.delete(usage));
     }
 
     public void deleteAllNotes() {
-        new DeleteAllUsageAsyncTask(usageDao).execute();
-
+        DB_EXECUTOR.execute(usageDao::deleteAll);
     }
 
     public LiveData<List<Usage>> getAllUsage() {
-
         return allUsage;
     }
-
-
-    private static class InsertUsageAsyncTask extends AsyncTask<Usage, Void, Void> {
-
-        private UsageDao usageDao;
-
-        private InsertUsageAsyncTask(UsageDao usageDao) {
-            this.usageDao = usageDao;
-
-        }
-
-        @Override
-        protected Void doInBackground(Usage... usages) {
-            usageDao.insert(usages[0]);
-            return null;
-        }
-    }
-
-    private static class UpdateUsageAsyncTask extends AsyncTask<Usage, Void, Void> {
-
-        private UsageDao usageDao;
-
-        private UpdateUsageAsyncTask(UsageDao usageDao) {
-            this.usageDao = usageDao;
-
-        }
-
-        @Override
-        protected Void doInBackground(Usage... usages) {
-            usageDao.update(usages[0]);
-            return null;
-        }
-    }
-
-    private static class DeleteUsageAsyncTask extends AsyncTask<Usage, Void, Void> {
-
-        private UsageDao usageDao;
-
-        private DeleteUsageAsyncTask(UsageDao usageDao) {
-            this.usageDao = usageDao;
-
-        }
-
-        @Override
-        protected Void doInBackground(Usage... usages) {
-            usageDao.delete(usages[0]);
-            return null;
-        }
-    }
-
-    private static class DeleteAllUsageAsyncTask extends AsyncTask<Void, Void, Void> {
-
-        private UsageDao usageDao;
-
-        private DeleteAllUsageAsyncTask(UsageDao usageDao) {
-            this.usageDao = usageDao;
-
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            usageDao.deleteAll();
-            return null;
-        }
-    }
-
 }

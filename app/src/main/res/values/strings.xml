@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">c</string>
+    <string name="app_name">Internet Speed Meter</string>
+    <string name="column_date">Date</string>
+    <string name="column_mobile">Mobile</string>
+    <string name="column_wifi">Wi-Fi</string>
+    <string name="column_total">Total</string>
 </resources>

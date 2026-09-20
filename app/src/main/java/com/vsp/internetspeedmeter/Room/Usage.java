@@ -3,13 +3,10 @@ package com.vsp.internetspeedmeter.Room;
 
 
 
-import java.util.Date;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverter;
-import androidx.room.TypeConverters;
 
 
 @Entity(tableName = "Usage_Table")
