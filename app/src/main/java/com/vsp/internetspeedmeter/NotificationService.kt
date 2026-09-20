@@ -3,6 +3,7 @@ package com.vsp.internetspeedmeter
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.widget.RemoteViews
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -78,7 +79,11 @@ class NotificationService(private val context: Context) {
     fun createNotification() {
         mBuilder = getBuilder(false)
 
-        val notifiIntent = Intent(context, MainActivity::class.java)
+        val action = prefs.getString("tap_action", "dialog")
+        val notifiIntent = if (action == "dialog") Intent(context, DialogActivity::class.java)
+                           else Intent(context, MainActivity::class.java)
+        notifiIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -93,11 +98,14 @@ class NotificationService(private val context: Context) {
             mBuilder.setSmallIcon(android.R.drawable.stat_sys_download)
         }
 
-        mBuilder.setContentTitle("Speed: 0 B/s")
-            .setContentText("Mobile: 0 B  |  WiFi: 0 B")
-            .setOngoing(true)
+        val remoteViews = RemoteViews(context.packageName, R.layout.notification_custom)
+        remoteViews.setTextViewText(R.id.tv_notification_speed, "سرعت: 0 ب/ث")
+        remoteViews.setTextViewText(R.id.tv_notification_data, "موبایل: 0 م ب   وای فای: 0 م ب")
+        
+        mBuilder.setOngoing(true)
             .setShowWhen(false)
             .setContentIntent(pendingIntent)
+            .setCustomContentView(remoteViews)
             .setOnlyAlertOnce(true)
 
         applySettings()
@@ -159,9 +167,9 @@ class NotificationService(private val context: Context) {
 
         val showUpDown = prefs.getBoolean("show_up_down_speed", false)
 
-        val downStr = FormatUtils.formatSpeed(downSpeedBytes)
-        val upStr = FormatUtils.formatSpeed(upSpeedBytes)
-        val totalSpeedStr = FormatUtils.formatSpeed(totalSpeedBytes)
+        val downStr = FormatUtils.formatSpeedPersian(downSpeedBytes)
+        val upStr = FormatUtils.formatSpeedPersian(upSpeedBytes)
+        val totalSpeedStr = FormatUtils.formatSpeedPersian(totalSpeedBytes)
 
         val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes)
         val icon = getIcon(iconSpeed.value, iconSpeed.unit + "/s")
@@ -221,7 +229,9 @@ class NotificationService(private val context: Context) {
 
         val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+
+        val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#4285F4") }
+        canvas.drawCircle(iconSize / 2f, iconSize / 2f, iconSize / 2f, circlePaint)
 
         val centerX = iconSize / 2f
         val defaultSpeedSize = iconSize * 0.52f

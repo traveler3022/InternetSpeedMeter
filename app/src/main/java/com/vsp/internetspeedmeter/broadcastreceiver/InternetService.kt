@@ -61,6 +61,15 @@ class InternetService : Service() {
     private lateinit var prefs: SharedPreferences
     private val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.US)
 
+    // Session Tracking
+    private var currentNetworkType = -1 // 0: None, 1: Mobile, 2: Wifi
+    private var sessionStartTimeMs = 0L
+    private var sessionBytes = 0L
+
+    // Graph Tracking
+    val speedHistory = LongArray(60)
+    var speedHistoryIndex = 0
+
     private val systemEventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -87,6 +96,7 @@ class InternetService : Service() {
     }
 
     override fun onCreate() {
+        instance = this
         super.onCreate()
 
         powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -213,6 +223,14 @@ class InternetService : Service() {
 
                 val downSpeed = ((deltaRx * 1000.0) / elapsedMs).toLong()
                 val upSpeed = ((deltaTx * 1000.0) / elapsedMs).toLong()
+                val totalSpeed = downSpeed + upSpeed
+
+                speedHistoryIndex = (speedHistoryIndex + 1) % 60
+                if (tickCount >= 60) {
+                    System.arraycopy(speedHistory, 1, speedHistory, 0, 59)
+                    speedHistoryIndex = 59
+                }
+                speedHistory[speedHistoryIndex] = totalSpeed
 
                 lastSpeedTime = curTime
                 lastHardwareTotalRx = curTotalRx
@@ -304,16 +322,35 @@ class InternetService : Service() {
         lastHardwareMobileRx = curMobileRx
         lastHardwareMobileTx = curMobileTx
 
+        val newNetworkType = when {
+            isWifi -> 2
+            isMobile -> 1
+            else -> 0
+        }
+        if (newNetworkType != currentNetworkType && newNetworkType != 0) {
+            currentNetworkType = newNetworkType
+            sessionStartTimeMs = SystemClock.elapsedRealtime()
+            sessionBytes = 0L
+        }
+
         when {
-            isWifi -> dailyWifiBytes += deltaTotal
-            isMobile -> dailyMobileBytes += deltaTotal
+            isWifi -> {
+                dailyWifiBytes += deltaTotal
+                sessionBytes += deltaTotal
+            }
+            isMobile -> {
+                dailyMobileBytes += deltaTotal
+                sessionBytes += deltaTotal
+            }
             else -> {
                 if (deltaMobile > 0L) {
                     val mobileAllocation = deltaMobile.coerceAtMost(deltaTotal)
                     dailyMobileBytes += mobileAllocation
                     dailyWifiBytes += (deltaTotal - mobileAllocation)
+                    sessionBytes += deltaTotal
                 } else {
                     dailyWifiBytes += deltaTotal
+                    sessionBytes += deltaTotal
                 }
             }
         }
@@ -396,6 +433,7 @@ class InternetService : Service() {
     }
 
     override fun onDestroy() {
+        if (instance == this) instance = null
         super.onDestroy()
         try {
             unregisterReceiver(systemEventReceiver)
@@ -413,6 +451,14 @@ class InternetService : Service() {
             stopForeground(true)
         }
         serviceScope.cancel()
+    }
+
+    companion object {
+        var instance: InternetService? = null
+    }
+
+    fun getSessionInfo(): Pair<Long, Long> {
+        return Pair(kotlin.math.max(0L, android.os.SystemClock.elapsedRealtime() - sessionStartTimeMs), sessionBytes)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

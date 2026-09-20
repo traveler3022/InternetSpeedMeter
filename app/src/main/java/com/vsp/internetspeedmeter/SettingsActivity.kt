@@ -17,7 +17,7 @@ class SettingsActivity : AppCompatActivity() {
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
         }
         super.onCreate(savedInstanceState)
-        supportActionBar?.title = "Preferences"
+        supportActionBar?.title = "تنظیمات"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         if (savedInstanceState == null) {

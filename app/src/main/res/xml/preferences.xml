@@ -1,45 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="NOTIFICATION">
-        <CheckBoxPreference
-            app:key="hide_lockscreen_notification"
-            app:title="Hide Lockscreen Notification"
-            app:defaultValue="false" />
-        <CheckBoxPreference
-            app:key="show_up_down_speed"
-            app:title="Show Up/Down Speed"
-            app:summary="Shows both upload and download speed in notification"
-            app:defaultValue="false" />
-        <CheckBoxPreference
-            app:key="hide_notification_idle"
-            app:title="Hide notification when idle"
-            app:defaultValue="false" />
-    </PreferenceCategory>
+    <CheckBoxPreference
+        app:key="hide_lockscreen_notification"
+        app:title="Hide Lockscreen Notification"
+        app:summary="Hides the notification on lockscreen"
+        app:defaultValue="false" />
 
-    <PreferenceCategory app:title="THEME">
-        <ListPreference
-            app:key="icon_color"
-            app:title="Status Bar Icon Color"
-            app:summary="Change the color of the speed indicator icon"
-            app:entries="@array/icon_color_entries"
-            app:entryValues="@array/icon_color_values"
-            app:defaultValue="white" />
-        <ListPreference
-            app:key="theme_color"
-            app:title="App Theme"
-            app:summary="Select application background theme"
-            app:entries="@array/theme_entries"
-            app:entryValues="@array/theme_values"
-            app:defaultValue="light" />
-    </PreferenceCategory>
+    <CheckBoxPreference
+        app:key="hide_notification_idle"
+        app:title="تنظیم نوار اطلاع رسانی"
+        app:summary="تنها زمانی که به اینترنت متصل هستم اعلان را نشان بده"
+        app:widgetLayout="@layout/preference_pro_widget"
+        app:defaultValue="false" />
 
-    <PreferenceCategory app:title="DATA USAGE">
-        <CheckBoxPreference
-            app:key="limit_data_warning"
-            app:title="Data Usage Warning"
-            app:summary="Show warning when data limit is reached"
-            app:defaultValue="false" />
-    </PreferenceCategory>
+    <CheckBoxPreference
+        app:key="show_up_down_speed"
+        app:title="نشان دادن سرعت ارسال/دریافت"
+        app:summary="سرعت ارسال و دریافت را در نوار اعلان نمایش می‌دهد"
+        app:defaultValue="false" />
+
+    <Preference
+        app:key="tap_action"
+        app:title="عمل ضربه‌ی اعلان"
+        app:summary="بازکردن گفتگوی اعلان"
+        app:widgetLayout="@layout/preference_pro_widget" />
+
+    <Preference
+        app:key="speed_unit"
+        app:title="واحد سرعت"
+        app:summary="بایت بر ثانیه" />
+
+    <Preference
+        app:key="mobile_limit"
+        app:title="محدودیت استفاده از اینترنت سیم کارت: 0 م ب (Monthly)"
+        app:summary="این استفاده ماهیانه اینترنت تلفن همراه را در اعلان نشان می دهد. مقدار را به صفر تغییر دهید تا غیر فعال شود" />
+
+    <Preference
+        app:key="start_of_day"
+        app:title="ساعت شروع روز"
+        app:summary="این مقدار با توجه به زمان ISP خود و یا زمان بیدار شدن خود انتخاب کنید"
+        app:widgetLayout="@layout/preference_pro_widget" />
+
+    <Preference
+        app:key="language"
+        app:title="زبان"
+        app:summary="پیش فرض سیستم" />
+
+    <Preference
+        app:key="notification_color"
+        app:title="رنگ اعلان"
+        app:summary="پیش فرض سیستم"
+        app:widgetLayout="@layout/preference_pro_widget" />
+
+    <Preference
+        app:key="theme"
+        app:title="تم"
+        app:summary="رنگ زمینه دلخواه را انتخاب کنید"
+        app:widgetLayout="@layout/preference_pro_widget" />
+
+    <Preference
+        app:key="advanced_settings"
+        app:title="تنظیمات پیشرفته"
+        app:summary="وای‌فای و بهینه‌سازی پس‌زمینه SSID" />
 
 </PreferenceScreen>
