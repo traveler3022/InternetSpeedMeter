@@ -11,9 +11,6 @@ data class Usage(
     val wifi: String = "0 MB",
     val total: String = "0 MB"
 ) {
-    // Java getter compatibility
+    // Java getter compatibility for lowercase getdate()
     fun getdate(): String = date
-    fun getMobile(): String = mobile
-    fun getWifi(): String = wifi
-    fun getTotal(): String = total
 }
