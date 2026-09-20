@@ -10,20 +10,24 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Icon;
 import android.os.Build;
-import android.util.Log;
+import android.os.SystemClock;
 
 import com.vsp.internetspeedmeter.Room.Usage;
 import com.vsp.internetspeedmeter.Room.UsageRepository;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+/**
+ * Builds the status-bar notification in the style of "Internet Speed Meter Lite":
+ * the status-bar icon is a two-line bitmap (download speed on top, unit below),
+ * the collapsed row shows download and upload speed, and the expanded row shows
+ * today's usage split into mobile and Wi-Fi.
+ */
 public class NotificationService {
     public static final String CHANNEL_ID = "speed_meter_channel";
     public static final String CHANNEL_NAME = "Internet Speed Meter";
@@ -31,18 +35,26 @@ public class NotificationService {
     public static final String TAG = "internetspeed";
     public static final int NOTIFICATION_ID = 1;
 
+    /** Icon canvas is square; the status bar scales it down to the icon slot. */
+    private static final int ICON_SIZE = 96;
+    /** Room stores one row per day, so writing it every tick is pure wear for no gain. */
+    private static final long DB_WRITE_INTERVAL_MS = 10_000L;
+
+    private static final long KB = 1024L;
+    private static final long MB = KB * 1024L;
+    private static final long GB = MB * 1024L;
+
     private Notification.Builder mBuilder;
     private NotificationManager mNotifyMgr;
     private PendingIntent pendingIntent;
-    private Context context;
-    private Bitmap bitmap;
-    private Canvas canvas;
-    private Paint paint, unitsPaint;
-    private Icon icon;
+    private final Context context;
+    private Paint valuePaint, unitPaint;
     private UsageRepository usageRepository;
     public String myDate;
     private SimpleDateFormat df;
-    private final DecimalFormat decimalFormat = new DecimalFormat("#.0");
+
+    private long lastDbWriteMs = 0L;
+    private String lastMobileStr = "", lastWifiStr = "", lastTotalStr = "";
 
     public NotificationService(Context context) {
         this.context = context;
@@ -70,18 +82,20 @@ public class NotificationService {
         }
         pendingIntent = PendingIntent.getActivity(context, 100, notifiIntent, flags);
 
-        icon = getIcon("0", "K");
-        mBuilder.setSmallIcon(icon)
-                .setContentTitle("Down: 0 KB/s   Up: 0 KB/s")
-                .setContentText("Mobile: 0 MB   WiFi: 0 MB")
+        mBuilder.setSmallIcon(getIcon("0", "B/s"))
+                .setContentTitle(speedLine(0, 0))
+                .setContentText(usageLine(0, 0))
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setContentIntent(pendingIntent)
                 .setOnlyAlertOnce(true);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
-        }
+        mBuilder.setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setCategory(Notification.CATEGORY_SERVICE);
+        // Phones below Oreo have no channels, so the priority has to be set here to
+        // keep the row silent and parked at the bottom of the shade.
+        mBuilder.setPriority(Notification.PRIORITY_LOW);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mBuilder.setBadgeIconType(Notification.BADGE_ICON_NONE);
         }
@@ -90,119 +104,164 @@ public class NotificationService {
     }
 
     public Notification.Builder updateNotification(long downSpeedBytes, long upSpeedBytes, long mobileBytes, long wifiBytes) {
-        // Check date rollover
         checkDateRollover();
 
-        // Speed formatting
-        String downStr = formatSpeed(downSpeedBytes);
-        String upStr = formatSpeed(upSpeedBytes);
+        // Internet Speed Meter Lite puts the download speed alone in the status bar;
+        // upload only appears in the expanded row.
+        String[] icon = splitSpeed(downSpeedBytes);
+        mBuilder.setSmallIcon(getIcon(icon[0], icon[1]));
 
-        // Status bar icon: show total current speed
-        long totalSpeedBytes = downSpeedBytes + upSpeedBytes;
-        SpeedUnit iconSpeed = formatSpeedForIcon(totalSpeedBytes);
-        icon = getIcon(iconSpeed.value, iconSpeed.unit);
-
-        // Data usage formatting
         String mobileStr = formatData(mobileBytes);
         String wifiStr = formatData(wifiBytes);
         String totalStr = formatData(mobileBytes + wifiBytes);
 
-        mBuilder.setSmallIcon(icon);
-        mBuilder.setContentTitle("Down: " + downStr + "   Up: " + upStr);
-        mBuilder.setContentText("Mobile: " + mobileStr + "   WiFi: " + wifiStr);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-            mBuilder.setSubText("Total: " + totalStr);
-        }
+        mBuilder.setContentTitle(speedLine(downSpeedBytes, upSpeedBytes));
+        mBuilder.setContentText(usageLine(mobileBytes, wifiBytes));
+        mBuilder.setSubText(totalStr + " today");
+        mBuilder.setStyle(new Notification.BigTextStyle().bigText(
+                "Today: " + totalStr
+                        + "\nMobile: " + mobileStr
+                        + "\nWi-Fi: " + wifiStr));
 
-        // Update database
-        usageRepository.update(new Usage(myDate, mobileStr, wifiStr, totalStr));
+        persistUsage(mobileStr, wifiStr, totalStr);
 
         return mBuilder;
+    }
+
+    /**
+     * Refreshes the already-running foreground notification. Re-posting through
+     * NotificationManager once a second is far cheaper than routing every tick
+     * through startForeground(), which round-trips via ActivityManager.
+     */
+    public void postUpdate(long downSpeedBytes, long upSpeedBytes, long mobileBytes, long wifiBytes) {
+        Notification notification = updateNotification(downSpeedBytes, upSpeedBytes, mobileBytes, wifiBytes).build();
+        if (mNotifyMgr != null) {
+            mNotifyMgr.notify(NOTIFICATION_ID, notification);
+        }
+    }
+
+    /** Collapsed row, e.g. "↓ 124 kB/s    ↑ 12 kB/s". */
+    private String speedLine(long downBytes, long upBytes) {
+        return "↓ " + formatSpeed(downBytes) + "    ↑ " + formatSpeed(upBytes);
+    }
+
+    private String usageLine(long mobileBytes, long wifiBytes) {
+        return "Mobile " + formatData(mobileBytes) + "  •  Wi-Fi " + formatData(wifiBytes);
+    }
+
+    /**
+     * The daily row only ever changes at MB granularity, so it is written at most
+     * once every {@link #DB_WRITE_INTERVAL_MS} and only when a value actually moved —
+     * the update loop itself ticks once a second.
+     */
+    private void persistUsage(String mobileStr, String wifiStr, String totalStr) {
+        boolean changed = !mobileStr.equals(lastMobileStr)
+                || !wifiStr.equals(lastWifiStr)
+                || !totalStr.equals(lastTotalStr);
+        long now = SystemClock.elapsedRealtime();
+        if (!changed || now - lastDbWriteMs < DB_WRITE_INTERVAL_MS) {
+            return;
+        }
+        lastMobileStr = mobileStr;
+        lastWifiStr = wifiStr;
+        lastTotalStr = totalStr;
+        lastDbWriteMs = now;
+        usageRepository.update(new Usage(myDate, mobileStr, wifiStr, totalStr));
     }
 
     private void checkDateRollover() {
         String currentDate = df.format(Calendar.getInstance().getTime());
         if (!currentDate.equals(myDate)) {
             myDate = currentDate;
-            usageRepository.insert(new Usage(myDate, "0 MB", "0 MB", "0 MB"));
+            lastMobileStr = lastWifiStr = lastTotalStr = "";
+            lastDbWriteMs = 0L;
+            usageRepository.insert(new Usage(myDate, "0 B", "0 B", "0 B"));
         }
     }
 
     private void setupIcon() {
-        paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setTextSize(52);
-        paint.setTextAlign(Paint.Align.CENTER);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        paint.setColor(Color.WHITE);
+        valuePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        valuePaint.setTextAlign(Paint.Align.CENTER);
+        valuePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        valuePaint.setColor(Color.WHITE);
 
-        unitsPaint = new Paint();
-        unitsPaint.setAntiAlias(true);
-        unitsPaint.setTextSize(36);
-        unitsPaint.setTextAlign(Paint.Align.CENTER);
-        unitsPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        unitsPaint.setColor(Color.WHITE);
-
-        bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
+        unitPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        unitPaint.setTextAlign(Paint.Align.CENTER);
+        unitPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        unitPaint.setColor(Color.WHITE);
     }
 
+    /**
+     * Draws the two-line status-bar icon. A fresh bitmap is allocated per update on
+     * purpose: the system reads the icon's bitmap asynchronously after the
+     * notification is posted, so redrawing one shared bitmap in place makes the
+     * status bar flicker between the old and new value.
+     */
     public Icon getIcon(String speed, String units) {
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        canvas.drawText(speed, 48, 50, paint);
-        canvas.drawText(units, 48, 88, unitsPaint);
+        Bitmap bitmap = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return Icon.createWithBitmap(bitmap);
-        }
-        return null;
+        fitText(valuePaint, speed, 54f, ICON_SIZE - 4f);
+        fitText(unitPaint, units, 38f, ICON_SIZE - 4f);
+
+        // Two stacked lines, each vertically centred inside its own half.
+        canvas.drawText(speed, ICON_SIZE / 2f, baselineIn(valuePaint, 0f, ICON_SIZE / 2f), valuePaint);
+        canvas.drawText(units, ICON_SIZE / 2f, baselineIn(unitPaint, ICON_SIZE / 2f, ICON_SIZE), unitPaint);
+
+        return Icon.createWithBitmap(bitmap);
     }
 
+    /** Shrinks the text size until the string fits {@code maxWidth}. */
+    private void fitText(Paint paint, String text, float startSize, float maxWidth) {
+        float size = startSize;
+        paint.setTextSize(size);
+        while (size > 10f && paint.measureText(text) > maxWidth) {
+            size -= 2f;
+            paint.setTextSize(size);
+        }
+    }
+
+    private float baselineIn(Paint paint, float top, float bottom) {
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        return (top + bottom) / 2f - (fm.ascent + fm.descent) / 2f;
+    }
+
+    /** Speed for the notification text, e.g. "0 B/s", "124 kB/s", "1.2 MB/s". */
     private String formatSpeed(long bytesPerSec) {
-        if (bytesPerSec >= 1000000000L) {
-            return decimalFormat.format((double) bytesPerSec / 1000000000L) + " GB/s";
-        } else if (bytesPerSec >= 1000000L) {
-            return decimalFormat.format((double) bytesPerSec / 1000000L) + " MB/s";
-        } else if (bytesPerSec >= 1000L) {
-            return (bytesPerSec / 1000L) + " KB/s";
-        } else {
-            return bytesPerSec + " B/s";
-        }
+        String[] parts = splitSpeed(bytesPerSec);
+        return parts[0] + " " + parts[1];
     }
 
-    private static class SpeedUnit {
-        String value;
-        String unit;
-        SpeedUnit(String value, String unit) {
-            this.value = value;
-            this.unit = unit;
+    /** Same numbers as {@link #formatSpeed}, split into value and unit for the icon. */
+    private String[] splitSpeed(long bytesPerSec) {
+        if (bytesPerSec >= GB) {
+            return new String[]{scaled(bytesPerSec, GB), "GB/s"};
+        } else if (bytesPerSec >= MB) {
+            return new String[]{scaled(bytesPerSec, MB), "MB/s"};
+        } else if (bytesPerSec >= KB) {
+            return new String[]{scaled(bytesPerSec, KB), "kB/s"};
         }
+        return new String[]{String.valueOf(bytesPerSec), "B/s"};
     }
 
-    private SpeedUnit formatSpeedForIcon(long bytesPerSec) {
-        if (bytesPerSec >= 1000000000L) {
-            return new SpeedUnit(decimalFormat.format((double) bytesPerSec / 1000000000L), "GB");
-        } else if (bytesPerSec >= 1000000L) {
-            return new SpeedUnit(decimalFormat.format((double) bytesPerSec / 1000000L), "MB");
-        } else if (bytesPerSec >= 1000L) {
-            long kb = bytesPerSec / 1000L;
-            if (kb > 999) kb = 999;
-            return new SpeedUnit(String.valueOf(kb), "KB");
-        } else {
-            return new SpeedUnit("0", "KB");
+    /** One decimal below 10 (1.2), whole numbers above it (124) — as ISM Lite shows them. */
+    private String scaled(long bytes, long unit) {
+        double value = (double) bytes / unit;
+        if (value < 10d) {
+            return String.format(Locale.US, "%.1f", value);
         }
+        return String.valueOf(Math.round(value));
     }
 
     private String formatData(long bytes) {
-        if (bytes >= 1073741824L) {
-            return decimalFormat.format((double) bytes / 1073741824L) + " GB";
-        } else if (bytes >= 1048576L) {
-            return decimalFormat.format((double) bytes / 1048576L) + " MB";
-        } else if (bytes >= 1024L) {
-            return (bytes / 1024L) + " KB";
-        } else {
-            return bytes + " B";
+        if (bytes >= GB) {
+            return scaled(bytes, GB) + " GB";
+        } else if (bytes >= MB) {
+            return scaled(bytes, MB) + " MB";
+        } else if (bytes >= KB) {
+            return scaled(bytes, KB) + " kB";
         }
+        return bytes + " B";
     }
 
     private void createNotificationChannel() {
@@ -215,6 +274,7 @@ public class NotificationService {
             channel.setDescription(CHANNEL_DESC);
             channel.setShowBadge(false);
             channel.enableVibration(false);
+            channel.enableLights(false);
             channel.setSound(null, null);
 
             NotificationManager manager = context.getSystemService(NotificationManager.class);
