@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 build_output/
+app/release/
+*.apk
+*.aab

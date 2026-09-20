@@ -11,11 +11,11 @@ class UsageViewModel(application: Application) : AndroidViewModel(application) {
     val allNotes: LiveData<List<Usage>> = repository.allUsage
 
     fun insert(usage: Usage) = viewModelScope.launch {
-        repository.insert(usage)
+        repository.upsert(usage)
     }
 
     fun update(usage: Usage) = viewModelScope.launch {
-        repository.update(usage)
+        repository.upsert(usage)
     }
 
     fun delete(usage: Usage) = viewModelScope.launch {
