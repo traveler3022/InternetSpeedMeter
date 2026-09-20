@@ -2,7 +2,6 @@ package com.vsp.internetspeedmeter
 
 import android.app.AppOpsManager
 import android.app.usage.NetworkStats
-import android.app.AppOpsManager
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.content.Intent
