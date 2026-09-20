@@ -36,6 +36,7 @@ class DialogActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         setContentView(R.layout.dialog_graph)
 
         window.setLayout(

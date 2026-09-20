@@ -172,24 +172,23 @@ class NotificationService(private val context: Context) {
         val totalSpeedStr = FormatUtils.formatSpeedPersian(totalSpeedBytes)
 
         val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes)
-        val icon = getIcon(iconSpeed.value, iconSpeed.unit + "/s")
-        if (icon != null) {
-            mBuilder.setSmallIcon(icon)
-        } else {
-            @Suppress("DEPRECATION")
-            mBuilder.setSmallIcon(android.R.drawable.stat_sys_download)
-        }
 
-        val mobileStr = FormatUtils.formatBytes(mobileBytes)
-        val wifiStr = FormatUtils.formatBytes(wifiBytes)
-
+        val mobileStr = FormatUtils.formatBytesPersian(mobileBytes)
+        val wifiStr = FormatUtils.formatBytesPersian(wifiBytes)
+        
+        val remoteViews = RemoteViews(context.packageName, R.layout.notification_custom)
         if (showUpDown) {
-            mBuilder.setContentTitle("Down: $downStr   Up: $upStr")
+            remoteViews.setTextViewText(R.id.tv_notification_speed, "دریافت: $downStr   ارسال: $upStr")
         } else {
-            mBuilder.setContentTitle("Speed: $totalSpeedStr")
+            remoteViews.setTextViewText(R.id.tv_notification_speed, "سرعت: $totalSpeedStr")
         }
-
-        mBuilder.setContentText("Mobile: $mobileStr  |  WiFi: $wifiStr")
+        remoteViews.setTextViewText(R.id.tv_notification_data, "موبایل: $mobileStr   وای فای: $wifiStr")
+        remoteViews.setTextViewText(R.id.tv_icon_speed_value, iconSpeed.value)
+        remoteViews.setTextViewText(R.id.tv_icon_speed_unit, iconSpeed.unit + "/s")
+        
+        mBuilder.setCustomContentView(remoteViews)
+        @Suppress("DEPRECATION")
+        mBuilder.setSmallIcon(android.R.drawable.stat_sys_download) // Fallback for status bar
 
         return mBuilder
     }
