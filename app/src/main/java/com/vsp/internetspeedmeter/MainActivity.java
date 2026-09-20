@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.vsp.internetspeedmeter.BroadcastReciever.InternetService;
 import com.vsp.internetspeedmeter.Model.DisplayModel;
 import com.vsp.internetspeedmeter.Recyclerview.UsageAdapter;
@@ -14,21 +12,15 @@ import com.vsp.internetspeedmeter.Room.Usage;
 import com.vsp.internetspeedmeter.Room.UsageViewModel;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Timer;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.OneTimeWorkRequest;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String CHANNEL_ID = "1";
-    public static final String CHANNEL_NAME = "SpeedNoti";
-    public static final String CHANNEL_DESC = "Hii there";
     public static final String TAG = "internetspeed";
 
     List<String> date = new ArrayList<>(), mobile = new ArrayList<>(), wifi = new ArrayList<>(), total = new ArrayList<>();
@@ -37,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
     UsageAdapter adapter;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
-    NotificationService notificationService;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,10 +44,6 @@ public class MainActivity extends AppCompatActivity {
             editor.putBoolean("isStarted", false);
             editor.apply();
         }
-
-//        notificationService = new NotificationService(this);
-//        Gson gson = new Gson();
-//        String s = gson.toJson(notificationService);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -105,18 +92,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-
-    public void stopService() {
-        Intent serviceintent = new Intent(this, InternetService.class);
-        stopService(serviceintent);
-    }
-
-    private void toast(String x) {
-        Toast.makeText(getApplicationContext(), x, Toast.LENGTH_SHORT).show();
-    }
 }

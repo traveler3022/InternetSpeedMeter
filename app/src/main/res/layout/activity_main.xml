@@ -1,87 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/recyclervewUsage"
-        android:layout_alignParentTop="true"
-        />
-
-
+    <!-- Column headings. This row used to sit at the bottom holding hard-coded
+         sample values ("16 Jan 2021", "520 MB") that nothing ever wrote to, so the
+         app always showed the same fake numbers under the real list. -->
     <LinearLayout
-        android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="3dp"
         android:orientation="horizontal"
+        android:padding="3dp"
         android:weightSum="4">
 
         <TextView
-            android:id="@+id/alldayDateTv"
-            android:layout_width="100dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:layout_weight="1"
             android:background="@drawable/custom_round_gradient_background_purple"
+            android:gravity="center"
             android:padding="3dp"
-            android:text="16 Jan 2021"
+            android:text="@string/column_date"
             android:textColor="#ffffff"
-            android:gravity="center"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/alldaymobileTv"
-            android:layout_width="100dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@color/Grey300"
-            android:padding="3dp"
-            android:text="520 MB"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:background="@drawable/custom_round_gradient_background_purple"
             android:gravity="center"
-
-            />
+            android:padding="3dp"
+            android:text="@string/column_mobile"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/alldayWifiTv"
-            android:layout_width="100dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@color/Grey300"
-            android:padding="3dp"
-            android:text="520 MB"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:background="@drawable/custom_round_gradient_background_purple"
             android:gravity="center"
-
-            />
+            android:padding="3dp"
+            android:text="@string/column_wifi"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/alldayTotalTv"
-            android:layout_width="100dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@color/Grey300"
-            android:padding="3dp"
-            android:text="520 MB"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:background="@drawable/custom_round_gradient_background_purple"
             android:gravity="center"
-
-            />
-
-
+            android:padding="3dp"
+            android:text="@string/column_total"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
-</RelativeLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclervewUsage"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/model_recyclerview" />
+
+</LinearLayout>
