@@ -8,8 +8,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.databinding.ItemUsageRowBinding
 import com.vsp.internetspeedmeter.util.FormatUtils
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffCallback) {
+
+    private val dbDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsageViewHolder {
         val binding = ItemUsageRowBinding.inflate(
@@ -21,14 +26,15 @@ class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffC
     }
 
     override fun onBindViewHolder(holder: UsageViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val todayStr = dbDateFormat.format(Calendar.getInstance().time)
+        holder.bind(getItem(position), todayStr)
     }
 
     class UsageViewHolder(private val binding: ItemUsageRowBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(usage: Usage) {
-            binding.tvDate.text = usage.date
+        fun bind(usage: Usage, todayStr: String) {
+            binding.tvDate.text = if (usage.date == todayStr) "Today" else usage.date
             binding.tvMobile.text = FormatUtils.formatBytes(usage.mobile)
             binding.tvWifi.text = FormatUtils.formatBytes(usage.wifi)
             binding.tvTotal.text = FormatUtils.formatBytes(usage.total)

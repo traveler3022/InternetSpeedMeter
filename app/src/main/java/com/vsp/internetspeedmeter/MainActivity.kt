@@ -7,7 +7,8 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +21,6 @@ import com.vsp.internetspeedmeter.databinding.ActivityMainBinding
 import com.vsp.internetspeedmeter.util.FormatUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -31,11 +31,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
 
     private val dbDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-    private val displayDateFormat = SimpleDateFormat("EEEE, d MMM yyyy", Locale.getDefault())
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted && prefs.getBoolean(PREF_IS_STARTED, true)) {
+            if (isGranted) {
                 startMonitoringService()
             }
         }
@@ -48,10 +47,9 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
         setupRecyclerView()
-        setupTodayHeader()
-        setupServiceToggle()
         observeUsageData()
         checkAndRequestPermissions()
+        startMonitoringService()
     }
 
     private fun setupRecyclerView() {
@@ -63,56 +61,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupTodayHeader() {
-        binding.tvTodayDate.text = displayDateFormat.format(Date())
-    }
-
-    private fun setupServiceToggle() {
-        val isStarted = prefs.getBoolean(PREF_IS_STARTED, true)
-        binding.switchService.isChecked = isStarted
-        updateServiceStatusText(isStarted)
-
-        binding.switchService.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean(PREF_IS_STARTED, isChecked).apply()
-            updateServiceStatusText(isChecked)
-            if (isChecked) {
-                startMonitoringService()
-            } else {
-                stopMonitoringService()
-            }
-        }
-
-        if (isStarted) {
-            startMonitoringService()
-        }
-    }
-
-    private fun updateServiceStatusText(isActive: Boolean) {
-        binding.tvServiceStatus.text = if (isActive) {
-            getString(R.string.service_status_active)
-        } else {
-            getString(R.string.service_status_stopped)
-        }
-    }
-
     private fun observeUsageData() {
         viewModel.allNotes.observe(this) { usages ->
-            setupTodayHeader()
-
             if (usages.isNullOrEmpty()) {
-                binding.layoutEmpty.visibility = View.VISIBLE
-                binding.recyclerViewUsage.visibility = View.GONE
-                binding.tvTodayMobile.text = getString(R.string.zero_data)
-                binding.tvTodayWifi.text = getString(R.string.zero_data)
-                binding.tvTodayTotal.text = getString(R.string.zero_data)
-                binding.tvTotalMobile.text = getString(R.string.zero_data)
-                binding.tvTotalWifi.text = getString(R.string.zero_data)
-                binding.tvGrandTotal.text = getString(R.string.zero_data)
+                binding.tvTotalMobile.text = "0 B"
+                binding.tvTotalWifi.text = "0 B"
+                binding.tvGrandTotal.text = "0 B"
+                adapter.submitList(emptyList())
                 return@observe
             }
-
-            binding.layoutEmpty.visibility = View.GONE
-            binding.recyclerViewUsage.visibility = View.VISIBLE
 
             // Sort chronologically descending (latest date on top)
             val sortedList = usages.sortedByDescending {
@@ -126,13 +83,6 @@ class MainActivity : AppCompatActivity() {
             // Display up to 30 days of history
             val last30Days = sortedList.take(30)
             adapter.submitList(last30Days)
-
-            // Update Today's Highlight
-            val todayStr = dbDateFormat.format(Calendar.getInstance().time)
-            val todayUsage = usages.find { it.date == todayStr }
-            binding.tvTodayMobile.text = todayUsage?.let { FormatUtils.formatBytes(it.mobile) } ?: getString(R.string.zero_data)
-            binding.tvTodayWifi.text = todayUsage?.let { FormatUtils.formatBytes(it.wifi) } ?: getString(R.string.zero_data)
-            binding.tvTodayTotal.text = todayUsage?.let { FormatUtils.formatBytes(it.total) } ?: getString(R.string.zero_data)
 
             // Calculate aggregate 30-day totals accurately using Long bytes
             val totalMobileBytes = last30Days.sumOf { it.mobile }
@@ -154,11 +104,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun stopMonitoringService() {
-        val serviceIntent = Intent(this, InternetService::class.java)
-        stopService(serviceIntent)
-    }
-
     private fun checkAndRequestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -169,23 +114,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
     }
 
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_preferences -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
+            // Stop and Exit if user wants it (Internet Speed Meter Lite has this)
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     companion object {
         private const val PREF_NAME = "internetSpeed"
-        private const val PREF_IS_STARTED = "isStarted"
     }
 }
