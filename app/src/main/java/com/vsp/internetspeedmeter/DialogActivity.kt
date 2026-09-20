@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.provider.Settings
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -41,6 +42,7 @@ class DialogActivity : AppCompatActivity() {
     private lateinit var appsRecycler: RecyclerView
     private lateinit var btnMobile: TextView
     private lateinit var btnWifi: TextView
+    private lateinit var tvAppsEmpty: TextView
 
     private val appAdapter = AppUsageAdapter()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -72,6 +74,7 @@ class DialogActivity : AppCompatActivity() {
         appsRecycler = findViewById(R.id.recycler_view_apps)
         btnMobile = findViewById(R.id.btn_mobile)
         btnWifi = findViewById(R.id.btn_wifi)
+        tvAppsEmpty = findViewById(R.id.tv_apps_empty)
 
         appsRecycler.layoutManager = LinearLayoutManager(this)
         appsRecycler.adapter = appAdapter
@@ -126,10 +129,12 @@ class DialogActivity : AppCompatActivity() {
         if (!hasUsageAccess()) {
             requestUsageAccessOnce()
             appAdapter.submitList(emptyList())
+            tvAppsEmpty.visibility = View.VISIBLE
             return@launch
         }
         val items = withContext(Dispatchers.IO) { queryAppUsage(showWifi) }
         appAdapter.submitList(items)
+        tvAppsEmpty.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun hasUsageAccess(): Boolean {

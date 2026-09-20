@@ -1,5 +1,7 @@
 package com.vsp.internetspeedmeter.broadcastreceiver
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -14,7 +16,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
-import com.vsp.internetspeedmeter.NotificationService
+import com.vsp.internetspeedmeter.notification.SpeedNotification
 import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.room.UsageRepository
 import com.vsp.internetspeedmeter.util.DayCycle
@@ -34,7 +36,7 @@ import kotlin.math.max
 
 class InternetService : Service() {
 
-    private lateinit var notificationService: NotificationService
+    private lateinit var notificationManager: NotificationManager
     private lateinit var usageRepository: UsageRepository
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var powerManager: PowerManager
@@ -108,7 +110,9 @@ class InternetService : Service() {
         isPowerSaveMode = powerManager.isPowerSaveMode
 
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        notificationService = NotificationService(this)
+        notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        SpeedNotification.ensureChannel(this)
         usageRepository = UsageRepository(this)
 
         lastRecordedDate = DayCycle.currentDate(this)
@@ -145,29 +149,24 @@ class InternetService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
-            val notification = notificationService.updateNotification(
-                0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
-            ).build()
-            notificationService.notify(notification)
+            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
             return START_STICKY
         }
 
-        val initialNotification = notificationService.updateNotification(
-            0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
-        ).build()
+        val initialNotification = buildNotification(0L, 0L)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             try {
                 startForeground(
-                    NotificationService.NOTIFICATION_ID,
+                    SpeedNotification.NOTIFICATION_ID,
                     initialNotification,
                     android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
             } catch (_: Exception) {
-                startForeground(NotificationService.NOTIFICATION_ID, initialNotification)
+                startForeground(SpeedNotification.NOTIFICATION_ID, initialNotification)
             }
         } else {
-            startForeground(NotificationService.NOTIFICATION_ID, initialNotification)
+            startForeground(SpeedNotification.NOTIFICATION_ID, initialNotification)
         }
 
         if (isScreenOn || !pauseWhenScreenOff()) {
@@ -248,10 +247,8 @@ class InternetService : Service() {
 
                 checkDateRollover()
 
-                val notification = notificationService.updateNotification(
-                    downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
-                ).build()
-                notificationService.notify(notification)
+                notificationManager.notify(
+                    SpeedNotification.NOTIFICATION_ID, buildNotification(downSpeed, upSpeed))
 
                 tickCount++
                 if (tickCount % 5 == 0) {
@@ -365,10 +362,7 @@ class InternetService : Service() {
         monitorJob?.cancel()
         monitorJob = null
 
-        val notification = notificationService.updateNotification(
-            0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
-        ).build()
-        notificationService.notify(notification)
+        notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
 
         saveToPrefs()
         persistDailyUsage()
@@ -417,6 +411,32 @@ class InternetService : Service() {
     }
 
     private fun monthlyMobileBytes(): Long = monthlyMobileBase + dailyMobileBytes
+
+    private fun buildNotification(downSpeed: Long, upSpeed: Long): Notification =
+        SpeedNotification.build(
+            this, downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes,
+            monthlyMobileBytes(), isNotificationIdle()
+        )
+
+    /** "تنها زمانی که به اینترنت متصل هستم": silence the notification while offline. */
+    private fun isNotificationIdle(): Boolean {
+        val onlyWhenConnected = androidx.preference.PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getBoolean("notification_when_connected", false)
+        return onlyWhenConnected && !isConnected()
+    }
+
+    private fun isConnected(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            capabilities != null &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } else {
+            @Suppress("DEPRECATION")
+            connectivityManager.activeNetworkInfo?.isConnected == true
+        }
+    }
 
     private fun pauseWhenScreenOff(): Boolean =
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)

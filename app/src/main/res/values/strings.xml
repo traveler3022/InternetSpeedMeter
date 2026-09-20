@@ -22,11 +22,12 @@
     <string name="tab_mobile">Mobile</string>
     <string name="tab_wifi">Wifi</string>
     <string name="mobile_wifi">Mobile | Wifi</string>
+    <string name="apps_need_permission">برای دیدن مصرف هر برنامه، دسترسی Usage Access را فعال کنید</string>
     <string name="usage_access_needed">برای نمایش مصرف هر برنامه، دسترسی «Usage Access» را برای این برنامه فعال کنید</string>
 
     <!-- Notification -->
     <string name="notif_speed">سرعت: %1$s</string>
-    <string name="notif_up_down">دریافت: %1$s   ارسال: %2$s</string>
+    <string name="notif_up_down">سرعت: %1$s   ↓ %2$s   ↑ %3$s</string>
     <string name="notif_data">موبایل: %1$s   وای فای: %2$s</string>
     <string name="notif_data_limit">موبایل: %1$s از %2$s   وای فای: %3$s</string>
 

@@ -14,10 +14,11 @@
     <string name="menu_stop_exit">Stop and exit</string>
     <string name="reset_done">Statistics cleared</string>
 
+    <string name="apps_need_permission">Grant Usage Access to see per-app usage</string>
     <string name="usage_access_needed">Grant "Usage Access" to this app to see per-app usage</string>
 
     <string name="notif_speed">Speed: %1$s</string>
-    <string name="notif_up_down">Down: %1$s   Up: %2$s</string>
+    <string name="notif_up_down">Speed: %1$s   ↓ %2$s   ↑ %3$s</string>
     <string name="notif_data">Mobile: %1$s   Wi-Fi: %2$s</string>
     <string name="notif_data_limit">Mobile: %1$s of %2$s   Wi-Fi: %3$s</string>
 
