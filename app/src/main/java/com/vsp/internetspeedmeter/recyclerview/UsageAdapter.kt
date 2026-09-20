@@ -1,12 +1,13 @@
-package com.vsp.internetspeedmeter.Recyclerview
+package com.vsp.internetspeedmeter.recyclerview
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.vsp.internetspeedmeter.Room.Usage
+import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.databinding.ItemUsageRowBinding
+import com.vsp.internetspeedmeter.util.FormatUtils
 
 class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffCallback) {
 
@@ -28,9 +29,9 @@ class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffC
 
         fun bind(usage: Usage) {
             binding.tvDate.text = usage.date
-            binding.tvMobile.text = usage.mobile
-            binding.tvWifi.text = usage.wifi
-            binding.tvTotal.text = usage.total
+            binding.tvMobile.text = FormatUtils.formatBytes(usage.mobile)
+            binding.tvWifi.text = FormatUtils.formatBytes(usage.wifi)
+            binding.tvTotal.text = FormatUtils.formatBytes(usage.total)
         }
     }
 

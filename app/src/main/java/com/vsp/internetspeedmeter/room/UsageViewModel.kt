@@ -1,4 +1,4 @@
-package com.vsp.internetspeedmeter.Room
+package com.vsp.internetspeedmeter.room
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

@@ -25,8 +25,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Preferences"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+            android:parentActivityName=".MainActivity">
+        </activity>
+
         <service
-            android:name=".BroadcastReciever.InternetService"
+            android:name=".broadcastreceiver.InternetService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
@@ -36,7 +43,7 @@
         </service>
 
         <receiver
-            android:name=".BroadcastReciever.BootReceiver"
+            android:name=".broadcastreceiver.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

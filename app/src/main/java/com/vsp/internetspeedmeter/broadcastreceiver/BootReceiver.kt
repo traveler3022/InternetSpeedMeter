@@ -1,4 +1,4 @@
-package com.vsp.internetspeedmeter.BroadcastReciever
+package com.vsp.internetspeedmeter.broadcastreceiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
