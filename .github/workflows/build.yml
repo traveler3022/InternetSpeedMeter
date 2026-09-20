@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build Debug APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -34,3 +36,26 @@ jobs:
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Publish Debug APK to GitHub Release
+        if: github.ref == 'refs/heads/master' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v1.1-debug"
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          NOTES="### Internet Speed Meter Debug Build
+          - **Built on:** $(date -u '+%Y-%m-%d %H:%M UTC')
+          - **Commit:** ${GITHUB_SHA:0:7}
+          - **Features:** Real-time speed notification, Wi-Fi & Mobile tracking, battery saving (screen off pause)
+          - **Signature:** Standard v2/v3 signing (Installs on Android 11+)"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK_PATH" --clobber
+          else
+            gh release create "$TAG" "$APK_PATH" \
+              --title "Internet Speed Meter (Debug APK)" \
+              --notes "$NOTES" \
+              --target "$GITHUB_SHA" \
+              --prerelease
+          fi
