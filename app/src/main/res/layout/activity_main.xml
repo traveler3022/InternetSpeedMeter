@@ -1,79 +1,424 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/bg_page"
     tools:context=".MainActivity">
 
-    <!-- Column headings. This row used to sit at the bottom holding hard-coded
-         sample values ("16 Jan 2021", "520 MB") that nothing ever wrote to, so the
-         app always showed the same fake numbers under the real list. -->
-    <LinearLayout
+    <!-- Top App Bar / Toolbar -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="3dp"
-        android:weightSum="4">
+        app:cardCornerRadius="0dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/colorPrimary"
+        app:strokeWidth="0dp">
 
-        <TextView
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:background="@drawable/custom_round_gradient_background_purple"
-            android:gravity="center"
-            android:padding="3dp"
-            android:text="@string/column_date"
-            android:textColor="#ffffff"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="14dp"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:background="@drawable/custom_round_gradient_background_purple"
-            android:gravity="center"
-            android:padding="3dp"
-            android:text="@string/column_mobile"
-            android:textColor="#ffffff"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_baseline_speed_24"
+                app:tint="@color/White"
+                android:contentDescription="@string/app_name" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:background="@drawable/custom_round_gradient_background_purple"
-            android:gravity="center"
-            android:padding="3dp"
-            android:text="@string/column_wifi"
-            android:textColor="#ffffff"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:background="@drawable/custom_round_gradient_background_purple"
-            android:gravity="center"
-            android:padding="3dp"
-            android:text="@string/column_total"
-            android:textColor="#ffffff"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textColor="@color/White"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclervewUsage"
+                <TextView
+                    android:id="@+id/tvServiceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/service_status_active"
+                    android:textColor="#E0E7FF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchService"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Main Content Container -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        tools:listitem="@layout/model_recyclerview" />
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Today's Highlight Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/today_usage_title"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTodayDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        tools:text="Today, 20 Sep 2026" />
+                </LinearLayout>
+
+                <!-- 3 Statistic Cards -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="3">
+
+                    <!-- Mobile Today -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_stat_mobile"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_cell_tower_24"
+                            app:tint="@color/mobile_accent"
+                            android:contentDescription="@string/column_mobile" />
+
+                        <TextView
+                            android:id="@+id/tvTodayMobile"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/mobile_accent"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            tools:text="0 MB" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/column_mobile"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- WiFi Today -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@drawable/bg_stat_wifi"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_wifi_24"
+                            app:tint="@color/wifi_accent"
+                            android:contentDescription="@string/column_wifi" />
+
+                        <TextView
+                            android:id="@+id/tvTodayWifi"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/wifi_accent"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            tools:text="0 MB" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/column_wifi"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Total Today -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/bg_stat_total"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_traffic_24"
+                            app:tint="@color/total_accent"
+                            android:contentDescription="@string/column_total" />
+
+                        <TextView
+                            android:id="@+id/tvTodayTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/total_accent"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            tools:text="0 MB" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/column_total"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- History Card with Table & RecyclerView -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- Section Header -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="8dp"
+                    android:text="@string/history_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <!-- Table Column Headers -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rounded_header"
+                    android:orientation="horizontal"
+                    android:paddingVertical="10dp"
+                    android:paddingHorizontal="8dp"
+                    android:weightSum="4">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.1"
+                        android:gravity="center"
+                        android:text="@string/column_date"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.95"
+                        android:gravity="center"
+                        android:text="@string/column_mobile"
+                        android:textColor="@color/mobile_accent"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.95"
+                        android:gravity="center"
+                        android:text="@string/column_wifi"
+                        android:textColor="@color/wifi_accent"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/column_total"
+                        android:textColor="@color/total_accent"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border_color" />
+
+                <!-- Empty State -->
+                <LinearLayout
+                    android:id="@+id/layoutEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_internet_speed_24"
+                        app:tint="@color/text_muted"
+                        android:contentDescription="@string/empty_history" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:text="@string/empty_history"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- RecyclerView List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewUsage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:scrollbars="vertical"
+                    tools:listitem="@layout/item_usage_row" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 30-Day Summary Footer Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="8dp"
+                android:gravity="center_vertical"
+                android:weightSum="4">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.1"
+                    android:gravity="center"
+                    android:text="@string/summary_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTotalMobile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.95"
+                    android:gravity="center"
+                    android:textColor="@color/mobile_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="0 MB" />
+
+                <TextView
+                    android:id="@+id/tvTotalWifi"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.95"
+                    android:gravity="center"
+                    android:textColor="@color/wifi_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="0 MB" />
+
+                <TextView
+                    android:id="@+id/tvGrandTotal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@color/total_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="0 MB" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
 
 </LinearLayout>

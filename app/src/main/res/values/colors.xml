@@ -1,34 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#4F46E5</color>
+    <color name="colorPrimaryDark">#3730A3</color>
+    <color name="colorAccent">#06B6D4</color>
 
+    <color name="White">#FFFFFF</color>
+    <color name="Black">#000000</color>
+    <color name="Transparent">#00000000</color>
 
-    <item name="White" type="color">#FFFFFF</item>
-    <item name="Black" type="color">#000000</item>
-    <item name="Transparent" type="color">#00000000</item>
-    <item name="Grey50" type="color">#FAFAFA</item>
-    <item name="Grey100" type="color">#F5F5F5</item>
-    <item name="Grey200" type="color">#EEEEEE</item>
-    <item name="Grey300" type="color">#E0E0E0</item>
-    <item name="Grey400" type="color">#BDBDBD</item>
-    <item name="Grey500" type="color">#9E9E9E</item>
-    <item name="Grey600" type="color">#757575</item>
-    <item name="Grey700" type="color">#616161</item>
-    <item name="Grey800" type="color">#424242</item>
-    <item name="Grey900" type="color">#212121</item>
+    <color name="bg_page">#F8FAFC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="table_header_bg">#EEF2F6</color>
+    <color name="row_stripe">#F8FAFC</color>
+    <color name="border_color">#E2E8F0</color>
 
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_muted">#94A3B8</color>
 
-    <item name="DeepPurple50" type="color">#EDE7F6</item>
-    <item name="DeepPurple100" type="color">#D1C4E9</item>
-    <item name="DeepPurple200" type="color">#B39DDB</item>
-    <item name="DeepPurple300" type="color">#9575CD</item>
-    <item name="DeepPurple400" type="color">#7E57C2</item>
-    <item name="DeepPurple500" type="color">#673AB7</item>
-    <item name="DeepPurple600" type="color">#5E35B1</item>
-    <item name="DeepPurple700" type="color">#512DA8</item>
-    <item name="DeepPurple800" type="color">#4527A0</item>
-    <item name="DeepPurple900" type="color">#311B92</item>
+    <color name="mobile_accent">#2563EB</color>
+    <color name="wifi_accent">#059669</color>
+    <color name="total_accent">#7C3AED</color>
 
+    <color name="chip_mobile_bg">#EFF6FF</color>
+    <color name="chip_wifi_bg">#ECFDF5</color>
+    <color name="chip_total_bg">#F5F3FF</color>
+
+    <!-- Legacy compatibility colors -->
+    <color name="Grey50">#FAFAFA</color>
+    <color name="Grey100">#F5F5F5</color>
+    <color name="Grey200">#EEEEEE</color>
+    <color name="Grey300">#E0E0E0</color>
+    <color name="Grey400">#BDBDBD</color>
+    <color name="Grey500">#9E9E9E</color>
+    <color name="Grey600">#757575</color>
+    <color name="Grey700">#616161</color>
+    <color name="Grey800">#424242</color>
+    <color name="Grey900">#212121</color>
+    <color name="DeepPurple500">#673AB7</color>
+    <color name="DeepPurple700">#512DA8</color>
 </resources>
