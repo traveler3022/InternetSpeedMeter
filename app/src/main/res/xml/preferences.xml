@@ -2,23 +2,44 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="NOTIFICATION">
-
         <CheckBoxPreference
             app:key="hide_lockscreen_notification"
             app:title="Hide Lockscreen Notification"
             app:defaultValue="false" />
-
         <CheckBoxPreference
             app:key="show_up_down_speed"
             app:title="Show Up/Down Speed"
             app:summary="Shows both upload and download speed in notification"
             app:defaultValue="false" />
-
         <CheckBoxPreference
             app:key="hide_notification_idle"
             app:title="Hide notification when idle"
             app:defaultValue="false" />
+    </PreferenceCategory>
 
+    <PreferenceCategory app:title="THEME">
+        <ListPreference
+            app:key="icon_color"
+            app:title="Status Bar Icon Color"
+            app:summary="Change the color of the speed indicator icon"
+            app:entries="@array/icon_color_entries"
+            app:entryValues="@array/icon_color_values"
+            app:defaultValue="white" />
+        <ListPreference
+            app:key="theme_color"
+            app:title="App Theme"
+            app:summary="Select application background theme"
+            app:entries="@array/theme_entries"
+            app:entryValues="@array/theme_values"
+            app:defaultValue="light" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="DATA USAGE">
+        <CheckBoxPreference
+            app:key="limit_data_warning"
+            app:title="Data Usage Warning"
+            app:summary="Show warning when data limit is reached"
+            app:defaultValue="false" />
     </PreferenceCategory>
 
 </PreferenceScreen>
