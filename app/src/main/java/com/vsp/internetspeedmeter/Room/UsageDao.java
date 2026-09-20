@@ -9,10 +9,12 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import androidx.room.OnConflictStrategy;
+
 @Dao
 public interface UsageDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Usage usage);
 
     @Update
