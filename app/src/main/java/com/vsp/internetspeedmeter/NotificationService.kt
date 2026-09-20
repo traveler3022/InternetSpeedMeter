@@ -163,7 +163,7 @@ class NotificationService(private val context: Context) {
         val totalSpeedStr = FormatUtils.formatSpeed(totalSpeedBytes)
 
         val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes)
-        val icon = getIcon(iconSpeed.value, iconSpeed.unit)
+        val icon = getIcon(iconSpeed.value, iconSpeed.unit + "/s")
         if (icon != null) {
             mBuilder.setSmallIcon(icon)
         } else {
@@ -195,16 +195,10 @@ class NotificationService(private val context: Context) {
         val density = context.resources.displayMetrics.density
         iconSize = (density * 24).toInt().coerceIn(24, 96)
 
-        val customTypeface = try {
-            androidx.core.content.res.ResourcesCompat.getFont(context, R.font.asap_subset)
-        } catch (e: Exception) {
-            Typeface.create("sans-serif-condensed", Typeface.BOLD)
-        }
-
         speedPaint = Paint().apply {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            typeface = customTypeface ?: Typeface.create("sans-serif-condensed", Typeface.BOLD)
+            typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
             color = Color.WHITE
             textSize = iconSize * 0.52f
         }
@@ -212,7 +206,7 @@ class NotificationService(private val context: Context) {
         unitPaint = Paint().apply {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            typeface = customTypeface ?: Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
             color = Color.WHITE
             textSize = iconSize * 0.38f
         }
