@@ -8,7 +8,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.vsp.internetspeedmeter.databinding.ItemUsageRowBinding
 import com.vsp.internetspeedmeter.room.Usage
+import com.vsp.internetspeedmeter.R
+import com.vsp.internetspeedmeter.util.DayCycle
+import com.vsp.internetspeedmeter.util.FormatUtils
 import com.vsp.internetspeedmeter.util.PersianFormat
+import androidx.core.os.ConfigurationCompat
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Usage table row: blue date cell + alternating light/dark blue data cells,
@@ -29,7 +35,7 @@ class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffC
         val odd = position % 2 == 1
         holder.bind(
             usage = getItem(position),
-            todayStr = PersianFormat.today(),
+            todayStr = DayCycle.currentDate(holder.itemView.context),
             cellA = if (odd) rowDark else rowLight,
             cellB = if (odd) rowLight else rowLighter
         )
@@ -39,14 +45,40 @@ class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffC
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(usage: Usage, todayStr: String, cellA: Int, cellB: Int) {
-            binding.tvDate.text = PersianFormat.dateLabel(usage.date, todayStr)
-            binding.tvMobile.text = PersianFormat.bytes(usage.mobile)
-            binding.tvWifi.text = PersianFormat.bytes(usage.wifi)
-            binding.tvTotal.text = PersianFormat.bytes(usage.total)
+            val context = binding.root.context
+            val persian = ConfigurationCompat
+                .getLocales(context.resources.configuration)[0]?.language == "fa"
+
+            binding.tvDate.text = if (persian) {
+                PersianFormat.dateLabel(usage.date, todayStr)
+            } else {
+                englishDateLabel(usage.date, todayStr, context.getString(R.string.row_today))
+            }
+            binding.tvMobile.text = formatCell(usage.mobile, persian)
+            binding.tvWifi.text = formatCell(usage.wifi, persian)
+            binding.tvTotal.text = formatCell(usage.total, persian)
 
             binding.tvMobile.setBackgroundColor(cellA)
             binding.tvWifi.setBackgroundColor(cellB)
             binding.tvTotal.setBackgroundColor(cellA)
+        }
+    }
+
+    companion object {
+        private val dbDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.US)
+        private val uiDateFormat = SimpleDateFormat("d MMM yyyy", Locale.US)
+
+        private fun formatCell(bytes: Long, persian: Boolean): String =
+            if (persian) PersianFormat.bytes(bytes) else FormatUtils.formatBytes(bytes)
+
+        private fun englishDateLabel(dbDate: String, todayStr: String, todayLabel: String): String {
+            if (dbDate == todayStr) return todayLabel
+            return try {
+                val parsed = dbDateFormat.parse(dbDate) ?: return dbDate
+                uiDateFormat.format(parsed)
+            } catch (_: Exception) {
+                dbDate
+            }
         }
     }
 

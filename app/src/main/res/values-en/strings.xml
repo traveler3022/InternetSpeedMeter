@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">Internet Speed Meter Lite</string>
+
+    <string name="column_date">Date</string>
+    <string name="column_mobile">Mobile</string>
+    <string name="column_wifi">Wi-Fi</string>
+    <string name="column_total">Total</string>
+    <string name="row_today">Today</string>
+    <string name="row_this_month">This month</string>
+    <string name="empty_history">No usage recorded yet</string>
+
+    <string name="menu_settings">Settings</string>
+    <string name="menu_reset">Reset statistics</string>
+    <string name="menu_stop_exit">Stop and exit</string>
+    <string name="reset_done">Statistics cleared</string>
+
+    <string name="usage_access_needed">Grant "Usage Access" to this app to see per-app usage</string>
+
+    <string name="notif_speed">Speed: %1$s</string>
+    <string name="notif_up_down">Down: %1$s   Up: %2$s</string>
+    <string name="notif_data">Mobile: %1$s   Wi-Fi: %2$s</string>
+    <string name="notif_data_limit">Mobile: %1$s of %2$s   Wi-Fi: %3$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="pref_hide_lockscreen_title">Hide lockscreen notification</string>
+    <string name="pref_hide_lockscreen_summary">Hides the notification on the lockscreen</string>
+    <string name="pref_when_connected_title">Notification bar</string>
+    <string name="pref_when_connected_summary">Show the notification only while connected</string>
+    <string name="pref_up_down_title">Show upload/download speed</string>
+    <string name="pref_up_down_summary">Displays upload and download speed in the notification</string>
+    <string name="pref_click_action_title">Notification tap action</string>
+    <string name="pref_speed_unit_title">Speed unit</string>
+    <string name="pref_limit_title">Mobile data limit: %1$s (Monthly)</string>
+    <string name="pref_limit_summary">Shows the monthly mobile usage in the notification. Set it to zero to disable</string>
+    <string name="pref_limit_off">0 MB</string>
+    <string name="pref_day_start_title">Start of day</string>
+    <string name="pref_day_start_summary">Pick this according to your ISP cycle or the time you wake up</string>
+    <string name="pref_language_title">Language</string>
+    <string name="pref_notification_color_title">Notification color</string>
+    <string name="pref_theme_title">Theme</string>
+    <string name="pref_theme_summary">Choose your preferred background color</string>
+    <string name="pref_advanced_title">Advanced settings</string>
+    <string name="pref_advanced_summary">Wi-Fi SSID and background optimisation</string>
+
+    <string name="advanced_title">Advanced settings</string>
+    <string name="pref_boot_title">Start on boot</string>
+    <string name="pref_boot_summary">Restarts the meter service after every reboot</string>
+    <string name="pref_screen_off_title">Pause while the screen is off</string>
+    <string name="pref_screen_off_summary">Saves battery by pausing measurement when the screen is off. Turn it off to also count background usage</string>
+    <string name="pref_battery_title">Battery optimisation</string>
+    <string name="pref_battery_summary">Exclude the app from battery optimisation so the service is not killed</string>
+</resources>

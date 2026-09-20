@@ -16,6 +16,7 @@ import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.os.Build
+import androidx.core.os.ConfigurationCompat
 import androidx.preference.PreferenceManager
 import com.vsp.internetspeedmeter.util.FormatUtils
 import kotlin.math.max
@@ -99,8 +100,12 @@ class NotificationService(private val context: Context) {
         }
 
         val remoteViews = RemoteViews(context.packageName, R.layout.notification_custom)
-        remoteViews.setTextViewText(R.id.tv_notification_speed, "سرعت: 0 ب/ث")
-        remoteViews.setTextViewText(R.id.tv_notification_data, "موبایل: 0 م ب   وای فای: 0 م ب")
+        remoteViews.setTextViewText(
+            R.id.tv_notification_speed,
+            context.getString(R.string.notif_speed, formatSpeed(0L, false)))
+        remoteViews.setTextViewText(
+            R.id.tv_notification_data,
+            context.getString(R.string.notif_data, formatBytes(0L), formatBytes(0L)))
         
         mBuilder.setOngoing(true)
             .setShowWhen(false)
@@ -133,7 +138,8 @@ class NotificationService(private val context: Context) {
         downSpeedBytes: Long,
         upSpeedBytes: Long,
         mobileBytes: Long,
-        wifiBytes: Long
+        wifiBytes: Long,
+        monthlyMobileBytes: Long = 0L
     ): Notification.Builder {
         val totalSpeedBytes = max(0L, downSpeedBytes + upSpeedBytes)
         
@@ -169,22 +175,41 @@ class NotificationService(private val context: Context) {
 
         val useBits = prefs.getString("speed_unit", "byte") == "bit"
 
-        val downStr = FormatUtils.formatSpeedPersian(downSpeedBytes, useBits)
-        val upStr = FormatUtils.formatSpeedPersian(upSpeedBytes, useBits)
-        val totalSpeedStr = FormatUtils.formatSpeedPersian(totalSpeedBytes, useBits)
+        val downStr = formatSpeed(downSpeedBytes, useBits)
+        val upStr = formatSpeed(upSpeedBytes, useBits)
+        val totalSpeedStr = formatSpeed(totalSpeedBytes, useBits)
 
         val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes, useBits)
 
-        val mobileStr = FormatUtils.formatBytesPersian(mobileBytes)
-        val wifiStr = FormatUtils.formatBytesPersian(wifiBytes)
-        
+        val wifiStr = formatBytes(wifiBytes)
+
+        // "محدودیت استفاده از اینترنت سیم کارت": 0 disables it, otherwise the
+        // notification switches to the monthly mobile figure plus the cap.
+        val limitBytes = monthlyLimitBytes()
+        val overLimit = limitBytes > 0L && monthlyMobileBytes > limitBytes
+
         val remoteViews = RemoteViews(context.packageName, R.layout.notification_custom)
         if (showUpDown) {
-            remoteViews.setTextViewText(R.id.tv_notification_speed, "دریافت: $downStr   ارسال: $upStr")
+            remoteViews.setTextViewText(
+                R.id.tv_notification_speed, context.getString(R.string.notif_up_down, downStr, upStr))
         } else {
-            remoteViews.setTextViewText(R.id.tv_notification_speed, "سرعت: $totalSpeedStr")
+            remoteViews.setTextViewText(
+                R.id.tv_notification_speed, context.getString(R.string.notif_speed, totalSpeedStr))
         }
-        remoteViews.setTextViewText(R.id.tv_notification_data, "موبایل: $mobileStr   وای فای: $wifiStr")
+        if (limitBytes > 0L) {
+            remoteViews.setTextViewText(
+                R.id.tv_notification_data,
+                context.getString(
+                    R.string.notif_data_limit,
+                    formatBytes(monthlyMobileBytes), formatBytes(limitBytes), wifiStr
+                )
+            )
+        } else {
+            remoteViews.setTextViewText(
+                R.id.tv_notification_data,
+                context.getString(R.string.notif_data, formatBytes(mobileBytes), wifiStr)
+            )
+        }
         remoteViews.setTextViewText(R.id.tv_icon_speed_value, iconSpeed.value)
         remoteViews.setTextViewText(R.id.tv_icon_speed_unit, iconSpeed.unit + "/s")
 
@@ -200,7 +225,11 @@ class NotificationService(private val context: Context) {
         )
         remoteViews.setTextColor(
             R.id.tv_notification_data,
-            if (lightSurface) Color.parseColor("#5A5A5A") else Color.parseColor("#CCCCCC")
+            when {
+                overLimit -> Color.parseColor("#FF5252")
+                lightSurface -> Color.parseColor("#5A5A5A")
+                else -> Color.parseColor("#CCCCCC")
+            }
         )
         
         mBuilder.setCustomContentView(remoteViews)
@@ -215,6 +244,26 @@ class NotificationService(private val context: Context) {
 
         return mBuilder
     }
+
+    /** Monthly mobile cap in bytes; 0 (or an unset value) disables the feature. */
+    private fun monthlyLimitBytes(): Long {
+        val mb = prefs.getString("limit_data_warning", "0")?.trim()?.toLongOrNull() ?: 0L
+        return if (mb <= 0L) 0L else mb * 1024L * 1024L
+    }
+
+    /** Persian units while the UI is Persian, plain ones otherwise. */
+    private fun isPersianUi(): Boolean {
+        val locale = ConfigurationCompat.getLocales(context.resources.configuration)[0]
+        return locale?.language == "fa"
+    }
+
+    private fun formatSpeed(bytesPerSec: Long, bits: Boolean): String =
+        if (isPersianUi()) FormatUtils.formatSpeedPersian(bytesPerSec, bits)
+        else FormatUtils.formatSpeed(if (bits) bytesPerSec * 8L else bytesPerSec)
+            .let { if (bits) it.replace("B/s", "b/s") else it }
+
+    private fun formatBytes(bytes: Long): String =
+        if (isPersianUi()) FormatUtils.formatBytesPersian(bytes) else FormatUtils.formatBytes(bytes)
 
     fun notify(notification: Notification) {
         try {

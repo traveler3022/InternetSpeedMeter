@@ -51,6 +51,16 @@
                 android:value="Internet speed meter status notification" />
         </service>
 
+        <!-- Lets AppCompat persist the "زبان" preference on API < 33 -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
         <receiver
             android:name=".broadcastreceiver.BootReceiver"
             android:enabled="true"

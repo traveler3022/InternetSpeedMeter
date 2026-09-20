@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:key="start_on_boot"
+        android:defaultValue="true"
+        android:title="@string/pref_boot_title"
+        android:summary="@string/pref_boot_summary" />
+
+    <CheckBoxPreference
+        android:key="pause_when_screen_off"
+        android:defaultValue="true"
+        android:title="@string/pref_screen_off_title"
+        android:summary="@string/pref_screen_off_summary" />
+
+    <Preference
+        android:key="battery_optimization"
+        android:title="@string/pref_battery_title"
+        android:summary="@string/pref_battery_summary" />
+</PreferenceScreen>

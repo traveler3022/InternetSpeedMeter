@@ -36,4 +36,8 @@ interface UsageDao {
 
     @Query("SELECT * FROM Usage_Table WHERE date = :date LIMIT 1")
     suspend fun getUsageByDate(date: String): Usage?
+
+    /** Mobile bytes recorded in one "MM-yyyy" bucket, excluding [excludeDate]. */
+    @Query("SELECT COALESCE(SUM(mobile), 0) FROM Usage_Table WHERE substr(date, 4) = :monthYear AND date != :excludeDate")
+    suspend fun getMonthlyMobileExcluding(monthYear: String, excludeDate: String): Long
 }

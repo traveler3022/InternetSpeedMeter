@@ -19,6 +19,9 @@ import com.vsp.internetspeedmeter.broadcastreceiver.InternetService
 import com.vsp.internetspeedmeter.databinding.ActivityMainBinding
 import com.vsp.internetspeedmeter.recyclerview.UsageAdapter
 import com.vsp.internetspeedmeter.room.UsageViewModel
+import androidx.core.os.ConfigurationCompat
+import com.vsp.internetspeedmeter.util.DayCycle
+import com.vsp.internetspeedmeter.util.FormatUtils
 import com.vsp.internetspeedmeter.util.PersianFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -74,7 +77,7 @@ class MainActivity : AppCompatActivity() {
     private fun observeUsageData() {
         viewModel.allNotes.observe(this) { usages ->
             if (usages.isNullOrEmpty()) {
-                val zero = PersianFormat.bytes(0L)
+                val zero = formatTotal(0L)
                 binding.tvTotalMobile.text = zero
                 binding.tvTotalWifi.text = zero
                 binding.tvGrandTotal.text = zero
@@ -89,19 +92,39 @@ class MainActivity : AppCompatActivity() {
             val last30Days = sortedList.take(30)
             adapter.submitList(last30Days)
 
-            val totalMobileBytes = last30Days.sumOf { it.mobile }
-            val totalWifiBytes = last30Days.sumOf { it.wifi }
+            // The summary row is labelled "این ماه", so it sums the current month only
+            val currentMonth = DayCycle.monthOf(DayCycle.currentDate(this))
+            val thisMonth = sortedList.filter { DayCycle.monthOf(it.date) == currentMonth }
 
-            binding.tvTotalMobile.text = PersianFormat.bytes(totalMobileBytes)
-            binding.tvTotalWifi.text = PersianFormat.bytes(totalWifiBytes)
-            binding.tvGrandTotal.text = PersianFormat.bytes(totalMobileBytes + totalWifiBytes)
+            val totalMobileBytes = thisMonth.sumOf { it.mobile }
+            val totalWifiBytes = thisMonth.sumOf { it.wifi }
+
+            binding.tvTotalMobile.text = formatTotal(totalMobileBytes)
+            binding.tvTotalWifi.text = formatTotal(totalWifiBytes)
+            binding.tvGrandTotal.text = formatTotal(totalMobileBytes + totalWifiBytes)
         }
+    }
+
+    private fun formatTotal(bytes: Long): String {
+        val persian = ConfigurationCompat
+            .getLocales(resources.configuration)[0]?.language == "fa"
+        return if (persian) PersianFormat.bytes(bytes) else FormatUtils.formatBytes(bytes)
     }
 
     private fun startMonitoringService() {
         val serviceIntent = Intent(this, InternetService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(serviceIntent)
         else startService(serviceIntent)
+    }
+
+    /** Clears the table, the cached counters and restarts the service from zero. */
+    private fun resetStatistics() {
+        stopService(Intent(this, InternetService::class.java))
+        viewModel.deleteAllNotes()
+        prefs.edit().clear().apply()
+        getSharedPreferences(TRAFFIC_PREF_NAME, Context.MODE_PRIVATE).edit().clear().apply()
+        startMonitoringService()
+        Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
     }
 
     private fun stopMonitoringAndExit() {
@@ -130,9 +153,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java)); true
             }
             R.id.action_reset_stats -> {
-                viewModel.deleteAllNotes()
-                prefs.edit().clear().apply()
-                Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
+                resetStatistics()
                 true
             }
             R.id.action_stop_exit -> { stopMonitoringAndExit(); true }
@@ -142,5 +163,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val PREF_NAME = "internetSpeed"
+        private const val TRAFFIC_PREF_NAME = "traffic_data"
     }
 }
