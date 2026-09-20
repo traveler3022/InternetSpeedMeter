@@ -16,171 +16,211 @@ import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.util.Log;
 
-import com.vsp.internetspeedmeter.Model.OnCompleteListener;
-import com.vsp.internetspeedmeter.Model.Speed;
 import com.vsp.internetspeedmeter.Room.Usage;
 import com.vsp.internetspeedmeter.Room.UsageRepository;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
-import androidx.annotation.Nullable;
-
-import static com.vsp.internetspeedmeter.MainActivity.CHANNEL_DESC;
-import static com.vsp.internetspeedmeter.MainActivity.CHANNEL_ID;
-import static com.vsp.internetspeedmeter.MainActivity.CHANNEL_NAME;
-import static com.vsp.internetspeedmeter.MainActivity.TAG;
-
 public class NotificationService {
+    public static final String CHANNEL_ID = "speed_meter_channel";
+    public static final String CHANNEL_NAME = "Internet Speed Meter";
+    public static final String CHANNEL_DESC = "Displays real-time network speed and daily usage";
+    public static final String TAG = "internetspeed";
+    public static final int NOTIFICATION_ID = 1;
+
     private Notification.Builder mBuilder;
     private NotificationManager mNotifyMgr;
     private PendingIntent pendingIntent;
-    Context context;
-    Bitmap bitmap;
-    Canvas canvas;
-    Paint paint, unitsPaint;
-    Icon icon;
+    private Context context;
+    private Bitmap bitmap;
+    private Canvas canvas;
+    private Paint paint, unitsPaint;
+    private Icon icon;
     private UsageRepository usageRepository;
-    Date c;
-    SimpleDateFormat df;
     public String myDate;
-    public int i = 0;
+    private SimpleDateFormat df;
+    private final DecimalFormat decimalFormat = new DecimalFormat("#.0");
 
     public NotificationService(Context context) {
         this.context = context;
-        createNotification();
         usageRepository = new UsageRepository(context);
-        c = Calendar.getInstance().getTime();
         df = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-        myDate = df.format(c);
+        myDate = df.format(Calendar.getInstance().getTime());
+        createNotification();
     }
 
     public void createNotification() {
         createNotificationChannel();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mBuilder = new Notification.Builder(context, CHANNEL_ID);
         } else {
             mBuilder = new Notification.Builder(context);
         }
+
         setupIcon();
+
         Intent notifiIntent = new Intent(context, MainActivity.class);
-        pendingIntent = PendingIntent.getActivity(context,
-                100, notifiIntent, 0
-        );
-        icon = getIcon("0", "MB");
-        mBuilder.setSmallIcon(icon);//Icon.createWithBitmap(speed.createBitmapFromString(mTotalMobileData, mMTUnits))
-        mBuilder.setContentTitle("Down: " + 0 + " " + "MB" + "   Up: " + 0 + " " + "MB");
-        mBuilder.setContentText("Mobile: " + 0 + " " + "MB");
-        mBuilder.setVisibility(Notification.VISIBILITY_SECRET);
-        mBuilder.setOngoing(true);
-        mBuilder.setShowWhen(false);
-        mBuilder.setPriority(Notification.PRIORITY_MAX);
-        mBuilder.setContentIntent(pendingIntent);
-        mBuilder.setOnlyAlertOnce(true);
-
-//        mBuilder.silent
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mBuilder.setBadgeIconType(0);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
         }
-        mNotifyMgr = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
-        mNotifyMgr.notify(1, mBuilder.build());
+        pendingIntent = PendingIntent.getActivity(context, 100, notifiIntent, flags);
 
+        icon = getIcon("0", "K");
+        mBuilder.setSmallIcon(icon)
+                .setContentTitle("Down: 0 KB/s   Up: 0 KB/s")
+                .setContentText("Mobile: 0 MB   WiFi: 0 MB")
+                .setOngoing(true)
+                .setShowWhen(false)
+                .setContentIntent(pendingIntent)
+                .setOnlyAlertOnce(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mBuilder.setBadgeIconType(Notification.BADGE_ICON_NONE);
+        }
+
+        mNotifyMgr = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    public Notification.Builder updateNotification(Speed speed, long mTotalBytes) {
+    public Notification.Builder updateNotification(long downSpeedBytes, long upSpeedBytes, long mobileBytes, long wifiBytes) {
+        // Check date rollover
+        checkDateRollover();
 
-        speed.getSpeed(new OnCompleteListener<String>() {
-            @Override
-            public void OnComplete(@Nullable String mDownloadSpeedWithDecimals, @Nullable String mDUnits, @Nullable String mUploadSpeedWithDecimals, @Nullable String mUUnits, @Nullable String mTotalMobileData, @Nullable String mMTUnits) {
-                DecimalFormat df1 = new DecimalFormat("#.00");
-                icon = getIcon(mTotalMobileData, mMTUnits);
-                if (mTotalBytes >= 1000000000) {
-                    mTotalMobileData = String.valueOf(df1.format((float) mTotalBytes / (float) 1000000000));
-                    mMTUnits = " GB ";
+        // Speed formatting
+        String downStr = formatSpeed(downSpeedBytes);
+        String upStr = formatSpeed(upSpeedBytes);
 
-                } else if (mTotalBytes >= 1000000) {
-                    mTotalMobileData = String.valueOf(df1.format((float) mTotalBytes / (float) 1000000));
-                    mMTUnits = " MB";
+        // Status bar icon: show total current speed
+        long totalSpeedBytes = downSpeedBytes + upSpeedBytes;
+        SpeedUnit iconSpeed = formatSpeedForIcon(totalSpeedBytes);
+        icon = getIcon(iconSpeed.value, iconSpeed.unit);
 
-                } else if (mTotalBytes >= 1000) {
-                    mTotalMobileData = String.valueOf((int) (mTotalBytes / 1000));
-                    mMTUnits = " KB";
+        // Data usage formatting
+        String mobileStr = formatData(mobileBytes);
+        String wifiStr = formatData(wifiBytes);
+        String totalStr = formatData(mobileBytes + wifiBytes);
 
-                }
+        mBuilder.setSmallIcon(icon);
+        mBuilder.setContentTitle("Down: " + downStr + "   Up: " + upStr);
+        mBuilder.setContentText("Mobile: " + mobileStr + "   WiFi: " + wifiStr);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            mBuilder.setSubText("Total: " + totalStr);
+        }
 
-                mBuilder.setSmallIcon(icon);//Icon.createWithBitmap(speed.createBitmapFromString(mTotalMobileData, mMTUnits))
-                mBuilder.setContentTitle("Down: " + mDownloadSpeedWithDecimals + " " + mDUnits + "   Up: " + mUploadSpeedWithDecimals + " " + mUUnits);
-                mBuilder.setContentText("Mobile: " + mTotalMobileData + " " + mMTUnits);
-                usageRepository.update(new Usage(myDate, mTotalMobileData + " " + mMTUnits, "300", "300"));
-//                Log.e(TAG, "onChanged: "+mTotalMobileData+ " " + mMTUnits);
-            }
-        });
-
+        // Update database
+        usageRepository.update(new Usage(myDate, mobileStr, wifiStr, totalStr));
 
         return mBuilder;
     }
 
-    public void updateDate() {
-        c.setTime(c.getTime() + 86400000 * i);
-        Log.e(TAG, "updateDate: i value " + i);
-        i++;
-//        c = Calendar.getInstance().setTimeInMillis();
-
-        df = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-        myDate = df.format(c);
-        usageRepository.insert(new Usage(myDate, "0", "0", "0"));
-
-    }
-
-    public void setupIcon() {
-
-        paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setTextSize(65);
-        paint.setTextAlign(Paint.Align.CENTER);
-        paint.setTypeface(Typeface.DEFAULT_BOLD);
-
-        unitsPaint = new Paint();
-        unitsPaint.setAntiAlias(true);
-        unitsPaint.setTextSize(40); // size is in pixels
-        unitsPaint.setTextAlign(Paint.Align.CENTER);
-        unitsPaint.setTypeface(Typeface.DEFAULT_BOLD);
-
-     /*   Rect textBounds = new Rect();
-        paint.getTextBounds("0", 0, 2, textBounds);
-
-        Rect unitsTextBounds = new Rect();
-        unitsPaint.getTextBounds("MB", 0, 3, unitsTextBounds);*/
-
-//        int width = (textBounds.width() > unitsTextBounds.width()) ? textBounds.width() : unitsTextBounds.width();
-
-        bitmap = Bitmap.createBitmap(96, 96,
-                Bitmap.Config.ARGB_8888);
-
-        canvas = new Canvas(bitmap);
-
-    }
-
-    Icon getIcon(String speed, String units) {
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        canvas.drawText(speed, 48, 52, paint);
-        canvas.drawText(units, 48, 95, unitsPaint);
-
-        return Icon.createWithBitmap(bitmap);
-    }
-
-    private void createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription(CHANNEL_DESC);
-            NotificationManager manager = context.getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
+    private void checkDateRollover() {
+        String currentDate = df.format(Calendar.getInstance().getTime());
+        if (!currentDate.equals(myDate)) {
+            myDate = currentDate;
+            usageRepository.insert(new Usage(myDate, "0 MB", "0 MB", "0 MB"));
         }
     }
 
+    private void setupIcon() {
+        paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setTextSize(52);
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        paint.setColor(Color.WHITE);
 
+        unitsPaint = new Paint();
+        unitsPaint.setAntiAlias(true);
+        unitsPaint.setTextSize(36);
+        unitsPaint.setTextAlign(Paint.Align.CENTER);
+        unitsPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        unitsPaint.setColor(Color.WHITE);
+
+        bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888);
+        canvas = new Canvas(bitmap);
+    }
+
+    public Icon getIcon(String speed, String units) {
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        canvas.drawText(speed, 48, 50, paint);
+        canvas.drawText(units, 48, 88, unitsPaint);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Icon.createWithBitmap(bitmap);
+        }
+        return null;
+    }
+
+    private String formatSpeed(long bytesPerSec) {
+        if (bytesPerSec >= 1000000000L) {
+            return decimalFormat.format((double) bytesPerSec / 1000000000L) + " GB/s";
+        } else if (bytesPerSec >= 1000000L) {
+            return decimalFormat.format((double) bytesPerSec / 1000000L) + " MB/s";
+        } else if (bytesPerSec >= 1000L) {
+            return (bytesPerSec / 1000L) + " KB/s";
+        } else {
+            return bytesPerSec + " B/s";
+        }
+    }
+
+    private static class SpeedUnit {
+        String value;
+        String unit;
+        SpeedUnit(String value, String unit) {
+            this.value = value;
+            this.unit = unit;
+        }
+    }
+
+    private SpeedUnit formatSpeedForIcon(long bytesPerSec) {
+        if (bytesPerSec >= 1000000000L) {
+            return new SpeedUnit(decimalFormat.format((double) bytesPerSec / 1000000000L), "GB");
+        } else if (bytesPerSec >= 1000000L) {
+            return new SpeedUnit(decimalFormat.format((double) bytesPerSec / 1000000L), "MB");
+        } else if (bytesPerSec >= 1000L) {
+            long kb = bytesPerSec / 1000L;
+            if (kb > 999) kb = 999;
+            return new SpeedUnit(String.valueOf(kb), "KB");
+        } else {
+            return new SpeedUnit("0", "KB");
+        }
+    }
+
+    private String formatData(long bytes) {
+        if (bytes >= 1073741824L) {
+            return decimalFormat.format((double) bytes / 1073741824L) + " GB";
+        } else if (bytes >= 1048576L) {
+            return decimalFormat.format((double) bytes / 1048576L) + " MB";
+        } else if (bytes >= 1024L) {
+            return (bytes / 1024L) + " KB";
+        } else {
+            return bytes + " B";
+        }
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription(CHANNEL_DESC);
+            channel.setShowBadge(false);
+            channel.enableVibration(false);
+            channel.setSound(null, null);
+
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
 }

@@ -8,7 +8,6 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.vsp.internetspeedmeter.BroadcastReciever.InternetService;
-import com.vsp.internetspeedmeter.BroadcastReciever.ResetWork;
 import com.vsp.internetspeedmeter.Model.DisplayModel;
 import com.vsp.internetspeedmeter.Recyclerview.UsageAdapter;
 import com.vsp.internetspeedmeter.Room.Usage;
@@ -59,49 +58,51 @@ public class MainActivity extends AppCompatActivity {
 //        Gson gson = new Gson();
 //        String s = gson.toJson(notificationService);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
         viewModel.getAllNotes().observe(this, new Observer<List<Usage>>() {
             @Override
             public void onChanged(List<Usage> usages) {
-                Log.e(TAG, "onChanged: " + usages.size());
+                if (usages == null) return;
+                Log.d(TAG, "onChanged: " + usages.size());
 
-                for (int i = 0; i < usages.size(); i++) {
-                    Usage usage = usages.get(i);
-                    if (date.size() != 0) {
-                        date.set(i, usage.getdate());
-                        mobile.set(i, usage.getMobile());
-                        wifi.set(i, usage.getWifi());
-                        total.set(i, usage.getTotal());
-                    } else {
-                        date.add(i, usage.getdate());
-                        mobile.add(i, usage.getMobile());
-                        wifi.add(i, usage.getWifi());
-                        total.add(i, usage.getTotal());
-                    }
+                date.clear();
+                mobile.clear();
+                wifi.clear();
+                total.clear();
 
-
-                    adapter.notifyDataSetChanged();
-                    Log.e(TAG, "onChanged: " + usage.getMobile() + "   " + usage.getdate());
+                for (Usage usage : usages) {
+                    date.add(usage.getdate());
+                    mobile.add(usage.getMobile());
+                    wifi.add(usage.getWifi());
+                    total.add(usage.getTotal());
                 }
+
+                adapter.notifyDataSetChanged();
             }
         });
 
         recyclerView.setAdapter(adapter);
 
         check();
-
-
     }
 
     private void check() {
-        if ((!preferences.contains("isStarted")) || !preferences.getBoolean("isStarted", false)) {
+        if (!preferences.getBoolean("isStarted", false)) {
             editor.putBoolean("isStarted", true);
             editor.apply();
-            Intent serviceintent = new Intent(this, InternetService.class);
-            startService(serviceintent);
-
-
         }
 
+        Intent serviceIntent = new Intent(this, InternetService.class);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
     }
 
     @Override
