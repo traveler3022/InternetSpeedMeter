@@ -24,6 +24,11 @@ class UsageRepository(context: Context) {
         usageDao.getUsageByDate(date)
     }
 
+    suspend fun getMonthlyMobileExcluding(monthYear: String, excludeDate: String): Long =
+        withContext(Dispatchers.IO) {
+            usageDao.getMonthlyMobileExcluding(monthYear, excludeDate)
+        }
+
     suspend fun delete(usage: Usage) = withContext(Dispatchers.IO) {
         usageDao.delete(usage)
     }

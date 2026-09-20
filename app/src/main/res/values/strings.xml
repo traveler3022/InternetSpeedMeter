@@ -1,21 +1,63 @@
 <resources>
     <string name="app_name">Internet Speed Meter Lite</string>
+
+    <!-- Usage table -->
     <string name="column_date">تاریخ</string>
     <string name="column_mobile">موبایل</string>
     <string name="column_wifi">وای فای</string>
     <string name="column_total">مجموع</string>
     <string name="row_today">امروز</string>
     <string name="row_this_month">این ماه</string>
+    <string name="empty_history">هنوز آماری ثبت نشده است</string>
+
+    <!-- Menu -->
     <string name="menu_settings">تنظیمات</string>
     <string name="menu_reset">تنظیم مجدد آمار</string>
     <string name="menu_stop_exit">توقف و خروج</string>
     <string name="reset_done">آمار پاک شد</string>
+
+    <!-- Session dialog -->
     <string name="session_time">Session Time</string>
     <string name="session_usage">Session Usage</string>
     <string name="tab_mobile">Mobile</string>
     <string name="tab_wifi">Wifi</string>
     <string name="mobile_wifi">Mobile | Wifi</string>
-    <string name="settings_title">تنظیمات</string>
-    <string name="empty_history">هنوز آماری ثبت نشده است</string>
     <string name="usage_access_needed">برای نمایش مصرف هر برنامه، دسترسی «Usage Access» را برای این برنامه فعال کنید</string>
+
+    <!-- Notification -->
+    <string name="notif_speed">سرعت: %1$s</string>
+    <string name="notif_up_down">دریافت: %1$s   ارسال: %2$s</string>
+    <string name="notif_data">موبایل: %1$s   وای فای: %2$s</string>
+    <string name="notif_data_limit">موبایل: %1$s از %2$s   وای فای: %3$s</string>
+
+    <!-- Settings -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="pref_hide_lockscreen_title">مخفی کردن اعلان در صفحه قفل</string>
+    <string name="pref_hide_lockscreen_summary">اعلان را در صفحه قفل مخفی می‌کند</string>
+    <string name="pref_when_connected_title">تنظیم نوار اطلاع رسانی</string>
+    <string name="pref_when_connected_summary">تنها زمانی که به اینترنت متصل هستم اعلان را نشان بده</string>
+    <string name="pref_up_down_title">نشان دادن سرعت ارسال‌دریافت</string>
+    <string name="pref_up_down_summary">سرعت ارسال و دریافت را در نوار اعلان نمایش می‌دهد</string>
+    <string name="pref_click_action_title">عمل ضربه‌ی اعلان</string>
+    <string name="pref_speed_unit_title">واحد سرعت</string>
+    <string name="pref_limit_title">محدودیت استفاده از اینترنت سیم کارت: %1$s (Monthly)</string>
+    <string name="pref_limit_summary">این استفاده ماهیانه اینترنت تلفن همراه را در اعلان نشان می دهد. مقدار را به صفر تغییر دهید تا غیر فعال شود</string>
+    <string name="pref_limit_off">۰ م ب</string>
+    <string name="pref_day_start_title">ساعت شروع روز</string>
+    <string name="pref_day_start_summary">این مقدار با توجه به زمان ISP خود و یا زمان بیدار شدن خود انتخاب کنید</string>
+    <string name="pref_language_title">زبان</string>
+    <string name="pref_notification_color_title">رنگ اعلان</string>
+    <string name="pref_theme_title">تم</string>
+    <string name="pref_theme_summary">رنگ زمینه دلخواه را انتخاب کنید</string>
+    <string name="pref_advanced_title">تنظیمات پیشرفته</string>
+    <string name="pref_advanced_summary">وای‌فای و بهینه‌سازی پس‌زمینه SSID</string>
+
+    <!-- Advanced settings -->
+    <string name="advanced_title">تنظیمات پیشرفته</string>
+    <string name="pref_boot_title">اجرا پس از روشن شدن دستگاه</string>
+    <string name="pref_boot_summary">سرویس اندازه‌گیری سرعت با هر بار بوت دستگاه دوباره اجرا می‌شود</string>
+    <string name="pref_screen_off_title">توقف هنگام خاموش بودن صفحه</string>
+    <string name="pref_screen_off_summary">برای صرفه‌جویی در باتری، اندازه‌گیری هنگام خاموشی صفحه متوقف می‌شود. با خاموش کردن این گزینه، مصرف پس‌زمینه هم شمارش می‌شود</string>
+    <string name="pref_battery_title">بهینه‌سازی باتری</string>
+    <string name="pref_battery_summary">برای جلوگیری از بسته شدن سرویس، برنامه را از بهینه‌سازی باتری خارج کنید</string>
 </resources>

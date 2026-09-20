@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.vsp.internetspeedmeter.NotificationService
 import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.room.UsageRepository
+import com.vsp.internetspeedmeter.util.DayCycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -58,6 +59,9 @@ class InternetService : Service() {
     private var dailyWifiBytes = 0L
     private var lastRecordedDate = ""
 
+    // Mobile bytes of the current month, excluding today (today is added live)
+    private var monthlyMobileBase = 0L
+
     private lateinit var prefs: SharedPreferences
     private val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.US)
 
@@ -76,7 +80,7 @@ class InternetService : Service() {
                 Intent.ACTION_SCREEN_OFF -> {
                     isScreenOn = false
                     sampleAndAccumulateTraffic()
-                    stopMonitoring()
+                    if (pauseWhenScreenOff()) stopMonitoring()
                 }
                 Intent.ACTION_SCREEN_ON -> {
                     isScreenOn = true
@@ -107,7 +111,7 @@ class InternetService : Service() {
         notificationService = NotificationService(this)
         usageRepository = UsageRepository(this)
 
-        lastRecordedDate = dateFormat.format(Calendar.getInstance().time)
+        lastRecordedDate = DayCycle.currentDate(this)
         prefs = getSharedPreferences("traffic_data", Context.MODE_PRIVATE)
 
         val savedDate = prefs.getString("lastRecordedDate", "")
@@ -122,6 +126,7 @@ class InternetService : Service() {
         initHardwareCounters()
         checkDateRollover()
         syncWithDatabase()
+        refreshMonthlyBase()
 
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
@@ -141,14 +146,14 @@ class InternetService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
             val notification = notificationService.updateNotification(
-                0L, 0L, dailyMobileBytes, dailyWifiBytes
+                0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
             ).build()
             notificationService.notify(notification)
             return START_STICKY
         }
 
         val initialNotification = notificationService.updateNotification(
-            0L, 0L, dailyMobileBytes, dailyWifiBytes
+            0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
         ).build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -165,7 +170,7 @@ class InternetService : Service() {
             startForeground(NotificationService.NOTIFICATION_ID, initialNotification)
         }
 
-        if (isScreenOn) {
+        if (isScreenOn || !pauseWhenScreenOff()) {
             startMonitoring()
         }
 
@@ -206,7 +211,7 @@ class InternetService : Service() {
 
         monitorJob = serviceScope.launch {
             var tickCount = 0
-            while (isActive && isScreenOn) {
+            while (isActive && (isScreenOn || !pauseWhenScreenOff())) {
                 val curTime = SystemClock.elapsedRealtime()
                 val curTotalRx = getCorrectedTotalRx()
                 val curTotalTx = getCorrectedTotalTx()
@@ -244,7 +249,7 @@ class InternetService : Service() {
                 checkDateRollover()
 
                 val notification = notificationService.updateNotification(
-                    downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes
+                    downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
                 ).build()
                 notificationService.notify(notification)
 
@@ -361,7 +366,7 @@ class InternetService : Service() {
         monitorJob = null
 
         val notification = notificationService.updateNotification(
-            0L, 0L, dailyMobileBytes, dailyWifiBytes
+            0L, 0L, dailyMobileBytes, dailyWifiBytes, monthlyMobileBytes()
         ).build()
         notificationService.notify(notification)
 
@@ -383,7 +388,7 @@ class InternetService : Service() {
     }
 
     private fun checkDateRollover() {
-        val today = dateFormat.format(Calendar.getInstance().time)
+        val today = DayCycle.currentDate(this)
         if (today != lastRecordedDate) {
             saveToPrefs()
             persistDailyUsage()
@@ -394,8 +399,28 @@ class InternetService : Service() {
 
             saveToPrefs()
             persistDailyUsage()
+            refreshMonthlyBase()
         }
     }
+
+    /** Monthly mobile usage of the completed days, used by the "محدودیت" preference. */
+    private fun refreshMonthlyBase() {
+        serviceScope.launch(Dispatchers.IO) {
+            monthlyMobileBase = try {
+                usageRepository.getMonthlyMobileExcluding(
+                    DayCycle.monthOf(lastRecordedDate), lastRecordedDate
+                )
+            } catch (_: Exception) {
+                0L
+            }
+        }
+    }
+
+    private fun monthlyMobileBytes(): Long = monthlyMobileBase + dailyMobileBytes
+
+    private fun pauseWhenScreenOff(): Boolean =
+        androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean("pause_when_screen_off", true)
 
     private fun syncWithDatabase() {
         serviceScope.launch(Dispatchers.IO) {

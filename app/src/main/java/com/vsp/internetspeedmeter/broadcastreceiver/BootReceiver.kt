@@ -12,8 +12,11 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
                 val isStarted = prefs.getBoolean(PREF_IS_STARTED, true)
+                val startOnBoot = androidx.preference.PreferenceManager
+                    .getDefaultSharedPreferences(context)
+                    .getBoolean("start_on_boot", true)
 
-                if (isStarted) {
+                if (isStarted && startOnBoot) {
                     val serviceIntent = Intent(context, InternetService::class.java)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(serviceIntent)

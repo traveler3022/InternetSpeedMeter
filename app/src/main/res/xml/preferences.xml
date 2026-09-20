@@ -1,82 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- All features unlocked: no PRO-gated preferences, no custom pro widget layouts. -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <CheckBoxPreference
         android:key="hide_lockscreen"
         android:defaultValue="false"
-        android:title="مخفی کردن اعلان در صفحه قفل"
-        android:summary="اعلان را در صفحه قفل مخفی می‌کند" />
+        android:title="@string/pref_hide_lockscreen_title"
+        android:summary="@string/pref_hide_lockscreen_summary" />
 
     <CheckBoxPreference
         android:key="notification_when_connected"
         android:defaultValue="false"
-        android:title="تنظیم نوار اطلاع رسانی"
-        android:summary="تنها زمانی که به اینترنت متصل هستم اعلان را نشان بده" />
+        android:title="@string/pref_when_connected_title"
+        android:summary="@string/pref_when_connected_summary" />
 
     <CheckBoxPreference
         android:key="show_up_down_speed"
         android:defaultValue="true"
-        android:title="نشان دادن سرعت ارسال‌دریافت"
-        android:summary="سرعت ارسال و دریافت را در نوار اعلان نمایش می‌دهد" />
+        android:title="@string/pref_up_down_title"
+        android:summary="@string/pref_up_down_summary" />
 
     <ListPreference
         android:key="notification_click_action"
         android:defaultValue="dialog"
-        android:title="عمل ضربه‌ی اعلان"
-        android:summary="بازکردن گفتگوی اعلان"
+        android:title="@string/pref_click_action_title"
         android:entries="@array/click_action_entries"
-        android:entryValues="@array/click_action_values" />
+        android:entryValues="@array/click_action_values"
+        app:useSimpleSummaryProvider="true" />
 
     <ListPreference
         android:key="speed_unit"
         android:defaultValue="byte"
-        android:title="واحد سرعت"
-        android:summary="بایت بر ثانیه"
+        android:title="@string/pref_speed_unit_title"
         android:entries="@array/speed_unit_entries"
-        android:entryValues="@array/speed_unit_values" />
+        android:entryValues="@array/speed_unit_values"
+        app:useSimpleSummaryProvider="true" />
 
     <EditTextPreference
         android:key="limit_data_warning"
         android:defaultValue="0"
-        android:title="محدودیت استفاده از اینترنت سیم کارت (Monthly)"
-        android:summary="این استفاده ماهیانه اینترنت تلفن همراه را در اعلان نشان می دهد. مقدار را به صفر تغییر دهید تا غیر فعال شود"
+        android:title="@string/pref_limit_title"
+        android:summary="@string/pref_limit_summary"
         android:inputType="number" />
 
     <ListPreference
         android:key="day_start_hour"
         android:defaultValue="0"
-        android:title="ساعت شروع روز"
-        android:summary="این مقدار با توجه به زمان ISP خود و یا زمان بیدار شدن خود انتخاب کنید"
+        android:title="@string/pref_day_start_title"
+        android:summary="@string/pref_day_start_summary"
         android:entries="@array/day_start_entries"
         android:entryValues="@array/day_start_values" />
 
     <ListPreference
         android:key="app_language"
         android:defaultValue="system"
-        android:title="زبان"
-        android:summary="پیش فرض سیستم"
+        android:title="@string/pref_language_title"
         android:entries="@array/language_entries"
-        android:entryValues="@array/language_values" />
+        android:entryValues="@array/language_values"
+        app:useSimpleSummaryProvider="true" />
 
     <ListPreference
         android:key="notification_color"
         android:defaultValue="system"
-        android:title="رنگ اعلان"
-        android:summary="پیش فرض سیستم"
+        android:title="@string/pref_notification_color_title"
         android:entries="@array/notification_color_entries"
-        android:entryValues="@array/notification_color_values" />
+        android:entryValues="@array/notification_color_values"
+        app:useSimpleSummaryProvider="true" />
 
     <ListPreference
         android:key="theme_color"
         android:defaultValue="light"
-        android:title="تم"
-        android:summary="رنگ زمینه دلخواه را انتخاب کنید"
+        android:title="@string/pref_theme_title"
+        android:summary="@string/pref_theme_summary"
         android:entries="@array/theme_entries"
         android:entryValues="@array/theme_values" />
 
     <Preference
         android:key="advanced_settings"
-        android:title="تنظیمات پیشرفته"
-        android:summary="وای‌فای و بهینه‌سازی پس‌زمینه SSID" />
+        android:title="@string/pref_advanced_title"
+        android:summary="@string/pref_advanced_summary" />
 </PreferenceScreen>
