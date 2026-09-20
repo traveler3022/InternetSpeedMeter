@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.net.NetworkInterface
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -65,13 +66,11 @@ class InternetService : Service() {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_OFF -> {
                     isScreenOn = false
-                    // Sample all traffic up to screen-off and persist
                     sampleAndAccumulateTraffic()
                     stopMonitoring()
                 }
                 Intent.ACTION_SCREEN_ON -> {
                     isScreenOn = true
-                    // Capture all background bytes consumed while screen was asleep
                     sampleAndAccumulateTraffic()
                     lastSpeedTime = SystemClock.elapsedRealtime()
                     startMonitoring()
@@ -110,14 +109,10 @@ class InternetService : Service() {
             dailyWifiBytes = 0L
         }
 
-        // Initialize hardware counters and reseed state
         initHardwareCounters()
-
-        // Sync with Room DB if prefs has 0 bytes (e.g. after fresh restart)
         checkDateRollover()
         syncWithDatabase()
 
-        // Register system event broadcasts
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -167,6 +162,35 @@ class InternetService : Service() {
         return START_STICKY
     }
 
+    private fun getVpnTraffic(): Pair<Long, Long> {
+        var rx = 0L
+        var tx = 0L
+        try {
+            val ifaces = NetworkInterface.getNetworkInterfaces()
+            ifaces?.let {
+                for (iface in it) {
+                    if (iface.isUp && (iface.name.startsWith("tun") || iface.name.startsWith("tap"))) {
+                        rx += sanitizeBytes(TrafficStats.getRxBytes(iface.name))
+                        tx += sanitizeBytes(TrafficStats.getTxBytes(iface.name))
+                    }
+                }
+            }
+        } catch (e: Exception) {}
+        return Pair(rx, tx)
+    }
+
+    private fun getCorrectedTotalRx(): Long {
+        val total = sanitizeBytes(TrafficStats.getTotalRxBytes())
+        val vpn = getVpnTraffic().first
+        return max(0L, total - vpn)
+    }
+
+    private fun getCorrectedTotalTx(): Long {
+        val total = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        val vpn = getVpnTraffic().second
+        return max(0L, total - vpn)
+    }
+
     private fun startMonitoring() {
         if (monitorJob?.isActive == true) return
 
@@ -174,10 +198,9 @@ class InternetService : Service() {
             var tickCount = 0
             while (isActive && isScreenOn) {
                 val curTime = SystemClock.elapsedRealtime()
-                val curTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
-                val curTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+                val curTotalRx = getCorrectedTotalRx()
+                val curTotalTx = getCorrectedTotalTx()
 
-                // Counter rollover / system reboot detection
                 if (curTotalRx < lastHardwareTotalRx || curTotalTx < lastHardwareTotalTx) {
                     initHardwareCounters()
                     delay(1000)
@@ -188,7 +211,6 @@ class InternetService : Service() {
                 val deltaRx = max(0L, curTotalRx - lastHardwareTotalRx)
                 val deltaTx = max(0L, curTotalTx - lastHardwareTotalTx)
 
-                // High-precision speed calculation based on actual elapsed monotonic time
                 val downSpeed = ((deltaRx * 1000.0) / elapsedMs).toLong()
                 val upSpeed = ((deltaTx * 1000.0) / elapsedMs).toLong()
 
@@ -196,7 +218,6 @@ class InternetService : Service() {
                 lastHardwareTotalRx = curTotalRx
                 lastHardwareTotalTx = curTotalTx
 
-                // Accumulate daily volume
                 val deltaTotal = deltaRx + deltaTx
                 if (deltaTotal > 0L) {
                     allocateTraffic(deltaTotal)
@@ -204,20 +225,17 @@ class InternetService : Service() {
 
                 checkDateRollover()
 
-                // Update notification every tick
                 val notification = notificationService.updateNotification(
                     downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes
                 ).build()
                 notificationService.notify(notification)
 
-                // Throttle persistence to SQLite & SharedPreferences to every 5 ticks to save battery and flash wear
                 tickCount++
                 if (tickCount % 5 == 0) {
                     saveToPrefs()
                     persistDailyUsage()
                 }
 
-                // If power saving is active, throttle loop to 3 seconds, otherwise standard 1 second
                 val targetDelay = if (isPowerSaveMode) 3000L else 1000L
                 val loopElapsed = SystemClock.elapsedRealtime() - curTime
                 val remainingDelay = max(100L, targetDelay - loopElapsed)
@@ -226,13 +244,9 @@ class InternetService : Service() {
         }
     }
 
-    /**
-     * Captures and accumulates background data transfer during screen-off / sleep periods.
-     * Prevents any data loss when the phone screen is turned off and back on.
-     */
     private fun sampleAndAccumulateTraffic() {
-        val curTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
-        val curTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        val curTotalRx = getCorrectedTotalRx()
+        val curTotalTx = getCorrectedTotalTx()
 
         if (curTotalRx >= lastHardwareTotalRx && curTotalTx >= lastHardwareTotalTx) {
             val deltaRx = curTotalRx - lastHardwareTotalRx
@@ -282,19 +296,18 @@ class InternetService : Service() {
             }
         }
 
+        val curMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
+        val curMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
+        val deltaMobile = max(0L, curMobileRx - lastHardwareMobileRx) +
+                max(0L, curMobileTx - lastHardwareMobileTx)
+
+        lastHardwareMobileRx = curMobileRx
+        lastHardwareMobileTx = curMobileTx
+
         when {
             isWifi -> dailyWifiBytes += deltaTotal
             isMobile -> dailyMobileBytes += deltaTotal
             else -> {
-                // Secondary check using mobile stats delta
-                val curMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
-                val curMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
-                val deltaMobile = max(0L, curMobileRx - lastHardwareMobileRx) +
-                        max(0L, curMobileTx - lastHardwareMobileTx)
-
-                lastHardwareMobileRx = curMobileRx
-                lastHardwareMobileTx = curMobileTx
-
                 if (deltaMobile > 0L) {
                     val mobileAllocation = deltaMobile.coerceAtMost(deltaTotal)
                     dailyMobileBytes += mobileAllocation
@@ -310,7 +323,6 @@ class InternetService : Service() {
         monitorJob?.cancel()
         monitorJob = null
 
-        // Display 0 B/s in status bar while screen is sleeping
         val notification = notificationService.updateNotification(
             0L, 0L, dailyMobileBytes, dailyWifiBytes
         ).build()
@@ -321,8 +333,8 @@ class InternetService : Service() {
     }
 
     private fun initHardwareCounters() {
-        lastHardwareTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
-        lastHardwareTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        lastHardwareTotalRx = getCorrectedTotalRx()
+        lastHardwareTotalTx = getCorrectedTotalTx()
         lastHardwareMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
         lastHardwareMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
         lastSpeedTime = SystemClock.elapsedRealtime()
@@ -336,11 +348,9 @@ class InternetService : Service() {
     private fun checkDateRollover() {
         val today = dateFormat.format(Calendar.getInstance().time)
         if (today != lastRecordedDate) {
-            // Commit final usage for previous day
             saveToPrefs()
             persistDailyUsage()
 
-            // Transition to new day
             lastRecordedDate = today
             dailyMobileBytes = 0L
             dailyWifiBytes = 0L
@@ -354,7 +364,6 @@ class InternetService : Service() {
         serviceScope.launch(Dispatchers.IO) {
             val todayUsage = usageRepository.getUsageByDate(lastRecordedDate)
             if (todayUsage != null) {
-                // If DB has higher figures (e.g. from previous run), adopt the higher value
                 if (todayUsage.mobile > dailyMobileBytes) {
                     dailyMobileBytes = todayUsage.mobile
                 }
