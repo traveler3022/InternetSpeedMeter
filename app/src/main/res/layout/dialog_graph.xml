@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Original dialog: forced LTR so the header reads  Session Time | Session Usage
+  and the footer reads  Mobile | Wifi  (RTL inheritance was flipping both).
+  The graph and the app list share the body; the list wraps its content so an
+  empty result never leaves a tall grey block.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layoutDirection="ltr"
+    android:textDirection="ltr"
     android:background="@color/dialog_body"
     android:orientation="vertical">
 
-    <!-- Session header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layoutDirection="ltr"
         android:background="@color/dialog_header"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:paddingVertical="12dp"
         android:weightSum="2">
 
         <LinearLayout
@@ -28,6 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text="00:00:00"
                 android:textColor="@color/White"
+                android:textDirection="ltr"
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
@@ -52,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:text="0 B"
                 android:textColor="@color/White"
+                android:textDirection="ltr"
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
@@ -64,49 +74,65 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Speed graph -->
+    <!-- extra top padding so the top axis label ("1459 KB/s") is never clipped -->
     <com.vsp.internetspeedmeter.GraphView
         android:id="@+id/graph_view"
         android:layout_width="match_parent"
-        android:layout_height="190dp"
+        android:layout_height="200dp"
         android:background="@color/White"
-        android:padding="8dp" />
+        android:paddingStart="4dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp" />
 
-    <!-- Per-app usage -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_apps"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="wrap_content"
+        android:maxHeight="260dp"
         android:background="@color/dialog_body"
+        android:paddingVertical="6dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_app_usage" />
 
-    <!-- Mobile / Wifi switch -->
+    <TextView
+        android:id="@+id/tv_apps_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/dialog_body"
+        android:gravity="center"
+        android:paddingVertical="18dp"
+        android:text="@string/apps_need_permission"
+        android:textColor="@color/app_row_text"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:layoutDirection="ltr"
         android:background="@color/dialog_footer"
         android:gravity="center"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/btn_mobile"
-            android:layout_width="100dp"
-            android:layout_height="32dp"
+            android:layout_width="110dp"
+            android:layout_height="34dp"
             android:background="@color/White"
             android:gravity="center"
             android:text="@string/tab_mobile"
             android:textColor="@color/app_row_text"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/btn_wifi"
-            android:layout_width="100dp"
-            android:layout_height="32dp"
+            android:layout_width="110dp"
+            android:layout_height="34dp"
             android:background="@color/dialog_header"
             android:gravity="center"
             android:text="@string/tab_wifi"
             android:textColor="@color/White"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 </LinearLayout>
