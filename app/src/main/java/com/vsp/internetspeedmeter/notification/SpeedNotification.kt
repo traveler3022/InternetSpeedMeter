@@ -197,23 +197,41 @@ object SpeedNotification {
     private fun formatBytes(context: Context, bytes: Long): String =
         if (isPersianUi(context)) PersianFormat.bytes(bytes) else FormatUtils.formatBytes(bytes)
 
-    /** Status-bar icon: "28" over "KB/s", like the original. */
+    /**
+     * Status-bar icon: "28" over "KB/s". Both lines are condensed-bold and are
+     * scaled to fill the 96px canvas, so the glyphs come out as large and as
+     * heavy as the reference app's icon instead of thin and small.
+     */
     private fun speedIcon(bytesPerSec: Long, bits: Boolean): Bitmap {
         val size = 96
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        }
-
         val speed = FormatUtils.formatSpeedForIcon(bytesPerSec, bits)
 
-        paint.textSize = 52f
-        canvas.drawText(speed.value, size / 2f, 50f, paint)
-        paint.textSize = 30f
-        canvas.drawText(speed.unit + "/s", size / 2f, 86f, paint)
+        val valuePaint = textPaint(62f)
+        fitWidth(valuePaint, speed.value, size - 4f)
+
+        val unitText = speed.unit + "/s"
+        val unitPaint = textPaint(38f)
+        fitWidth(unitPaint, unitText, size - 2f)
+
+        canvas.drawText(speed.value, size / 2f, 56f, valuePaint)
+        canvas.drawText(unitText, size / 2f, 94f, unitPaint)
         return bmp
+    }
+
+    private fun textPaint(size: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
+        isFakeBoldText = true
+        textSize = size
+    }
+
+    private fun fitWidth(paint: Paint, text: String, maxWidth: Float) {
+        val width = paint.measureText(text)
+        if (width > maxWidth && width > 0f) {
+            paint.textSize = paint.textSize * maxWidth / width
+        }
     }
 }
