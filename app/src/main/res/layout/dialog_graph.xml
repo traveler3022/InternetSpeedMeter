@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Original dialog: forced LTR so the header reads  Session Time | Session Usage
-  and the footer reads  Mobile | Wifi  (RTL inheritance was flipping both).
-  The graph and the app list share the body; the list wraps its content so an
-  empty result never leaves a tall grey block.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layoutDirection="ltr"
-    android:textDirection="ltr"
     android:background="@color/dialog_body"
+    android:layoutDirection="ltr"
     android:orientation="vertical">
 
+    <!-- Session header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layoutDirection="ltr"
         android:background="@color/dialog_header"
         android:orientation="horizontal"
-        android:paddingVertical="12dp"
+        android:paddingVertical="11dp"
         android:weightSum="2">
 
         <LinearLayout
@@ -36,8 +29,7 @@
                 android:layout_height="wrap_content"
                 android:text="00:00:00"
                 android:textColor="@color/White"
-                android:textDirection="ltr"
-                android:textSize="26sp"
+                android:textSize="25sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -61,8 +53,7 @@
                 android:layout_height="wrap_content"
                 android:text="0 B"
                 android:textColor="@color/White"
-                android:textDirection="ltr"
-                android:textSize="26sp"
+                android:textSize="25sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -74,65 +65,92 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- extra top padding so the top axis label ("1459 KB/s") is never clipped -->
-    <com.vsp.internetspeedmeter.GraphView
-        android:id="@+id/graph_view"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="@color/White"
-        android:paddingStart="4dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view_apps"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="260dp"
-        android:background="@color/dialog_body"
-        android:paddingVertical="6dp"
-        android:scrollbars="vertical"
-        tools:listitem="@layout/item_app_usage" />
-
-    <TextView
-        android:id="@+id/tv_apps_empty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/dialog_body"
-        android:gravity="center"
-        android:paddingVertical="18dp"
-        android:text="@string/apps_need_permission"
-        android:textColor="@color/app_row_text"
-        android:textSize="14sp"
-        android:visibility="gone" />
-
+    <!-- VIEW 1: live speed graph + Mobile|Wifi (entry into app usage) -->
     <LinearLayout
+        android:id="@+id/graph_container"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layoutDirection="ltr"
-        android:background="@color/dialog_footer"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content"
+        android:background="@color/White"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/btn_mobile"
-            android:layout_width="110dp"
-            android:layout_height="34dp"
-            android:background="@color/White"
-            android:gravity="center"
-            android:text="@string/tab_mobile"
-            android:textColor="@color/app_row_text"
-            android:textSize="16sp" />
+        <com.vsp.internetspeedmeter.GraphView
+            android:id="@+id/graph_view"
+            android:layout_width="match_parent"
+            android:layout_height="190dp"
+            android:padding="8dp" />
 
-        <TextView
-            android:id="@+id/btn_wifi"
-            android:layout_width="110dp"
-            android:layout_height="34dp"
-            android:background="@color/dialog_header"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/dialog_footer"
             android:gravity="center"
-            android:text="@string/tab_wifi"
-            android:textColor="@color/White"
-            android:textSize="16sp" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_graph_mobile"
+                android:layout_width="110dp"
+                android:layout_height="32dp"
+                android:background="@color/White"
+                android:gravity="center"
+                android:text="@string/tab_mobile"
+                android:textColor="@color/app_row_text"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btn_graph_wifi"
+                android:layout_width="110dp"
+                android:layout_height="32dp"
+                android:background="@color/White"
+                android:gravity="center"
+                android:text="@string/tab_wifi"
+                android:textColor="@color/app_row_text"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- VIEW 2: app usage list (scrolls in a fixed box) + Mobile|Wifi below it -->
+    <LinearLayout
+        android:id="@+id/apps_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/dialog_body"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_apps"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/item_app_usage" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/dialog_footer"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_apps_mobile"
+                android:layout_width="110dp"
+                android:layout_height="32dp"
+                android:background="@color/dialog_header"
+                android:gravity="center"
+                android:text="@string/tab_mobile"
+                android:textColor="@color/White"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btn_apps_wifi"
+                android:layout_width="110dp"
+                android:layout_height="32dp"
+                android:background="@color/White"
+                android:gravity="center"
+                android:text="@string/tab_wifi"
+                android:textColor="@color/app_row_text"
+                android:textSize="15sp" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
