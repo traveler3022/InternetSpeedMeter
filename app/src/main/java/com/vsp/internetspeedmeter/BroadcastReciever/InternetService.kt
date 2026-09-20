@@ -173,6 +173,12 @@ class InternetService : Service() {
             unregisterReceiver(screenReceiver)
         } catch (_: Exception) {}
         stopMonitoring()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
         serviceScope.cancel()
     }
 
