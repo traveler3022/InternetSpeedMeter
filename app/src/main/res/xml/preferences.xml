@@ -3,18 +3,18 @@
 
     <PreferenceCategory app:title="NOTIFICATION">
 
-        <SwitchPreferenceCompat
+        <CheckBoxPreference
             app:key="hide_lockscreen_notification"
             app:title="Hide Lockscreen Notification"
             app:defaultValue="false" />
 
-        <SwitchPreferenceCompat
+        <CheckBoxPreference
             app:key="show_up_down_speed"
             app:title="Show Up/Down Speed"
             app:summary="Shows both upload and download speed in notification"
             app:defaultValue="false" />
 
-        <SwitchPreferenceCompat
+        <CheckBoxPreference
             app:key="hide_notification_idle"
             app:title="Hide notification when idle"
             app:defaultValue="false" />
