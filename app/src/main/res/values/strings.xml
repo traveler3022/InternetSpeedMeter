@@ -1,14 +1,21 @@
 <resources>
-    <string name="app_name">Internet Speed Meter</string>
-    <string name="service_status_active">Monitoring Active</string>
-    <string name="service_status_stopped">Monitoring Paused</string>
-    <string name="today_usage_title">Today\'s Data Usage</string>
-    <string name="history_title">Usage History (Last 30 Days)</string>
-    <string name="summary_title">30-Day Total</string>
-    <string name="column_date">Date</string>
-    <string name="column_mobile">Mobile</string>
-    <string name="column_wifi">Wi-Fi</string>
-    <string name="column_total">Total</string>
-    <string name="empty_history">No usage data recorded yet.\nKeep the service running to track your daily bandwidth!</string>
-    <string name="zero_data">0 MB</string>
+    <string name="app_name">Internet Speed Meter Lite</string>
+    <string name="column_date">تاریخ</string>
+    <string name="column_mobile">موبایل</string>
+    <string name="column_wifi">وای فای</string>
+    <string name="column_total">مجموع</string>
+    <string name="row_today">امروز</string>
+    <string name="row_this_month">این ماه</string>
+    <string name="menu_settings">تنظیمات</string>
+    <string name="menu_reset">تنظیم مجدد آمار</string>
+    <string name="menu_stop_exit">توقف و خروج</string>
+    <string name="reset_done">آمار پاک شد</string>
+    <string name="session_time">Session Time</string>
+    <string name="session_usage">Session Usage</string>
+    <string name="tab_mobile">Mobile</string>
+    <string name="tab_wifi">Wifi</string>
+    <string name="mobile_wifi">Mobile | Wifi</string>
+    <string name="settings_title">تنظیمات</string>
+    <string name="empty_history">هنوز آماری ثبت نشده است</string>
+    <string name="usage_access_needed">برای نمایش مصرف هر برنامه، دسترسی «Usage Access» را برای این برنامه فعال کنید</string>
 </resources>

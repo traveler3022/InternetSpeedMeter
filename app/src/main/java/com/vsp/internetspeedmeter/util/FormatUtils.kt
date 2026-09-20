@@ -27,8 +27,20 @@ object FormatUtils {
     /**
      * Formats speed for the compact status bar icon (max 3 digits + 2-letter unit).
      */
-    fun formatSpeedForIcon(bytesPerSec: Long): SpeedUnit {
+    fun formatSpeedForIcon(bytesPerSec: Long, bits: Boolean = false): SpeedUnit {
         val safeBytes = if (bytesPerSec < 0L) 0L else bytesPerSec
+        if (bits) {
+            val b = safeBytes * 8L
+            return when {
+                b >= 1_000_000_000L -> SpeedUnit(decimalFormat.format(b.toDouble() / 1_000_000_000L), "Gb")
+                b >= 1_000_000L -> SpeedUnit(decimalFormat.format(b.toDouble() / 1_000_000L), "Mb")
+                b >= 1_000L -> {
+                    val kb = b / 1000L
+                    SpeedUnit((if (kb > 999L) 999L else kb).toString(), "Kb")
+                }
+                else -> SpeedUnit(b.toString(), "b")
+            }
+        }
         return when {
             safeBytes >= 1_000_000_000L -> SpeedUnit(decimalFormat.format(safeBytes.toDouble() / 1_000_000_000L), "GB")
             safeBytes >= 1_000_000L -> SpeedUnit(decimalFormat.format(safeBytes.toDouble() / 1_000_000L), "MB")
@@ -53,8 +65,21 @@ object FormatUtils {
         }
     }
 
-    fun formatSpeedPersian(bytesPerSec: Long): String {
+    /**
+     * Persian speed label. [bits] switches the unit to bits per second
+     * (the "واحد سرعت" preference).
+     */
+    fun formatSpeedPersian(bytesPerSec: Long, bits: Boolean = false): String {
         val safeBytes = if (bytesPerSec < 0L) 0L else bytesPerSec
+        if (bits) {
+            val b = safeBytes * 8L
+            return when {
+                b >= 1_000_000_000L -> "${decimalFormat.format(b.toDouble() / 1_000_000_000L)} گ بیت/ث"
+                b >= 1_000_000L -> "${decimalFormat.format(b.toDouble() / 1_000_000L)} م بیت/ث"
+                b >= 1_000L -> "${b / 1000L} ک بیت/ث"
+                else -> "$b بیت/ث"
+            }
+        }
         return when {
             safeBytes >= 1_000_000_000L -> "${decimalFormat.format(safeBytes.toDouble() / 1_000_000_000L)} گ ب/ث"
             safeBytes >= 1_000_000L -> "${decimalFormat.format(safeBytes.toDouble() / 1_000_000L)} م ب/ث"

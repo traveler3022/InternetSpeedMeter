@@ -1,28 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#4F46E5</color>
-    <color name="colorPrimaryDark">#3730A3</color>
-    <color name="colorAccent">#06B6D4</color>
+    <color name="colorPrimary">#3B86F0</color>
+    <color name="colorPrimaryDark">#101010</color>
+    <color name="colorAccent">#4A90D9</color>
 
     <color name="White">#FFFFFF</color>
     <color name="Black">#000000</color>
     <color name="Transparent">#00000000</color>
 
-    <color name="bg_page">#F8FAFC</color>
+    <!-- Internet Speed Meter Lite look -->
+    <color name="bar_black">#101010</color>
+    <color name="table_header">#3B86F0</color>
+    <color name="date_cell">#3B86F0</color>
+    <color name="row_dark">#C3DBFA</color>
+    <color name="row_light">#EEF5FD</color>
+    <color name="row_lighter">#F7FBFF</color>
+    <color name="cell_text">#0B1220</color>
+
+    <color name="dialog_header">#4A90D9</color>
+    <color name="dialog_body">#F7F7F7</color>
+    <color name="dialog_footer">#E0E0E0</color>
+    <color name="dialog_footer_text">#4F73B8</color>
+    <color name="app_row_text">#5A5A5A</color>
+
+    <color name="settings_bg">#1B1B1B</color>
+    <color name="settings_row">#2A2A2A</color>
+    <color name="settings_title">#F2F2F2</color>
+    <color name="settings_summary">#B8B8B8</color>
+
+    <color name="bg_page">#FFFFFF</color>
     <color name="card_bg">#FFFFFF</color>
-    <color name="table_header_bg">#EEF2F6</color>
-    <color name="row_stripe">#F8FAFC</color>
-    <color name="border_color">#E2E8F0</color>
-
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#475569</color>
-    <color name="text_muted">#94A3B8</color>
-
-    <color name="mobile_accent">#2563EB</color>
-    <color name="wifi_accent">#059669</color>
-    <color name="total_accent">#7C3AED</color>
-
-    <color name="chip_mobile_bg">#EFF6FF</color>
-    <color name="chip_wifi_bg">#ECFDF5</color>
-    <color name="chip_total_bg">#F5F3FF</color>
+    <color name="text_primary">#0B1220</color>
+    <color name="text_secondary">#5A5A5A</color>
 </resources>

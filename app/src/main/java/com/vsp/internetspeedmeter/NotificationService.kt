@@ -79,7 +79,7 @@ class NotificationService(private val context: Context) {
     fun createNotification() {
         mBuilder = getBuilder(false)
 
-        val action = prefs.getString("tap_action", "dialog")
+        val action = prefs.getString("notification_click_action", "dialog")
         val notifiIntent = if (action == "dialog") Intent(context, DialogActivity::class.java)
                            else Intent(context, MainActivity::class.java)
         notifiIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -124,7 +124,7 @@ class NotificationService(private val context: Context) {
 
     private fun applySettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val hideLock = prefs.getBoolean("hide_lockscreen_notification", false)
+            val hideLock = prefs.getBoolean("hide_lockscreen", false)
             mBuilder.setVisibility(if (hideLock) Notification.VISIBILITY_SECRET else Notification.VISIBILITY_PUBLIC)
         }
     }
@@ -137,7 +137,7 @@ class NotificationService(private val context: Context) {
     ): Notification.Builder {
         val totalSpeedBytes = max(0L, downSpeedBytes + upSpeedBytes)
         
-        val hideWhenIdle = prefs.getBoolean("hide_notification_idle", false)
+        val hideWhenIdle = prefs.getBoolean("notification_when_connected", false)
         val currentlyIdle = totalSpeedBytes == 0L
         
         if (hideWhenIdle && currentlyIdle != isIdle) {
@@ -167,11 +167,13 @@ class NotificationService(private val context: Context) {
 
         val showUpDown = prefs.getBoolean("show_up_down_speed", false)
 
-        val downStr = FormatUtils.formatSpeedPersian(downSpeedBytes)
-        val upStr = FormatUtils.formatSpeedPersian(upSpeedBytes)
-        val totalSpeedStr = FormatUtils.formatSpeedPersian(totalSpeedBytes)
+        val useBits = prefs.getString("speed_unit", "byte") == "bit"
 
-        val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes)
+        val downStr = FormatUtils.formatSpeedPersian(downSpeedBytes, useBits)
+        val upStr = FormatUtils.formatSpeedPersian(upSpeedBytes, useBits)
+        val totalSpeedStr = FormatUtils.formatSpeedPersian(totalSpeedBytes, useBits)
+
+        val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeedBytes, useBits)
 
         val mobileStr = FormatUtils.formatBytesPersian(mobileBytes)
         val wifiStr = FormatUtils.formatBytesPersian(wifiBytes)
@@ -185,10 +187,31 @@ class NotificationService(private val context: Context) {
         remoteViews.setTextViewText(R.id.tv_notification_data, "موبایل: $mobileStr   وای فای: $wifiStr")
         remoteViews.setTextViewText(R.id.tv_icon_speed_value, iconSpeed.value)
         remoteViews.setTextViewText(R.id.tv_icon_speed_unit, iconSpeed.unit + "/s")
+
+        // "رنگ اعلان": light keeps a white surface, system/dark stay on the dark one
+        val lightSurface = prefs.getString("notification_color", "system") == "light"
+        remoteViews.setInt(
+            R.id.notification_root, "setBackgroundColor",
+            if (lightSurface) Color.WHITE else Color.parseColor("#282828")
+        )
+        remoteViews.setTextColor(
+            R.id.tv_notification_speed,
+            if (lightSurface) Color.parseColor("#101010") else Color.WHITE
+        )
+        remoteViews.setTextColor(
+            R.id.tv_notification_data,
+            if (lightSurface) Color.parseColor("#5A5A5A") else Color.parseColor("#CCCCCC")
+        )
         
         mBuilder.setCustomContentView(remoteViews)
-        @Suppress("DEPRECATION")
-        mBuilder.setSmallIcon(android.R.drawable.stat_sys_download) // Fallback for status bar
+
+        val statusIcon = getIcon(iconSpeed.value, iconSpeed.unit)
+        if (statusIcon != null) {
+            mBuilder.setSmallIcon(statusIcon)
+        } else {
+            @Suppress("DEPRECATION")
+            mBuilder.setSmallIcon(android.R.drawable.stat_sys_download)
+        }
 
         return mBuilder
     }
@@ -203,8 +226,7 @@ class NotificationService(private val context: Context) {
         val density = context.resources.displayMetrics.density
         iconSize = (density * 24).toInt().coerceIn(24, 96)
 
-        val iconColorPref = prefs.getString("icon_color", "white")
-        val iconColor = if (iconColorPref == "blue") Color.parseColor("#33B5E5") else Color.WHITE
+        val iconColor = Color.WHITE
 
         speedPaint = Paint().apply {
             isAntiAlias = true
