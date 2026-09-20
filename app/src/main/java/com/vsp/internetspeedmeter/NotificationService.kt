@@ -154,6 +154,7 @@ class NotificationService(private val context: Context) {
                 .setOnlyAlertOnce(true)
         }
 
+        setupPaints()
         applySettings()
 
         val showUpDown = prefs.getBoolean("show_up_down_speed", false)
@@ -195,11 +196,14 @@ class NotificationService(private val context: Context) {
         val density = context.resources.displayMetrics.density
         iconSize = (density * 24).toInt().coerceIn(24, 96)
 
+        val iconColorPref = prefs.getString("icon_color", "white")
+        val iconColor = if (iconColorPref == "blue") Color.parseColor("#33B5E5") else Color.WHITE
+
         speedPaint = Paint().apply {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
             typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
-            color = Color.WHITE
+            color = iconColor
             textSize = iconSize * 0.52f
         }
 
@@ -207,7 +211,7 @@ class NotificationService(private val context: Context) {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            color = Color.WHITE
+            color = iconColor
             textSize = iconSize * 0.38f
         }
     }

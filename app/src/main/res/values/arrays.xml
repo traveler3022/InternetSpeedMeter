@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="theme_entries">
+        <item>Light Theme</item>
+        <item>Dark Theme</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+
+    <string-array name="icon_color_entries">
+        <item>White</item>
+        <item>Blue</item>
+    </string-array>
+    <string-array name="icon_color_values">
+        <item>white</item>
+        <item>blue</item>
+    </string-array>
+</resources>
