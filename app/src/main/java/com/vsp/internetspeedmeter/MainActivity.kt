@@ -15,9 +15,9 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.vsp.internetspeedmeter.BroadcastReciever.InternetService
 import com.vsp.internetspeedmeter.Recyclerview.UsageAdapter
-import com.vsp.internetspeedmeter.Room.Usage
 import com.vsp.internetspeedmeter.Room.UsageViewModel
 import com.vsp.internetspeedmeter.databinding.ActivityMainBinding
+import com.vsp.internetspeedmeter.util.FormatUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -97,6 +97,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeUsageData() {
         viewModel.allNotes.observe(this) { usages ->
+            setupTodayHeader()
+
             if (usages.isNullOrEmpty()) {
                 binding.layoutEmpty.visibility = View.VISIBLE
                 binding.recyclerViewUsage.visibility = View.GONE
@@ -121,7 +123,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            adapter.submitList(sortedList)
+            // Display up to 30 days of history
+            val last30Days = sortedList.take(30)
+            adapter.submitList(last30Days)
 
             // Update Today's Highlight
             val todayStr = dbDateFormat.format(Calendar.getInstance().time)
@@ -130,14 +134,14 @@ class MainActivity : AppCompatActivity() {
             binding.tvTodayWifi.text = todayUsage?.wifi ?: getString(R.string.zero_data)
             binding.tvTodayTotal.text = todayUsage?.total ?: getString(R.string.zero_data)
 
-            // Calculate aggregate 30-day totals
-            val totalMobileBytes = usages.sumOf { parseToBytes(it.mobile) }
-            val totalWifiBytes = usages.sumOf { parseToBytes(it.wifi) }
+            // Calculate aggregate 30-day totals accurately using FormatUtils
+            val totalMobileBytes = last30Days.sumOf { FormatUtils.parseDataToBytes(it.mobile) }
+            val totalWifiBytes = last30Days.sumOf { FormatUtils.parseDataToBytes(it.wifi) }
             val grandTotalBytes = totalMobileBytes + totalWifiBytes
 
-            binding.tvTotalMobile.text = formatBytes(totalMobileBytes)
-            binding.tvTotalWifi.text = formatBytes(totalWifiBytes)
-            binding.tvGrandTotal.text = formatBytes(grandTotalBytes)
+            binding.tvTotalMobile.text = FormatUtils.formatBytes(totalMobileBytes)
+            binding.tvTotalWifi.text = FormatUtils.formatBytes(totalWifiBytes)
+            binding.tvGrandTotal.text = FormatUtils.formatBytes(grandTotalBytes)
         }
     }
 
@@ -162,29 +166,6 @@ class MainActivity : AppCompatActivity() {
             ) {
                 requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
-        }
-    }
-
-    private fun parseToBytes(formatted: String): Long {
-        val trimmed = formatted.trim()
-        val parts = trimmed.split(" ")
-        if (parts.size < 2) return 0L
-        val value = parts[0].toDoubleOrNull() ?: return 0L
-        val unit = parts[1].uppercase(Locale.getDefault())
-        return when {
-            unit.startsWith("GB") -> (value * 1_000_000_000.0).toLong()
-            unit.startsWith("MB") -> (value * 1_000_000.0).toLong()
-            unit.startsWith("KB") -> (value * 1_000.0).toLong()
-            else -> value.toLong()
-        }
-    }
-
-    private fun formatBytes(bytes: Long): String {
-        return when {
-            bytes >= 1_000_000_000L -> String.format(Locale.getDefault(), "%.1f GB", bytes.toDouble() / 1_000_000_000.0)
-            bytes >= 1_000_000L -> String.format(Locale.getDefault(), "%.1f MB", bytes.toDouble() / 1_000_000.0)
-            bytes >= 1_000L -> "${bytes / 1000L} KB"
-            else -> "$bytes B"
         }
     }
 

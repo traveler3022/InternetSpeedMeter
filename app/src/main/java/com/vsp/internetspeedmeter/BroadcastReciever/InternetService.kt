@@ -7,8 +7,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.TrafficStats
+import android.os.Build
 import android.os.IBinder
+import androidx.core.content.ContextCompat
 import com.vsp.internetspeedmeter.NotificationService
+import com.vsp.internetspeedmeter.Room.Usage
+import com.vsp.internetspeedmeter.Room.UsageRepository
+import com.vsp.internetspeedmeter.util.FormatUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,6 +30,7 @@ import kotlin.math.max
 class InternetService : Service() {
 
     private lateinit var notificationService: NotificationService
+    private lateinit var usageRepository: UsageRepository
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Default + serviceJob)
     private var monitorJob: Job? = null
@@ -44,11 +50,11 @@ class InternetService : Service() {
     private val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
     private val screenReceiver = object : BroadcastReceiver() {
-        @Override
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_OFF -> {
                     isScreenOn = false
+                    persistDailyUsage()
                     stopMonitoring()
                 }
                 Intent.ACTION_SCREEN_ON -> {
@@ -75,17 +81,26 @@ class InternetService : Service() {
         }
 
         notificationService = NotificationService(this)
+        usageRepository = UsageRepository(this)
+        persistDailyUsage()
         syncTrafficStats()
 
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)
         }
-        registerReceiver(screenReceiver, filter)
+        ContextCompat.registerReceiver(
+            this,
+            screenReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val initialNotification = notificationService.updateNotification(0L, 0L, dailyMobileBytes, dailyWifiBytes).build()
+        val initialNotification = notificationService.updateNotification(
+            0L, 0L, dailyMobileBytes, dailyWifiBytes
+        ).build()
         startForeground(NotificationService.NOTIFICATION_ID, initialNotification)
 
         startMonitoring()
@@ -97,13 +112,17 @@ class InternetService : Service() {
         if (monitorJob?.isActive == true) return
 
         monitorJob = serviceScope.launch {
+            var tickCount = 0
             while (isActive && isScreenOn) {
-                val curTotalRx = TrafficStats.getTotalRxBytes()
-                val curTotalTx = TrafficStats.getTotalTxBytes()
-                val curMobileRx = TrafficStats.getMobileRxBytes()
-                val curMobileTx = TrafficStats.getMobileTxBytes()
+                val curTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
+                val curTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+                val curMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
+                val curMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
 
-                if (prevTotalRx == 0L || curTotalRx < prevTotalRx) {
+                // Detect initial run or counter reboot / rollover
+                if (prevTotalRx == 0L || curTotalRx < prevTotalRx || curTotalTx < prevTotalTx ||
+                    curMobileRx < prevMobileRx || curMobileTx < prevMobileTx
+                ) {
                     syncTrafficStats()
                     delay(1000)
                     continue
@@ -129,17 +148,24 @@ class InternetService : Service() {
                 dailyMobileBytes += deltaMobile
                 dailyWifiBytes += deltaWifi
 
+                // Update real-time status bar notification every second
+                val notification = notificationService.updateNotification(
+                    downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes
+                ).build()
+                notificationService.notify(notification)
+
+                // Save to SharedPreferences every second
                 prefs.edit()
                     .putLong("dailyMobileBytes", dailyMobileBytes)
                     .putLong("dailyWifiBytes", dailyWifiBytes)
                     .putString("lastRecordedDate", lastRecordedDate)
                     .apply()
 
-                val notification = notificationService.updateNotification(
-                    downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes
-                ).build()
-
-                startForeground(NotificationService.NOTIFICATION_ID, notification)
+                // Throttle Room SQLite persistence to every 5 seconds to reduce flash wear and battery drain
+                tickCount++
+                if (tickCount % 5 == 0) {
+                    persistDailyUsage()
+                }
 
                 delay(1000)
             }
@@ -151,20 +177,40 @@ class InternetService : Service() {
         monitorJob = null
     }
 
+    private fun sanitizeBytes(bytes: Long): Long {
+        return if (bytes == TrafficStats.UNSUPPORTED.toLong() || bytes < 0L) 0L else bytes
+    }
+
     private fun syncTrafficStats() {
-        prevTotalRx = TrafficStats.getTotalRxBytes()
-        prevTotalTx = TrafficStats.getTotalTxBytes()
-        prevMobileRx = TrafficStats.getMobileRxBytes()
-        prevMobileTx = TrafficStats.getMobileTxBytes()
+        prevTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
+        prevTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        prevMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
+        prevMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
     }
 
     private fun checkDateRollover() {
         val today = dateFormat.format(Calendar.getInstance().time)
         if (today != lastRecordedDate) {
+            persistDailyUsage()
             lastRecordedDate = today
             dailyMobileBytes = 0L
             dailyWifiBytes = 0L
+            persistDailyUsage()
         }
+    }
+
+    private fun persistDailyUsage() {
+        val mobileStr = FormatUtils.formatBytes(dailyMobileBytes)
+        val wifiStr = FormatUtils.formatBytes(dailyWifiBytes)
+        val totalStr = FormatUtils.formatBytes(dailyMobileBytes + dailyWifiBytes)
+        usageRepository.insert(
+            Usage(
+                date = lastRecordedDate,
+                mobile = mobileStr,
+                wifi = wifiStr,
+                total = totalStr
+            )
+        )
     }
 
     override fun onDestroy() {
@@ -172,8 +218,9 @@ class InternetService : Service() {
         try {
             unregisterReceiver(screenReceiver)
         } catch (_: Exception) {}
+        persistDailyUsage()
         stopMonitoring()
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
             @Suppress("DEPRECATION")
