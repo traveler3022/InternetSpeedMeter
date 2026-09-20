@@ -1,4 +1,4 @@
-package com.vsp.internetspeedmeter.Room
+package com.vsp.internetspeedmeter.room
 
 import android.content.Context
 import androidx.lifecycle.LiveData

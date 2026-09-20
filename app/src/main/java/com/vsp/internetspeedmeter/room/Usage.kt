@@ -1,4 +1,4 @@
-package com.vsp.internetspeedmeter.Room
+package com.vsp.internetspeedmeter.room
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class Usage(
     @PrimaryKey
     val date: String,
-    val mobile: String = "0 MB",
-    val wifi: String = "0 MB",
-    val total: String = "0 MB"
+    val mobile: Long = 0L,
+    val wifi: Long = 0L,
+    val total: Long = 0L
 )

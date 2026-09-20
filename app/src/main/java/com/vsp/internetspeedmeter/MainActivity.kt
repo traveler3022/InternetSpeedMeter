@@ -13,9 +13,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.vsp.internetspeedmeter.BroadcastReciever.InternetService
-import com.vsp.internetspeedmeter.Recyclerview.UsageAdapter
-import com.vsp.internetspeedmeter.Room.UsageViewModel
+import com.vsp.internetspeedmeter.broadcastreceiver.InternetService
+import com.vsp.internetspeedmeter.recyclerview.UsageAdapter
+import com.vsp.internetspeedmeter.room.UsageViewModel
 import com.vsp.internetspeedmeter.databinding.ActivityMainBinding
 import com.vsp.internetspeedmeter.util.FormatUtils
 import java.text.SimpleDateFormat
@@ -130,13 +130,13 @@ class MainActivity : AppCompatActivity() {
             // Update Today's Highlight
             val todayStr = dbDateFormat.format(Calendar.getInstance().time)
             val todayUsage = usages.find { it.date == todayStr }
-            binding.tvTodayMobile.text = todayUsage?.mobile ?: getString(R.string.zero_data)
-            binding.tvTodayWifi.text = todayUsage?.wifi ?: getString(R.string.zero_data)
-            binding.tvTodayTotal.text = todayUsage?.total ?: getString(R.string.zero_data)
+            binding.tvTodayMobile.text = todayUsage?.let { FormatUtils.formatBytes(it.mobile) } ?: getString(R.string.zero_data)
+            binding.tvTodayWifi.text = todayUsage?.let { FormatUtils.formatBytes(it.wifi) } ?: getString(R.string.zero_data)
+            binding.tvTodayTotal.text = todayUsage?.let { FormatUtils.formatBytes(it.total) } ?: getString(R.string.zero_data)
 
-            // Calculate aggregate 30-day totals accurately using FormatUtils
-            val totalMobileBytes = last30Days.sumOf { FormatUtils.parseDataToBytes(it.mobile) }
-            val totalWifiBytes = last30Days.sumOf { FormatUtils.parseDataToBytes(it.wifi) }
+            // Calculate aggregate 30-day totals accurately using Long bytes
+            val totalMobileBytes = last30Days.sumOf { it.mobile }
+            val totalWifiBytes = last30Days.sumOf { it.wifi }
             val grandTotalBytes = totalMobileBytes + totalWifiBytes
 
             binding.tvTotalMobile.text = FormatUtils.formatBytes(totalMobileBytes)
@@ -166,6 +166,21 @@ class MainActivity : AppCompatActivity() {
             ) {
                 requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_preferences -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
