@@ -53,6 +53,26 @@ object FormatUtils {
         }
     }
 
+    fun formatSpeedPersian(bytesPerSec: Long): String {
+        val safeBytes = if (bytesPerSec < 0L) 0L else bytesPerSec
+        return when {
+            safeBytes >= 1_000_000_000L -> "${decimalFormat.format(safeBytes.toDouble() / 1_000_000_000L)} گ ب/ث"
+            safeBytes >= 1_000_000L -> "${decimalFormat.format(safeBytes.toDouble() / 1_000_000L)} م ب/ث"
+            safeBytes >= 1_000L -> "${safeBytes / 1000L} ک ب/ث"
+            else -> "$safeBytes ب/ث"
+        }
+    }
+
+    fun formatBytesPersian(bytes: Long): String {
+        val safeBytes = if (bytes < 0L) 0L else bytes
+        return when {
+            safeBytes >= 1_073_741_824L -> "${decimalFormat.format(safeBytes.toDouble() / 1_073_741_824.0)} گ ب"
+            safeBytes >= 1_048_576L -> "${decimalFormat.format(safeBytes.toDouble() / 1_048_576.0)} م ب"
+            safeBytes >= 1024L -> "${safeBytes / 1024L} ک ب"
+            else -> "$safeBytes ب"
+        }
+    }
+
     /**
      * Parses a formatted data volume string back into bytes with locale tolerance (e.g. "12.5 MB" or "12,5 MB").
      */
