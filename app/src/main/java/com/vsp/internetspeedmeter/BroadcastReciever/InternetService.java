@@ -10,6 +10,7 @@ import android.net.TrafficStats;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.vsp.internetspeedmeter.NotificationService;
@@ -37,12 +38,18 @@ public class InternetService extends Service {
     private SharedPreferences prefs;
     private SimpleDateFormat dateFormat;
 
+    /** Flushing the running totals to disk every tick is needless IO; once every 10 s is enough. */
+    private static final long PREFS_FLUSH_INTERVAL_MS = 10_000L;
+    private long lastPrefsFlushMs = 0L;
+
     private final BroadcastReceiver screenReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
                 isScreenOn = false;
                 handler.removeCallbacks(runnable);
+                // The loop stops here, so flush whatever has not been written yet.
+                persistDailyCounts();
             } else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
                 isScreenOn = true;
                 // Re-sync previous values to avoid a fake speed spike upon turning screen on
@@ -91,17 +98,15 @@ public class InternetService extends Service {
             dailyMobileBytes += deltaMobile;
             dailyWifiBytes += deltaWifi;
 
-            // Persist daily counts
-            prefs.edit()
-                    .putLong("dailyMobileBytes", dailyMobileBytes)
-                    .putLong("dailyWifiBytes", dailyWifiBytes)
-                    .putString("lastRecordedDate", lastRecordedDate)
-                    .apply();
+            long now = SystemClock.elapsedRealtime();
+            if (now - lastPrefsFlushMs >= PREFS_FLUSH_INTERVAL_MS) {
+                lastPrefsFlushMs = now;
+                persistDailyCounts();
+            }
 
-            startForeground(
-                    NotificationService.NOTIFICATION_ID,
-                    notificationService.updateNotification(downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes).build()
-            );
+            // The service is already in the foreground; re-posting the notification
+            // directly is cheaper than going through startForeground() every second.
+            notificationService.postUpdate(downSpeed, upSpeed, dailyMobileBytes, dailyWifiBytes);
 
             handler.postDelayed(this, 1000);
         }
@@ -147,6 +152,14 @@ public class InternetService extends Service {
         return START_STICKY;
     }
 
+    private void persistDailyCounts() {
+        prefs.edit()
+                .putLong("dailyMobileBytes", dailyMobileBytes)
+                .putLong("dailyWifiBytes", dailyWifiBytes)
+                .putString("lastRecordedDate", lastRecordedDate)
+                .apply();
+    }
+
     private void syncTrafficStats() {
         prevTotalRx = TrafficStats.getTotalRxBytes();
         prevTotalTx = TrafficStats.getTotalTxBytes();
@@ -166,6 +179,7 @@ public class InternetService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        persistDailyCounts();
         try {
             unregisterReceiver(screenReceiver);
         } catch (Exception ignored) {}
