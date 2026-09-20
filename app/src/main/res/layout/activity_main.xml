@@ -1,68 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layoutDirection="rtl"
     android:orientation="vertical"
+    android:background="@color/White"
     tools:context=".MainActivity">
 
-    <!-- Table Header -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        style="@style/ToolbarBlack"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title="@string/app_name"
+        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+
+    <!-- Table header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="#E0E0E0"
-        android:orientation="horizontal"
+        android:layout_height="44dp"
+        android:background="@color/table_header"
         android:gravity="center_vertical"
-        android:paddingHorizontal="4dp"
-        android:weightSum="4">
+        android:orientation="horizontal"
+        android:weightSum="4.15">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.3"
-            android:gravity="center"
-            android:text="Date"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:text="Mobile"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:text="WiFi"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:text="Total"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+        <TextView style="@style/TableHeaderCell" android:layout_weight="1.25" android:text="@string/column_date" />
+        <TextView style="@style/TableHeaderCell" android:layout_weight="0.9" android:text="@string/column_mobile" />
+        <TextView style="@style/TableHeaderCell" android:layout_weight="1.0" android:text="@string/column_wifi" />
+        <TextView style="@style/TableHeaderCell" android:layout_weight="1.0" android:text="@string/column_total" />
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#BDBDBD" />
-
-    <!-- RecyclerView List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewUsage"
         android:layout_width="match_parent"
@@ -71,63 +40,57 @@
         android:scrollbars="vertical"
         tools:listitem="@layout/item_usage_row" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#BDBDBD" />
-
-    <!-- 30-Day Summary Footer -->
+    <!-- "This month" summary row, same colouring as a date row -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:orientation="horizontal"
+        android:layout_height="42dp"
         android:gravity="center_vertical"
-        android:paddingHorizontal="4dp"
-        android:background="#F5F5F5"
-        android:weightSum="4">
+        android:orientation="horizontal"
+        android:weightSum="4.15">
 
         <TextView
+            android:id="@+id/tvSummaryLabel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.3"
+            android:layout_height="match_parent"
+            android:layout_weight="1.25"
+            android:background="@color/date_cell"
             android:gravity="center"
-            android:text="This Month"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:text="@string/row_this_month"
+            android:textColor="@color/White"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvTotalMobile"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="0.9"
+            android:background="@color/row_dark"
             android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="0 MB" />
+            android:textColor="@color/cell_text"
+            android:textSize="15sp"
+            tools:text="۶۵٬۷۴ گ ب" />
 
         <TextView
             android:id="@+id/tvTotalWifi"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
+            android:layout_height="match_parent"
+            android:layout_weight="1.0"
+            android:background="@color/row_light"
             android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="0 MB" />
+            android:textColor="@color/cell_text"
+            android:textSize="15sp"
+            tools:text="۱ م ب" />
 
         <TextView
             android:id="@+id/tvGrandTotal"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
+            android:layout_height="match_parent"
+            android:layout_weight="1.0"
+            android:background="@color/row_dark"
             android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="0 MB" />
+            android:textColor="@color/cell_text"
+            android:textSize="15sp"
+            tools:text="۶۵٬۷۴ گ ب" />
     </LinearLayout>
-
 </LinearLayout>

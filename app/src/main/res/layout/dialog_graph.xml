@@ -1,107 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="4dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardElevation="8dp"
-    app:cardUseCompatPadding="false">
+    android:background="@color/dialog_body"
+    android:orientation="vertical">
 
+    <!-- Session header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@color/dialog_header"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:weightSum="2">
 
-        <!-- Header -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="#4F73B8"
-            android:orientation="horizontal"
-            android:padding="16dp"
-            android:weightSum="2">
-
-            <!-- Session Time -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/tv_session_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="00:00:00"
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Session Time"
-                    android:textColor="#E0E0E0"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Session Usage -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/tv_session_usage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 B"
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Session Usage"
-                    android:textColor="#E0E0E0"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Graph View -->
-        <com.vsp.internetspeedmeter.GraphView
-            android:id="@+id/graph_view"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:padding="8dp" />
-
-        <!-- App Usage RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view_apps"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
             android:layout_weight="1"
-            android:scrollbars="vertical" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:orientation="horizontal"
             android:gravity="center"
-            android:background="#E0E0E0">
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_session_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00:00"
+                android:textColor="@color/White"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mobile | Wifi"
-                android:textColor="#4F73B8"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:text="@string/session_time"
+                android:textColor="#E2E2E2"
+                android:textSize="12sp" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_session_usage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 B"
+                android:textColor="@color/White"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/session_usage"
+                android:textColor="#E2E2E2"
+                android:textSize="12sp" />
+        </LinearLayout>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <!-- Speed graph -->
+    <com.vsp.internetspeedmeter.GraphView
+        android:id="@+id/graph_view"
+        android:layout_width="match_parent"
+        android:layout_height="190dp"
+        android:background="@color/White"
+        android:padding="8dp" />
+
+    <!-- Per-app usage -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_apps"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="@color/dialog_body"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_app_usage" />
+
+    <!-- Mobile / Wifi switch -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/dialog_footer"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btn_mobile"
+            android:layout_width="100dp"
+            android:layout_height="32dp"
+            android:background="@color/White"
+            android:gravity="center"
+            android:text="@string/tab_mobile"
+            android:textColor="@color/app_row_text"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/btn_wifi"
+            android:layout_width="100dp"
+            android:layout_height="32dp"
+            android:background="@color/dialog_header"
+            android:gravity="center"
+            android:text="@string/tab_wifi"
+            android:textColor="@color/White"
+            android:textSize="15sp" />
+    </LinearLayout>
+</LinearLayout>

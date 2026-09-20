@@ -1,62 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rowRoot"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="?android:attr/selectableItemBackground">
+    android:layout_height="42dp"
+    android:layoutDirection="rtl"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:weightSum="4.15">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="4dp"
-        android:weightSum="4">
+    <TextView
+        android:id="@+id/tvDate"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.25"
+        android:background="@color/date_cell"
+        android:gravity="center"
+        android:textColor="@color/White"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        tools:text="۲۰ سپتامبر ۲۰۲۶" />
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.3"
-            android:gravity="center"
-            android:textColor="#333333"
-            android:textSize="14sp"
-            tools:text="Today" />
+    <TextView
+        android:id="@+id/tvMobile"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.9"
+        android:gravity="center"
+        android:textColor="@color/cell_text"
+        android:textSize="15sp"
+        tools:text="۶٬۰۴ گ ب" />
 
-        <TextView
-            android:id="@+id/tvMobile"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:textColor="#555555"
-            android:textSize="14sp"
-            tools:text="10 MB" />
+    <TextView
+        android:id="@+id/tvWifi"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.0"
+        android:gravity="center"
+        android:textColor="@color/cell_text"
+        android:textSize="15sp"
+        tools:text="۰ م ب" />
 
-        <TextView
-            android:id="@+id/tvWifi"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:textColor="#555555"
-            android:textSize="14sp"
-            tools:text="20 MB" />
-
-        <TextView
-            android:id="@+id/tvTotal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:gravity="center"
-            android:textColor="#555555"
-            android:textSize="14sp"
-            tools:text="30 MB" />
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="#E0E0E0" />
+    <TextView
+        android:id="@+id/tvTotal"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.0"
+        android:gravity="center"
+        android:textColor="@color/cell_text"
+        android:textSize="15sp"
+        tools:text="۶٬۰۴ گ ب" />
 </LinearLayout>

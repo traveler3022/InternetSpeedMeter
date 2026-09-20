@@ -2,32 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
+    android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:background="?android:attr/selectableItemBackground">
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="5dp">
 
     <ImageView
         android:id="@+id/iv_app_icon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:src="@mipmap/ic_launcher" />
 
     <TextView
         android:id="@+id/tv_app_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
         android:layout_weight="1"
-        android:layout_marginStart="16dp"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        android:text="App Name" />
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="App Name"
+        android:textColor="@color/app_row_text"
+        android:textSize="17sp" />
 
     <TextView
         android:id="@+id/tv_app_usage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#757575"
-        android:textSize="14sp"
-        android:text="0 MB" />
+        android:text="0 MB"
+        android:textColor="@color/app_row_text"
+        android:textSize="17sp" />
 </LinearLayout>

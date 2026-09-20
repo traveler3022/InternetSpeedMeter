@@ -4,16 +4,36 @@
         <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
         <item name="colorOnPrimary">@color/White</item>
         <item name="colorSecondary">@color/colorAccent</item>
-        <item name="android:windowBackground">@color/bg_page</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:windowBackground">@color/White</item>
+        <item name="android:statusBarColor">@color/bar_black</item>
     </style>
 
+    <style name="ToolbarBlack" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/bar_black</item>
+        <item name="titleTextColor">@color/White</item>
+        <item name="android:theme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+        <item name="popupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
+    </style>
+
+    <!-- Dark settings screen, matching the reference app -->
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/bar_black</item>
+        <item name="colorPrimaryVariant">@color/bar_black</item>
         <item name="colorOnPrimary">@color/White</item>
         <item name="colorSecondary">@color/colorAccent</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:windowBackground">@color/settings_bg</item>
+        <item name="android:statusBarColor">@color/bar_black</item>
+        <item name="android:textColorPrimary">@color/settings_title</item>
+        <item name="android:textColorSecondary">@color/settings_summary</item>
+    </style>
+
+    <style name="TableHeaderCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/White</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">15sp</item>
     </style>
 </resources>
