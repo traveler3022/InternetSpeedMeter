@@ -235,7 +235,7 @@ class InternetService : Service() {
         }
     }
 
-    private suspend fun monitoringLoop() {
+    private suspend fun CoroutineScope.monitoringLoop() {
         var tickCount = 0
 
         while (isActive) {
