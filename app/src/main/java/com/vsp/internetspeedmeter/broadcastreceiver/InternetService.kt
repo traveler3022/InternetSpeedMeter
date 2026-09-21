@@ -50,6 +50,10 @@ class InternetService : Service() {
     // Per-interface counter baselines (see TrafficMath.interfaceDeltas)
     private val ifaceBaselines = HashMap<String, TrafficMath.Counters>()
     private var lastSpeedTime = 0L
+    // Last reported speeds, re-shown for one tick when the counters look stale
+    private var lastDownSpeed = 0L
+    private var lastUpSpeed = 0L
+    private var heldStaleTick = false
 
     // Cumulative daily stats
     private var dailyMobileBytes = 0L
@@ -392,17 +396,38 @@ class InternetService : Service() {
             }
         }
 
-        val elapsedMs = curTime - lastSpeedTime
-        lastSpeedTime = curTime
-
         allocateTrafficLocked(mobileBytes, wifiBytes, unknownBytes)
+
+        // Android 15+ caches TrafficStats results for ~1 s (NetworkStatsService
+        // DEFAULT_TRAFFIC_STATS_CACHE_EXPIRY_DURATION_MS). Polling every second
+        // then often returns the previous value: that tick reads 0 and the next
+        // one gets two seconds of bytes. So when the counters stop moving right
+        // after traffic, keep the last speed for one tick and keep the baseline
+        // time, and the next change is divided by the real elapsed time.
+        val downSpeed: Long
+        val upSpeed: Long
+        if (deltaRx == 0L && deltaTx == 0L &&
+            !heldStaleTick && (lastDownSpeed > 0L || lastUpSpeed > 0L)
+        ) {
+            heldStaleTick = true
+            downSpeed = lastDownSpeed
+            upSpeed = lastUpSpeed
+        } else {
+            val elapsedMs = curTime - lastSpeedTime
+            lastSpeedTime = curTime
+            heldStaleTick = false
+            downSpeed = TrafficMath.bytesPerSecond(deltaRx, elapsedMs)
+            upSpeed = TrafficMath.bytesPerSecond(deltaTx, elapsedMs)
+            lastDownSpeed = downSpeed
+            lastUpSpeed = upSpeed
+        }
 
         val loopElapsedMs = max(0L, SystemClock.elapsedRealtime() - curTime)
         return TrafficMath.Sample(
             deltaRx = deltaRx,
             deltaTx = deltaTx,
-            downSpeed = TrafficMath.bytesPerSecond(deltaRx, elapsedMs),
-            upSpeed = TrafficMath.bytesPerSecond(deltaTx, elapsedMs),
+            downSpeed = downSpeed,
+            upSpeed = upSpeed,
             loopElapsedMs = loopElapsedMs
         )
     }
