@@ -44,18 +44,18 @@ jobs:
         run: |
           TAG="v1.1-debug"
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
-          NOTES="### Internet Speed Meter Debug Build
+          NOTES="### Internet Meter Debug Build
           - **Built on:** $(date -u '+%Y-%m-%d %H:%M UTC')
           - **Commit:** ${GITHUB_SHA:0:7}
-          - **Features:** Real-time speed notification, Wi-Fi & Mobile tracking, battery saving (screen off pause)
+          - **Features:** High-tech icons, Persian UI, real-time speed notification, Wi-Fi & Mobile tracking, battery saving (screen off pause)
           - **Signature:** Standard v2/v3 signing (Installs on Android 11+)"
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$APK_PATH" --clobber
-          else
-            gh release create "$TAG" "$APK_PATH" \
-              --title "Internet Speed Meter (Debug APK)" \
-              --notes "$NOTES" \
-              --target "$GITHUB_SHA" \
-              --prerelease
-          fi
+          # Delete existing release and tag so the tag points to the current commit
+          gh release delete "$TAG" --yes --cleanup-tag || true
+
+          # Create a fresh release pointing directly to this commit
+          gh release create "$TAG" "$APK_PATH" \
+            --title "Internet Meter (Debug APK)" \
+            --notes "$NOTES" \
+            --target "$GITHUB_SHA" \
+            --prerelease
