@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Internet Speed Meter Lite</string>
+    <string name="app_name">Internet Meter</string>
 
     <string name="column_date">Date</string>
     <string name="column_mobile">Mobile</string>
