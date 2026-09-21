@@ -17,11 +17,11 @@
     <string name="reset_done">آمار پاک شد</string>
 
     <!-- Session dialog -->
-    <string name="session_time">Session Time</string>
-    <string name="session_usage">Session Usage</string>
-    <string name="tab_mobile">Mobile</string>
-    <string name="tab_wifi">Wifi</string>
-    <string name="mobile_wifi">Mobile | Wifi</string>
+    <string name="session_time" translatable="false">Session Time</string>
+    <string name="session_usage" translatable="false">Session Usage</string>
+    <string name="tab_mobile" translatable="false">Mobile</string>
+    <string name="tab_wifi" translatable="false">Wifi</string>
+    <string name="mobile_wifi" translatable="false">Mobile | Wifi</string>
     <string name="apps_need_permission">برای دیدن مصرف هر برنامه، دسترسی Usage Access را فعال کنید</string>
     <string name="usage_access_needed">برای نمایش مصرف هر برنامه، دسترسی «Usage Access» را برای این برنامه فعال کنید</string>
 

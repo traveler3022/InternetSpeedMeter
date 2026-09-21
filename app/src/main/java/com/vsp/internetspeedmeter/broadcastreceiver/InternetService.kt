@@ -178,6 +178,7 @@ class InternetService : Service() {
         return START_STICKY
     }
 
+    @android.annotation.SuppressLint("NewApi")
     private fun getVpnTraffic(): Pair<Long, Long> {
         var rx = 0L
         var tx = 0L
@@ -186,13 +187,31 @@ class InternetService : Service() {
             ifaces?.let {
                 for (iface in it) {
                     if (iface.isUp && (iface.name.startsWith("tun") || iface.name.startsWith("tap"))) {
-                        rx += sanitizeBytes(TrafficStats.getRxBytes(iface.name))
-                        tx += sanitizeBytes(TrafficStats.getTxBytes(iface.name))
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            rx += sanitizeBytes(TrafficStats.getRxBytes(iface.name))
+                            tx += sanitizeBytes(TrafficStats.getTxBytes(iface.name))
+                        } else {
+                            rx += readSysFs(iface.name, "rx_bytes")
+                            tx += readSysFs(iface.name, "tx_bytes")
+                        }
                     }
                 }
             }
-        } catch (e: Exception) {}
+        } catch (e: Throwable) {}
         return Pair(rx, tx)
+    }
+
+    private fun readSysFs(iface: String, file: String): Long {
+        return try {
+            val f = java.io.File("/sys/class/net/$iface/statistics/$file")
+            if (f.exists()) {
+                f.readText().trim().toLong()
+            } else {
+                0L
+            }
+        } catch (e: Exception) {
+            0L
+        }
     }
 
 
