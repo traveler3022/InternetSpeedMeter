@@ -30,7 +30,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.NetworkInterface
-import java.util.LinkedHashSet
 import java.util.Locale
 import kotlin.math.max
 
@@ -48,11 +47,8 @@ class InternetService : Service() {
 
     private var isScreenOn = true
     private var isPowerSaveMode = false
-    // Hardware counter baselines
-    private var lastHardwareTotalRx = 0L
-    private var lastHardwareTotalTx = 0L
-    private var lastHardwareMobileRx = 0L
-    private var lastHardwareMobileTx = 0L
+    // Per-interface counter baselines (see TrafficMath.interfaceDeltas)
+    private val ifaceBaselines = HashMap<String, TrafficMath.Counters>()
     private var lastSpeedTime = 0L
 
     // Cumulative daily stats
@@ -196,11 +192,12 @@ class InternetService : Service() {
      * Ethernet networks via ConnectivityManager + LinkProperties and sample only
      * those interfaces.
      */
-    private data class TrafficCounters(val rx: Long, val tx: Long)
+    private data class IfaceReading(val counters: TrafficMath.Counters, val networkType: Int)
 
     @Suppress("DEPRECATION")
-    private fun readHardwareTraffic(): TrafficCounters {
-        val interfaceNames = LinkedHashSet<String>()
+    private fun readHardwareTraffic(): Map<String, IfaceReading> {
+        // interface name -> network type (1: mobile, 2: Wi-Fi/Ethernet)
+        val interfaceTypes = LinkedHashMap<String, Int>()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             for (network in connectivityManager.allNetworks) {
@@ -217,23 +214,23 @@ class InternetService : Service() {
                     continue
                 }
 
-                val isInternetTransport =
+                val type = when {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> 1
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-
-                if (!isInternetTransport) continue
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 2
+                    else -> continue
+                }
 
                 connectivityManager.getLinkProperties(network)?.interfaceName
                     ?.takeIf { it.isNotBlank() }
-                    ?.let(interfaceNames::add)
+                    ?.let { interfaceTypes[it] = type }
             }
         }
 
         // Fallback for old Android/vendor implementations where ConnectivityManager
         // does not expose a usable interface name. Do not include virtual VPN/tunnel
         // interfaces in this fallback path.
-        if (interfaceNames.isEmpty()) {
+        if (interfaceTypes.isEmpty()) {
             try {
                 val interfaces = NetworkInterface.getNetworkInterfaces()
                 interfaces?.let { all ->
@@ -242,24 +239,34 @@ class InternetService : Service() {
                         if (!iface.isUp || iface.isLoopback || isVirtualVpnInterface(name)) {
                             continue
                         }
-                        interfaceNames.add(name)
+                        interfaceTypes[name] = networkTypeFromName(name)
                     }
                 }
             } catch (_: Exception) {
-                // Keep the zero result; the next sample can retry discovery.
+                // Keep the empty result; the next sample can retry discovery.
             }
         }
 
-        var rx = 0L
-        var tx = 0L
-        for (name in interfaceNames) {
-            val ifaceRx = readInterfaceBytes(name, "rx_bytes")
-            val ifaceTx = readInterfaceBytes(name, "tx_bytes")
-            rx = TrafficMath.safeAdd(rx, ifaceRx)
-            tx = TrafficMath.safeAdd(tx, ifaceTx)
+        val result = HashMap<String, IfaceReading>()
+        for ((name, type) in interfaceTypes) {
+            val counters = TrafficMath.Counters(
+                rx = readInterfaceBytes(name, "rx_bytes"),
+                tx = readInterfaceBytes(name, "tx_bytes")
+            )
+            result[name] = IfaceReading(counters, type)
         }
+        return result
+    }
 
-        return TrafficCounters(rx = rx, tx = tx)
+    private fun networkTypeFromName(name: String): Int {
+        val lower = name.lowercase(Locale.ROOT)
+        return when {
+            lower.startsWith("wlan") || lower.startsWith("eth") -> 2
+            lower.startsWith("rmnet") || lower.startsWith("ccmni") ||
+                lower.startsWith("pdp") || lower.startsWith("wwan") ||
+                lower.startsWith("seth") -> 1
+            else -> 0
+        }
     }
 
     private fun isVirtualVpnInterface(name: String): Boolean {
@@ -268,18 +275,26 @@ class InternetService : Service() {
             lower.startsWith("tun") ||
             lower.startsWith("tap") ||
             lower.startsWith("wg") ||
-            lower.startsWith("vpn")
+            lower.startsWith("vpn") ||
+            // 464xlat stacked interface: its traffic is also counted on the
+            // underlying cellular interface.
+            lower.startsWith("v4-") ||
+            lower.startsWith("dummy")
     }
 
     private fun readInterfaceBytes(iface: String, file: String): Long {
-        val fromTrafficStats = if (file == "rx_bytes") {
-            TrafficStats.getRxBytes(iface)
-        } else {
-            TrafficStats.getTxBytes(iface)
-        }
+        // TrafficStats.getRxBytes(String)/getTxBytes(String) are public only
+        // since API 31; below that they are hidden APIs.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val fromTrafficStats = if (file == "rx_bytes") {
+                TrafficStats.getRxBytes(iface)
+            } else {
+                TrafficStats.getTxBytes(iface)
+            }
 
-        if (fromTrafficStats != TrafficStats.UNSUPPORTED.toLong() && fromTrafficStats >= 0L) {
-            return fromTrafficStats
+            if (fromTrafficStats != TrafficStats.UNSUPPORTED.toLong() && fromTrafficStats >= 0L) {
+                return fromTrafficStats
+            }
         }
 
         return readSysFs(iface, file)
@@ -324,11 +339,6 @@ class InternetService : Service() {
                 readAndApplyTrafficSampleLocked()
             }
 
-            if (sample.countersReset) {
-                delay(1000L)
-                continue
-            }
-
             synchronized(stateLock) {
                 val totalSpeed = TrafficMath.safeAdd(sample.downSpeed, sample.upSpeed)
                 speedHistoryIndex = (speedHistoryIndex + 1) % speedHistory.size
@@ -360,38 +370,41 @@ class InternetService : Service() {
 
     private fun readAndApplyTrafficSampleLocked(): TrafficMath.Sample {
         val curTime = SystemClock.elapsedRealtime()
-        val counters = readHardwareTraffic()
-        val curRawRx = counters.rx
-        val curRawTx = counters.tx
-
-        if (!TrafficMath.countersMonotonic(
-                curRawRx, lastHardwareTotalRx,
-                curRawTx, lastHardwareTotalTx
-            )
-        ) {
-            initHardwareCountersLocked()
-            return TrafficMath.Sample.countersReset()
-        }
-
-        val result = TrafficMath.calculate(
-            currentRx = curRawRx,
-            currentTx = curRawTx,
-            previousRx = lastHardwareTotalRx,
-            previousTx = lastHardwareTotalTx,
-            elapsedMs = curTime - lastSpeedTime
+        val readings = readHardwareTraffic()
+        val deltas = TrafficMath.interfaceDeltas(
+            ifaceBaselines,
+            readings.mapValues { it.value.counters }
         )
 
-        lastSpeedTime = curTime
-        lastHardwareTotalRx = curRawRx
-        lastHardwareTotalTx = curRawTx
-
-        val deltaTotal = TrafficMath.safeAdd(result.deltaRx, result.deltaTx)
-        if (deltaTotal > 0L) {
-            allocateTrafficLocked(deltaTotal)
+        var deltaRx = 0L
+        var deltaTx = 0L
+        var mobileBytes = 0L
+        var wifiBytes = 0L
+        var unknownBytes = 0L
+        for ((name, delta) in deltas) {
+            deltaRx = TrafficMath.safeAdd(deltaRx, delta.rx)
+            deltaTx = TrafficMath.safeAdd(deltaTx, delta.tx)
+            val bytes = TrafficMath.safeAdd(delta.rx, delta.tx)
+            when (readings[name]?.networkType) {
+                1 -> mobileBytes = TrafficMath.safeAdd(mobileBytes, bytes)
+                2 -> wifiBytes = TrafficMath.safeAdd(wifiBytes, bytes)
+                else -> unknownBytes = TrafficMath.safeAdd(unknownBytes, bytes)
+            }
         }
 
+        val elapsedMs = curTime - lastSpeedTime
+        lastSpeedTime = curTime
+
+        allocateTrafficLocked(mobileBytes, wifiBytes, unknownBytes)
+
         val loopElapsedMs = max(0L, SystemClock.elapsedRealtime() - curTime)
-        return result.copy(loopElapsedMs = loopElapsedMs)
+        return TrafficMath.Sample(
+            deltaRx = deltaRx,
+            deltaTx = deltaTx,
+            downSpeed = TrafficMath.bytesPerSecond(deltaRx, elapsedMs),
+            upSpeed = TrafficMath.bytesPerSecond(deltaTx, elapsedMs),
+            loopElapsedMs = loopElapsedMs
+        )
     }
 
     private fun sampleAndAccumulateTraffic() {
@@ -411,23 +424,12 @@ class InternetService : Service() {
     }
 
     /**
-     * Allocates traffic to the currently active transport. The mobile counters are
-     * only used when they provide an actual positive delta; otherwise the active
-     * transport is used as the fallback.
+     * Adds already-classified traffic to the daily totals. Bytes on interfaces
+     * whose transport is unknown (name-based fallback) go to the active
+     * transport, or to the last known one when nothing is active.
      */
-    private fun allocateTrafficLocked(deltaTotal: Long) {
-        if (deltaTotal <= 0L) return
-
+    private fun allocateTrafficLocked(mobileBytes: Long, wifiBytes: Long, unknownBytes: Long) {
         val newNetworkType = detectNetworkType()
-        val curMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
-        val curMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
-
-        val mobileDeltaRx = TrafficMath.monotonicDelta(curMobileRx, lastHardwareMobileRx)
-        val mobileDeltaTx = TrafficMath.monotonicDelta(curMobileTx, lastHardwareMobileTx)
-        val deltaMobile = TrafficMath.safeAdd(mobileDeltaRx, mobileDeltaTx)
-
-        lastHardwareMobileRx = curMobileRx
-        lastHardwareMobileTx = curMobileTx
 
         if (newNetworkType != 0 && newNetworkType != currentNetworkType) {
             currentNetworkType = newNetworkType
@@ -435,42 +437,15 @@ class InternetService : Service() {
             sessionBytes = 0L
         }
 
-        val mobileAllocation: Long
-        val wifiAllocation: Long
-
-        if (deltaMobile > 0L) {
-            mobileAllocation = deltaMobile.coerceAtMost(deltaTotal)
-            wifiAllocation = deltaTotal - mobileAllocation
-        } else {
-            when (newNetworkType) {
-                1 -> {
-                    mobileAllocation = deltaTotal
-                    wifiAllocation = 0L
-                }
-                2 -> {
-                    mobileAllocation = 0L
-                    wifiAllocation = deltaTotal
-                }
-                else -> {
-                    // No active transport: retain the last known classification
-                    // instead of silently assigning unknown traffic to Wi-Fi.
-                    when (currentNetworkType) {
-                        1 -> {
-                            mobileAllocation = deltaTotal
-                            wifiAllocation = 0L
-                        }
-                        2 -> {
-                            mobileAllocation = 0L
-                            wifiAllocation = deltaTotal
-                        }
-                        else -> {
-                            mobileAllocation = 0L
-                            wifiAllocation = 0L
-                        }
-                    }
-                }
-            }
+        var mobileAllocation = mobileBytes
+        var wifiAllocation = wifiBytes
+        when (if (newNetworkType != 0) newNetworkType else currentNetworkType) {
+            1 -> mobileAllocation = TrafficMath.safeAdd(mobileAllocation, unknownBytes)
+            2 -> wifiAllocation = TrafficMath.safeAdd(wifiAllocation, unknownBytes)
         }
+
+        val deltaTotal = TrafficMath.safeAdd(mobileAllocation, wifiAllocation)
+        if (deltaTotal <= 0L) return
 
         dailyMobileBytes = TrafficMath.safeAdd(dailyMobileBytes, mobileAllocation)
         dailyWifiBytes = TrafficMath.safeAdd(dailyWifiBytes, wifiAllocation)
@@ -542,11 +517,10 @@ class InternetService : Service() {
     }
 
     private fun initHardwareCountersLocked() {
-        val counters = readHardwareTraffic()
-        lastHardwareTotalRx = counters.rx
-        lastHardwareTotalTx = counters.tx
-        lastHardwareMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
-        lastHardwareMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
+        ifaceBaselines.clear()
+        for ((name, reading) in readHardwareTraffic()) {
+            ifaceBaselines[name] = reading.counters
+        }
         lastSpeedTime = SystemClock.elapsedRealtime()
     }
 
@@ -554,10 +528,6 @@ class InternetService : Service() {
         synchronized(stateLock) {
             initHardwareCountersLocked()
         }
-    }
-
-    private fun sanitizeBytes(bytes: Long): Long {
-        return if (bytes == TrafficStats.UNSUPPORTED.toLong() || bytes < 0L) 0L else bytes
     }
 
     private fun checkDateRollover() {

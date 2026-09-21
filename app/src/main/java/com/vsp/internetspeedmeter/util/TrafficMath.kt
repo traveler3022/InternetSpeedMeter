@@ -32,6 +32,36 @@ object TrafficMath {
         }
     }
 
+    data class Counters(val rx: Long, val tx: Long)
+
+    /**
+     * Per-interface deltas against [baselines], which is updated in place.
+     *
+     * Summing all interfaces into one number breaks when the interface set
+     * changes: a cellular link that appears next to Wi-Fi brings its whole
+     * since-boot counter into the sum, which then looks like gigabytes of new
+     * traffic. Each interface is therefore compared only with its own previous
+     * value. A newly seen interface contributes nothing until the next sample,
+     * and a counter that went backwards (interface re-created) is re-baselined.
+     * Baselines of interfaces that are currently absent are kept, so traffic on
+     * a link that comes back later is still counted.
+     */
+    fun interfaceDeltas(
+        baselines: MutableMap<String, Counters>,
+        current: Map<String, Counters>
+    ): Map<String, Counters> {
+        val deltas = HashMap<String, Counters>()
+        for ((name, now) in current) {
+            val before = baselines[name]
+            baselines[name] = now
+            if (before == null) continue
+            val deltaRx = monotonicDelta(now.rx, before.rx)
+            val deltaTx = monotonicDelta(now.tx, before.tx)
+            if (deltaRx > 0L || deltaTx > 0L) deltas[name] = Counters(deltaRx, deltaTx)
+        }
+        return deltas
+    }
+
     fun monotonicDelta(current: Long, previous: Long): Long =
         if (current >= previous && current >= 0L && previous >= 0L) {
             current - previous
