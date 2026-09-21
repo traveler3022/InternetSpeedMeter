@@ -38,16 +38,23 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
 
       - name: Publish Debug APK to GitHub Release
-        if: github.ref == 'refs/heads/master' && success()
+        if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/deep-debug') && success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v1.1-debug"
+          if [ "$GITHUB_REF" = "refs/heads/master" ]; then
+            TAG="v1.1-debug"
+            TITLE="Internet Meter (Debug APK)"
+          else
+            TAG="v1.1-deep-debug"
+            TITLE="Internet Meter 1.1 Deep Debug"
+          fi
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           NOTES="### Internet Meter Debug Build
+          - **Branch:** ${GITHUB_REF_NAME}
           - **Built on:** $(date -u '+%Y-%m-%d %H:%M UTC')
           - **Commit:** ${GITHUB_SHA:0:7}
-          - **Features:** High-tech icons, Persian UI, real-time speed notification, Wi-Fi & Mobile tracking, battery saving (screen off pause)
+          - **Features:** High-tech icons, Persian UI, TrafficMath overflow protection, Mutex DB concurrency, stateLock thread-safety
           - **Signature:** Standard v2/v3 signing (Installs on Android 11+)"
 
           # Delete existing release and tag so the tag points to the current commit
@@ -55,7 +62,7 @@ jobs:
 
           # Create a fresh release pointing directly to this commit
           gh release create "$TAG" "$APK_PATH" \
-            --title "Internet Meter (Debug APK)" \
+            --title "$TITLE" \
             --notes "$NOTES" \
             --target "$GITHUB_SHA" \
             --prerelease

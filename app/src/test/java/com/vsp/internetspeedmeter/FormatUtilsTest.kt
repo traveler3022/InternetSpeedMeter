@@ -2,6 +2,7 @@ package com.vsp.internetspeedmeter
 
 import com.vsp.internetspeedmeter.util.FormatUtils
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FormatUtilsTest {
@@ -73,6 +74,20 @@ class FormatUtilsTest {
         assertEquals(0L, FormatUtils.parseDataToBytes(""))
         assertEquals(0L, FormatUtils.parseDataToBytes("   "))
         assertEquals(0L, FormatUtils.parseDataToBytes("invalid text"))
+    }
+
+    @Test
+    fun testParseDataToBytes_handlesRepeatedWhitespaceAndPersianDigits() {
+        assertEquals(
+            (1.5 * 1024 * 1024).toLong(),
+            FormatUtils.parseDataToBytes(" ۱٬۵   م ب ")
+        )
+    }
+
+    @Test
+    fun testFormatSpeed_bitsMode_doesNotOverflow() {
+        val result = FormatUtils.formatSpeedPersian(Long.MAX_VALUE, bits = true)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test

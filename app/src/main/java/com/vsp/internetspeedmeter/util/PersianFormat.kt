@@ -14,7 +14,9 @@ object PersianFormat {
         "ژوئیه","اوت","سپتامبر","اکتبر","نوامبر","دسامبر"
     )
 
-    private val dbDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.US)
+    private val dbDateFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("dd-MM-yyyy", Locale.US)
+    }
 
     /** 1234 -> ۱۲۳۴ ; "." decimal separator becomes the Persian thousands-style comma used by the app. */
     fun toPersian(input: String): String {
@@ -38,7 +40,7 @@ object PersianFormat {
         if (dbDate == todayDbDate) return "امروز"
         return try {
             val cal = Calendar.getInstance()
-            cal.time = dbDateFormat.parse(dbDate) ?: return toPersian(dbDate)
+            cal.time = dbDateFormat.get().parse(dbDate) ?: return toPersian(dbDate)
             val d = cal.get(Calendar.DAY_OF_MONTH)
             val m = months[cal.get(Calendar.MONTH)]
             val y = cal.get(Calendar.YEAR)
@@ -48,5 +50,5 @@ object PersianFormat {
         }
     }
 
-    fun today(): String = dbDateFormat.format(Calendar.getInstance().time)
+    fun today(): String = dbDateFormat.get().format(Calendar.getInstance().time)
 }
