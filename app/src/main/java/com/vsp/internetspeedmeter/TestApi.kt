@@ -1,8 +1,8 @@
 package com.vsp.internetspeedmeter
 import android.net.TrafficStats
 class TestApi {
+    @android.annotation.SuppressLint("NewApi")
     fun test() {
-        @android.annotation.SuppressLint("NewApi")
-        val bytes = TrafficStats.getRxBytes("wlan0")
+        TrafficStats.getRxBytes("wlan0")
     }
 }
