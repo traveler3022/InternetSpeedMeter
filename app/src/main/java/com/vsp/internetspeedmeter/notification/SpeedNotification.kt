@@ -212,7 +212,10 @@ object SpeedNotification {
         fitWidth(valuePaint, speed.value, size - 4f)
 
         val unitText = speed.unit + "/s"
-        val unitPaint = textPaint(38f)
+        val unitPaint = textPaint(38f).apply {
+            style = Paint.Style.FILL_AND_STROKE
+            strokeWidth = 1f
+        }
         fitWidth(unitPaint, unitText, size - 2f)
 
         canvas.drawText(speed.value, size / 2f, 56f, valuePaint)
