@@ -349,27 +349,25 @@ class InternetService : Service() {
             sessionBytes = 0L
         }
 
-        when {
-            isWifi -> {
-                dailyWifiBytes += deltaTotal
-                sessionBytes += deltaTotal
-            }
-            isMobile -> {
-                dailyMobileBytes += deltaTotal
-                sessionBytes += deltaTotal
-            }
-            else -> {
-                if (deltaMobile > 0L) {
-                    val mobileAllocation = deltaMobile.coerceAtMost(deltaTotal)
-                    dailyMobileBytes += mobileAllocation
-                    dailyWifiBytes += (deltaTotal - mobileAllocation)
-                    sessionBytes += deltaTotal
-                } else {
-                    dailyWifiBytes += deltaTotal
-                    sessionBytes += deltaTotal
-                }
+        val mobileAllocation: Long
+        val wifiAllocation: Long
+
+        if (deltaMobile > 0L) {
+            mobileAllocation = deltaMobile.coerceAtMost(deltaTotal)
+            wifiAllocation = deltaTotal - mobileAllocation
+        } else {
+            if (isMobile) {
+                mobileAllocation = deltaTotal
+                wifiAllocation = 0L
+            } else {
+                mobileAllocation = 0L
+                wifiAllocation = deltaTotal
             }
         }
+
+        dailyMobileBytes += mobileAllocation
+        dailyWifiBytes += wifiAllocation
+        sessionBytes += deltaTotal
     }
 
     private fun stopMonitoring() {
