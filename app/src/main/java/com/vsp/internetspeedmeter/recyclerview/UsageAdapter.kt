@@ -1,6 +1,5 @@
 package com.vsp.internetspeedmeter.recyclerview
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -11,20 +10,17 @@ import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.R
 import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
+import com.vsp.internetspeedmeter.util.Palette
 import com.vsp.internetspeedmeter.util.PersianFormat
 import androidx.core.os.ConfigurationCompat
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Usage table row: blue date cell + alternating light/dark blue data cells,
- * exactly like the Internet Speed Meter Lite table.
+ * Usage table row: header-colored date cell + alternating data cells in the
+ * shades of the current palette, like the Internet Speed Meter Lite table.
  */
 class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffCallback) {
-
-    private val rowDark = Color.parseColor("#C3DBFA")
-    private val rowLight = Color.parseColor("#EEF5FD")
-    private val rowLighter = Color.parseColor("#F7FBFF")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsageViewHolder {
         val binding = ItemUsageRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -33,6 +29,10 @@ class UsageAdapter : ListAdapter<Usage, UsageAdapter.UsageViewHolder>(UsageDiffC
 
     override fun onBindViewHolder(holder: UsageViewHolder, position: Int) {
         val odd = position % 2 == 1
+        val context = holder.itemView.context
+        val rowDark = Palette.color(context, R.attr.ismRowDark)
+        val rowLight = Palette.color(context, R.attr.ismRowLight)
+        val rowLighter = Palette.color(context, R.attr.ismRowLighter)
         holder.bind(
             usage = getItem(position),
             todayStr = DayCycle.currentDate(holder.itemView.context),

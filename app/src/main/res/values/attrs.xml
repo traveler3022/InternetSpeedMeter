@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette of the "تم" preference; set by the ThemeOverlay.Ism.* styles -->
+    <attr name="ismPage" format="color" />
+    <attr name="ismBar" format="color" />
+    <attr name="ismHeader" format="color" />
+    <attr name="ismRowDark" format="color" />
+    <attr name="ismRowLight" format="color" />
+    <attr name="ismRowLighter" format="color" />
+    <attr name="ismCellText" format="color" />
+    <attr name="ismDialogBody" format="color" />
+    <attr name="ismCard" format="color" />
+    <attr name="ismFooter" format="color" />
+    <attr name="ismMuted" format="color" />
+    <attr name="ismGrid" format="color" />
+    <attr name="ismAccent" format="color" />
+</resources>

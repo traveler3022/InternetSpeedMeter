@@ -14,9 +14,9 @@ import androidx.core.os.LocaleListCompat
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
 import com.vsp.internetspeedmeter.broadcastreceiver.InternetService
 import com.vsp.internetspeedmeter.util.FormatUtils
+import com.vsp.internetspeedmeter.util.Palette
 import com.vsp.internetspeedmeter.util.PersianFormat
 
 /** Rebuilds the notification so a changed preference is visible right away. */
@@ -34,13 +34,11 @@ private fun refreshNotification(context: android.content.Context?) {
 class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val defaultPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (defaultPrefs.getString("theme_color", "light") == "dark") {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
+        Palette.applyNightMode(this)
         super.onCreate(savedInstanceState)
+        Palette.apply(this)
+        supportActionBar?.setBackgroundDrawable(
+            android.graphics.drawable.ColorDrawable(Palette.color(this, R.attr.ismBar)))
 
         val advanced = intent?.getBooleanExtra(EXTRA_ADVANCED, false) == true
         supportActionBar?.title =
@@ -95,8 +93,13 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
             when (key) {
-                "theme_color" -> {
-                    activity?.recreate()
+                Palette.KEY -> {
+                    // Every open screen has to be rebuilt with the new palette
+                    val activity = activity ?: return
+                    androidx.core.app.TaskStackBuilder.create(activity)
+                        .addNextIntentWithParentStack(activity.intent)
+                        .startActivities()
+                    activity.finish()
                     return
                 }
                 "app_language" -> {
