@@ -52,6 +52,8 @@ class InternetService : Service() {
     // Hardware counter baselines
     private var lastHardwareTotalRx = 0L
     private var lastHardwareTotalTx = 0L
+    private var lastHardwareVpnRx = 0L
+    private var lastHardwareVpnTx = 0L
     private var lastHardwareMobileRx = 0L
     private var lastHardwareMobileTx = 0L
     private var lastSpeedTime = 0L
@@ -193,17 +195,9 @@ class InternetService : Service() {
         return Pair(rx, tx)
     }
 
-    private fun getCorrectedTotalRx(): Long {
-        val total = sanitizeBytes(TrafficStats.getTotalRxBytes())
-        val vpn = getVpnTraffic().first
-        return max(0L, total - vpn)
-    }
 
-    private fun getCorrectedTotalTx(): Long {
-        val total = sanitizeBytes(TrafficStats.getTotalTxBytes())
-        val vpn = getVpnTraffic().second
-        return max(0L, total - vpn)
-    }
+
+
 
     private fun startMonitoring() {
         if (monitorJob?.isActive == true) return
@@ -212,18 +206,26 @@ class InternetService : Service() {
             var tickCount = 0
             while (isActive && (isScreenOn || !pauseWhenScreenOff())) {
                 val curTime = SystemClock.elapsedRealtime()
-                val curTotalRx = getCorrectedTotalRx()
-                val curTotalTx = getCorrectedTotalTx()
+                val curRawRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
+                val curRawTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+                val curVpn = getVpnTraffic()
 
-                if (curTotalRx < lastHardwareTotalRx || curTotalTx < lastHardwareTotalTx) {
+                if (curRawRx < lastHardwareTotalRx || curRawTx < lastHardwareTotalTx) {
                     initHardwareCounters()
                     delay(1000)
                     continue
                 }
 
                 val elapsedMs = max(1L, curTime - lastSpeedTime)
-                val deltaRx = max(0L, curTotalRx - lastHardwareTotalRx)
-                val deltaTx = max(0L, curTotalTx - lastHardwareTotalTx)
+                
+                var rawDeltaRx = max(0L, curRawRx - lastHardwareTotalRx)
+                var rawDeltaTx = max(0L, curRawTx - lastHardwareTotalTx)
+                
+                val vpnDeltaRx = max(0L, curVpn.first - lastHardwareVpnRx)
+                val vpnDeltaTx = max(0L, curVpn.second - lastHardwareVpnTx)
+                
+                val deltaRx = max(0L, rawDeltaRx - vpnDeltaRx)
+                val deltaTx = max(0L, rawDeltaTx - vpnDeltaTx)
 
                 val downSpeed = ((deltaRx * 1000.0) / elapsedMs).toLong()
                 val upSpeed = ((deltaTx * 1000.0) / elapsedMs).toLong()
@@ -237,8 +239,10 @@ class InternetService : Service() {
                 speedHistory[speedHistoryIndex] = totalSpeed
 
                 lastSpeedTime = curTime
-                lastHardwareTotalRx = curTotalRx
-                lastHardwareTotalTx = curTotalTx
+                lastHardwareTotalRx = curRawRx
+                lastHardwareTotalTx = curRawTx
+                lastHardwareVpnRx = curVpn.first
+                lastHardwareVpnTx = curVpn.second
 
                 val deltaTotal = deltaRx + deltaTx
                 if (deltaTotal > 0L) {
@@ -265,12 +269,20 @@ class InternetService : Service() {
     }
 
     private fun sampleAndAccumulateTraffic() {
-        val curTotalRx = getCorrectedTotalRx()
-        val curTotalTx = getCorrectedTotalTx()
+        val curRawRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
+        val curRawTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        val curVpn = getVpnTraffic()
 
-        if (curTotalRx >= lastHardwareTotalRx && curTotalTx >= lastHardwareTotalTx) {
-            val deltaRx = curTotalRx - lastHardwareTotalRx
-            val deltaTx = curTotalTx - lastHardwareTotalTx
+        if (curRawRx >= lastHardwareTotalRx && curRawTx >= lastHardwareTotalTx) {
+            val rawDeltaRx = curRawRx - lastHardwareTotalRx
+            val rawDeltaTx = curRawTx - lastHardwareTotalTx
+            
+            val vpnDeltaRx = max(0L, curVpn.first - lastHardwareVpnRx)
+            val vpnDeltaTx = max(0L, curVpn.second - lastHardwareVpnTx)
+            
+            val deltaRx = max(0L, rawDeltaRx - vpnDeltaRx)
+            val deltaTx = max(0L, rawDeltaTx - vpnDeltaTx)
+            
             val deltaTotal = deltaRx + deltaTx
             if (deltaTotal > 0L) {
                 allocateTraffic(deltaTotal)
@@ -279,8 +291,10 @@ class InternetService : Service() {
             }
         }
 
-        lastHardwareTotalRx = curTotalRx
-        lastHardwareTotalTx = curTotalTx
+        lastHardwareTotalRx = curRawRx
+        lastHardwareTotalTx = curRawTx
+        lastHardwareVpnRx = curVpn.first
+        lastHardwareVpnTx = curVpn.second
         lastSpeedTime = SystemClock.elapsedRealtime()
     }
 
@@ -369,8 +383,11 @@ class InternetService : Service() {
     }
 
     private fun initHardwareCounters() {
-        lastHardwareTotalRx = getCorrectedTotalRx()
-        lastHardwareTotalTx = getCorrectedTotalTx()
+        lastHardwareTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
+        lastHardwareTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
+        val vpn = getVpnTraffic()
+        lastHardwareVpnRx = vpn.first
+        lastHardwareVpnTx = vpn.second
         lastHardwareMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
         lastHardwareMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
         lastSpeedTime = SystemClock.elapsedRealtime()
