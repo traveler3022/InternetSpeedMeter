@@ -3,9 +3,9 @@ package com.vsp.internetspeedmeter.util
 import kotlin.math.max
 
 /**
- * Pure arithmetic for TrafficStats sampling.
+ * Pure arithmetic for traffic-counter sampling.
  *
- * TrafficStats counters are cumulative and may reset (for example after reboot).
+ * Counters are cumulative and may reset (for example after reboot).
  * Keeping the arithmetic here makes counter-reset and timing behavior testable
  * without an Android Service instance.
  */
@@ -57,20 +57,10 @@ object TrafficMath {
         currentTx: Long,
         previousRx: Long,
         previousTx: Long,
-        currentVpnRx: Long,
-        currentVpnTx: Long,
-        previousVpnRx: Long,
-        previousVpnTx: Long,
         elapsedMs: Long
     ): Sample {
-        val rawDeltaRx = monotonicDelta(currentRx, previousRx)
-        val rawDeltaTx = monotonicDelta(currentTx, previousTx)
-
-        val vpnDeltaRx = monotonicDelta(currentVpnRx, previousVpnRx)
-        val vpnDeltaTx = monotonicDelta(currentVpnTx, previousVpnTx)
-
-        val deltaRx = (rawDeltaRx - vpnDeltaRx).coerceAtLeast(0L)
-        val deltaTx = (rawDeltaTx - vpnDeltaTx).coerceAtLeast(0L)
+        val deltaRx = monotonicDelta(currentRx, previousRx)
+        val deltaTx = monotonicDelta(currentTx, previousTx)
 
         return Sample(
             deltaRx = deltaRx,
