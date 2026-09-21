@@ -20,6 +20,10 @@ class UsageRepository(context: Context) {
         usageDao.upsert(usage)
     }
 
+    suspend fun insertAllIgnore(usages: List<Usage>) = withContext(Dispatchers.IO) {
+        usageDao.insertAllIgnore(usages)
+    }
+
     suspend fun getUsageByDate(date: String): Usage? = withContext(Dispatchers.IO) {
         usageDao.getUsageByDate(date)
     }

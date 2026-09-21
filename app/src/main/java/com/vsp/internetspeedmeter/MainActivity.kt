@@ -18,12 +18,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.vsp.internetspeedmeter.broadcastreceiver.InternetService
 import com.vsp.internetspeedmeter.databinding.ActivityMainBinding
 import com.vsp.internetspeedmeter.recyclerview.UsageAdapter
+import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.room.UsageViewModel
 import androidx.core.os.ConfigurationCompat
 import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
 import com.vsp.internetspeedmeter.util.PersianFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -60,9 +62,19 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
         setupRecyclerView()
+        populateFutureMonthDays()
         observeUsageData()
         checkAndRequestPermissions()
         startMonitoringService()
+    }
+
+    private fun populateFutureMonthDays() {
+        val list = mutableListOf<Usage>()
+        for (i in 0..30) {
+            val c = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, i) }
+            list.add(Usage(date = dbDateFormat.format(c.time), mobile = 0L, wifi = 0L, total = 0L))
+        }
+        viewModel.insertAllIgnore(list)
     }
 
     private fun setupRecyclerView() {
@@ -85,15 +97,28 @@ class MainActivity : AppCompatActivity() {
                 return@observe
             }
 
-            val sortedList = usages.sortedByDescending {
-                try { dbDateFormat.parse(it.date)?.time ?: 0L } catch (_: Exception) { 0L }
-            }
+            val todayStr = DayCycle.currentDate(this)
+            val todayTime = try { dbDateFormat.parse(todayStr)?.time ?: 0L } catch (_: Exception) { 0L }
 
-            val last30Days = sortedList.take(30)
-            adapter.submitList(last30Days)
+            val sortedList = usages.sortedWith(Comparator { a, b ->
+                val timeA = try { dbDateFormat.parse(a.date)?.time ?: 0L } catch (_: Exception) { 0L }
+                val timeB = try { dbDateFormat.parse(b.date)?.time ?: 0L } catch (_: Exception) { 0L }
+
+                when {
+                    a.date == todayStr -> -1
+                    b.date == todayStr -> 1
+                    timeA >= todayTime && timeB >= todayTime -> timeA.compareTo(timeB)
+                    timeA < todayTime && timeB < todayTime -> timeB.compareTo(timeA)
+                    timeA >= todayTime -> -1
+                    else -> 1
+                }
+            })
+
+            val displayList = sortedList.take(35)
+            adapter.submitList(displayList)
 
             // The summary row is labelled "این ماه", so it sums the current month only
-            val currentMonth = DayCycle.monthOf(DayCycle.currentDate(this))
+            val currentMonth = DayCycle.monthOf(todayStr)
             val thisMonth = sortedList.filter { DayCycle.monthOf(it.date) == currentMonth }
 
             val totalMobileBytes = thisMonth.sumOf { it.mobile }
@@ -124,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.deleteAllNotes()
         prefs.edit().clear().apply()
         getSharedPreferences(TRAFFIC_PREF_NAME, Context.MODE_PRIVATE).edit().clear().apply()
+        populateFutureMonthDays()
         startMonitoringService()
         Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
     }
