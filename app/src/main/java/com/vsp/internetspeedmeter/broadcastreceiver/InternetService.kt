@@ -30,6 +30,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.NetworkInterface
+import java.util.LinkedHashSet
+import java.util.Locale
 import kotlin.math.max
 
 class InternetService : Service() {
@@ -49,8 +51,6 @@ class InternetService : Service() {
     // Hardware counter baselines
     private var lastHardwareTotalRx = 0L
     private var lastHardwareTotalTx = 0L
-    private var lastHardwareVpnRx = 0L
-    private var lastHardwareVpnTx = 0L
     private var lastHardwareMobileRx = 0L
     private var lastHardwareMobileTx = 0L
     private var lastSpeedTime = 0L
@@ -183,48 +183,120 @@ class InternetService : Service() {
         return START_STICKY
     }
 
-    @android.annotation.SuppressLint("NewApi")
-    private fun getVpnTraffic(): Pair<Long, Long> {
-        var rx = 0L
-        var tx = 0L
-        try {
-            val ifaces = NetworkInterface.getNetworkInterfaces()
-            ifaces?.let {
-                for (iface in it) {
-                    if (iface.isUp && (iface.name.startsWith("tun") || iface.name.startsWith("tap"))) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            rx += sanitizeBytes(TrafficStats.getRxBytes(iface.name))
-                            tx += sanitizeBytes(TrafficStats.getTxBytes(iface.name))
-                        } else {
-                            rx += readSysFs(iface.name, "rx_bytes")
-                            tx += readSysFs(iface.name, "tx_bytes")
+    /**
+     * Reads traffic from the underlying non-VPN network interfaces.
+     *
+     * Device-wide aggregate counters can aggregate traffic at multiple layers
+     * when a VPN is active. A VPN packet can be observed on its
+     * virtual interface and again on the physical transport, which makes a total
+     * device counter unsuitable as the source for a speed meter that must not
+     * double-count the same network transfer.
+     *
+     * We therefore resolve the interfaces belonging to non-VPN Wi-Fi/mobile/
+     * Ethernet networks via ConnectivityManager + LinkProperties and sample only
+     * those interfaces.
+     */
+    private data class TrafficCounters(val rx: Long, val tx: Long)
+
+    @Suppress("DEPRECATION")
+    private fun readHardwareTraffic(): TrafficCounters {
+        val interfaceNames = LinkedHashSet<String>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (network in connectivityManager.allNetworks) {
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                    ?: continue
+
+                // A VPN network may expose the underlying Wi-Fi/cellular transport
+                // too. NOT_VPN is therefore the authoritative filter here.
+                if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                    continue
+                }
+
+                if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                    continue
+                }
+
+                val isInternetTransport =
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+
+                if (!isInternetTransport) continue
+
+                connectivityManager.getLinkProperties(network)?.interfaceName
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let(interfaceNames::add)
+            }
+        }
+
+        // Fallback for old Android/vendor implementations where ConnectivityManager
+        // does not expose a usable interface name. Do not include virtual VPN/tunnel
+        // interfaces in this fallback path.
+        if (interfaceNames.isEmpty()) {
+            try {
+                val interfaces = NetworkInterface.getNetworkInterfaces()
+                interfaces?.let { all ->
+                    for (iface in all) {
+                        val name = iface.name
+                        if (!iface.isUp || iface.isLoopback || isVirtualVpnInterface(name)) {
+                            continue
                         }
+                        interfaceNames.add(name)
                     }
                 }
+            } catch (_: Exception) {
+                // Keep the zero result; the next sample can retry discovery.
             }
-        } catch (_: Exception) {
-            // Some vendor kernels expose transient/incomplete interface information.
-            // Treat an unreadable VPN counter as zero; the total counters remain authoritative.
         }
-        return Pair(rx, tx)
+
+        var rx = 0L
+        var tx = 0L
+        for (name in interfaceNames) {
+            val ifaceRx = readInterfaceBytes(name, "rx_bytes")
+            val ifaceTx = readInterfaceBytes(name, "tx_bytes")
+            rx = TrafficMath.safeAdd(rx, ifaceRx)
+            tx = TrafficMath.safeAdd(tx, ifaceTx)
+        }
+
+        return TrafficCounters(rx = rx, tx = tx)
+    }
+
+    private fun isVirtualVpnInterface(name: String): Boolean {
+        val lower = name.lowercase(Locale.ROOT)
+        return lower == "lo" ||
+            lower.startsWith("tun") ||
+            lower.startsWith("tap") ||
+            lower.startsWith("wg") ||
+            lower.startsWith("vpn")
+    }
+
+    private fun readInterfaceBytes(iface: String, file: String): Long {
+        val fromTrafficStats = if (file == "rx_bytes") {
+            TrafficStats.getRxBytes(iface)
+        } else {
+            TrafficStats.getTxBytes(iface)
+        }
+
+        if (fromTrafficStats != TrafficStats.UNSUPPORTED.toLong() && fromTrafficStats >= 0L) {
+            return fromTrafficStats
+        }
+
+        return readSysFs(iface, file)
     }
 
     private fun readSysFs(iface: String, file: String): Long {
         return try {
             val f = java.io.File("/sys/class/net/$iface/statistics/$file")
             if (f.exists()) {
-                f.readText().trim().toLong()
+                f.readText().trim().toLong().coerceAtLeast(0L)
             } else {
                 0L
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             0L
         }
     }
-
-
-
-
 
     private fun startMonitoring() {
         synchronized(stateLock) {
@@ -288,9 +360,9 @@ class InternetService : Service() {
 
     private fun readAndApplyTrafficSampleLocked(): TrafficMath.Sample {
         val curTime = SystemClock.elapsedRealtime()
-        val curRawRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
-        val curRawTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
-        val curVpn = getVpnTraffic()
+        val counters = readHardwareTraffic()
+        val curRawRx = counters.rx
+        val curRawTx = counters.tx
 
         if (!TrafficMath.countersMonotonic(
                 curRawRx, lastHardwareTotalRx,
@@ -306,18 +378,12 @@ class InternetService : Service() {
             currentTx = curRawTx,
             previousRx = lastHardwareTotalRx,
             previousTx = lastHardwareTotalTx,
-            currentVpnRx = curVpn.first,
-            currentVpnTx = curVpn.second,
-            previousVpnRx = lastHardwareVpnRx,
-            previousVpnTx = lastHardwareVpnTx,
             elapsedMs = curTime - lastSpeedTime
         )
 
         lastSpeedTime = curTime
         lastHardwareTotalRx = curRawRx
         lastHardwareTotalTx = curRawTx
-        lastHardwareVpnRx = curVpn.first
-        lastHardwareVpnTx = curVpn.second
 
         val deltaTotal = TrafficMath.safeAdd(result.deltaRx, result.deltaTx)
         if (deltaTotal > 0L) {
@@ -476,11 +542,9 @@ class InternetService : Service() {
     }
 
     private fun initHardwareCountersLocked() {
-        lastHardwareTotalRx = sanitizeBytes(TrafficStats.getTotalRxBytes())
-        lastHardwareTotalTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
-        val vpn = getVpnTraffic()
-        lastHardwareVpnRx = vpn.first
-        lastHardwareVpnTx = vpn.second
+        val counters = readHardwareTraffic()
+        lastHardwareTotalRx = counters.rx
+        lastHardwareTotalTx = counters.tx
         lastHardwareMobileRx = sanitizeBytes(TrafficStats.getMobileRxBytes())
         lastHardwareMobileTx = sanitizeBytes(TrafficStats.getMobileTxBytes())
         lastSpeedTime = SystemClock.elapsedRealtime()
