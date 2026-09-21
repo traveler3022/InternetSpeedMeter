@@ -47,8 +47,8 @@ class InternetService : Service() {
 
     private var isScreenOn = true
     private var isPowerSaveMode = false
-    // Per-interface counter baselines (see TrafficMath.interfaceDeltas)
-    private val ifaceBaselines = HashMap<String, TrafficMath.Counters>()
+    // Counter baselines per key of readCounters() (see TrafficMath.interfaceDeltas)
+    private val counterBaselines = HashMap<String, TrafficMath.Counters>()
     private var lastSpeedTime = 0L
     // Last reported speeds, re-shown for one tick when the counters look stale
     private var lastDownSpeed = 0L
@@ -184,153 +184,89 @@ class InternetService : Service() {
     }
 
     /**
-     * Reads traffic from the underlying non-VPN network interfaces.
+     * Counter snapshot, keyed for [TrafficMath.interfaceDeltas]:
+     * [KEY_TOTAL] = TrafficStats total (every interface, VPN tunnel included),
+     * [KEY_MOBILE] = TrafficStats mobile (all cellular interfaces, 464xlat too),
+     * [VPN_PREFIX] + name = each VPN tunnel and loopback, subtracted from the total.
      *
-     * Device-wide aggregate counters can aggregate traffic at multiple layers
-     * when a VPN is active. A VPN packet can be observed on its
-     * virtual interface and again on the physical transport, which makes a total
-     * device counter unsuitable as the source for a speed meter that must not
-     * double-count the same network transfer.
-     *
-     * We therefore resolve the interfaces belonging to non-VPN Wi-Fi/mobile/
-     * Ethernet networks via ConnectivityManager + LinkProperties and sample only
-     * those interfaces.
+     * The platform keeps the total and mobile counters correct as networking
+     * changes (464xlat, eBPF accounting, new modem interface names), so this code
+     * does not need to know about interfaces beyond spotting VPN tunnels.
+     * Order matters: total first, mobile last, so mobile never lags the total.
      */
-    private data class IfaceReading(val counters: TrafficMath.Counters, val networkType: Int)
+    private fun readCounters(): Map<String, TrafficMath.Counters> {
+        val result = HashMap<String, TrafficMath.Counters>()
+        val totalRx = TrafficStats.getTotalRxBytes()
+        val totalTx = TrafficStats.getTotalTxBytes()
+        if (totalRx < 0L || totalTx < 0L) return result
+        result[KEY_TOTAL] = TrafficMath.Counters(totalRx, totalTx)
 
-    @Suppress("DEPRECATION")
-    private fun readHardwareTraffic(): Map<String, IfaceReading> {
-        // interface name -> network type (1: mobile, 2: Wi-Fi/Ethernet)
-        val interfaceTypes = LinkedHashMap<String, Int>()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (network in connectivityManager.allNetworks) {
-                val capabilities = connectivityManager.getNetworkCapabilities(network)
-                    ?: continue
-
-                // A VPN network may expose the underlying Wi-Fi/cellular transport
-                // too. NOT_VPN is therefore the authoritative filter here.
-                if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                    continue
-                }
-
-                if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    continue
-                }
-
-                val type = when {
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> 1
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 2
-                    else -> continue
-                }
-
-                connectivityManager.getLinkProperties(network)?.interfaceName
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { interfaceTypes[it] = type }
-            }
+        for (iface in vpnInterfaces()) {
+            readInterface(iface)?.let { result[VPN_PREFIX + iface] = it }
         }
 
-        // Fallback for old Android/vendor implementations where ConnectivityManager
-        // does not expose a usable interface name. Do not include virtual VPN/tunnel
-        // interfaces in this fallback path.
-        if (interfaceTypes.isEmpty()) {
-            try {
-                val interfaces = NetworkInterface.getNetworkInterfaces()
-                interfaces?.let { all ->
-                    for (iface in all) {
-                        val name = iface.name
-                        if (!iface.isUp || iface.isLoopback || isVirtualVpnInterface(name)) {
-                            continue
-                        }
-                        interfaceTypes[name] = networkTypeFromName(name)
-                    }
-                }
-            } catch (_: Exception) {
-                // Keep the empty result; the next sample can retry discovery.
-            }
-        }
-
-        val result = HashMap<String, IfaceReading>()
-        for ((name, type) in interfaceTypes) {
-            val counters = TrafficMath.Counters(
-                rx = readInterfaceBytes(name, "rx_bytes"),
-                tx = readInterfaceBytes(name, "tx_bytes")
-            )
-            result[name] = IfaceReading(counters, type)
-
-            // On IPv6-only networks (464xlat) the kernel-side counters that
-            // TrafficStats reports put all translated IPv4 traffic on the stacked
-            // "v4-<iface>" interface and none of it on the base interface
-            // (NetworkStatsService.updateIfacesLocked). The sysfs fallback below
-            // API 31 reads driver counters, which already include it.
-            stackedClatCounters(name)?.let { result[CLAT_PREFIX + name] = IfaceReading(it, type) }
-        }
+        result[KEY_MOBILE] = TrafficMath.Counters(
+            TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
+            TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
+        )
         return result
     }
 
-    /** TrafficStats counters of the 464xlat interface stacked on [baseIface], if it exists. */
-    private fun stackedClatCounters(baseIface: String): TrafficMath.Counters? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
-        val stacked = CLAT_PREFIX + baseIface
-        val rx = TrafficStats.getRxBytes(stacked)
-        val tx = TrafficStats.getTxBytes(stacked)
-        if (rx < 0L || tx < 0L) return null
-        return TrafficMath.Counters(rx, tx)
-    }
-
-    private fun networkTypeFromName(name: String): Int {
-        val lower = name.lowercase(Locale.ROOT)
-        return when {
-            lower.startsWith("wlan") || lower.startsWith("eth") -> 2
-            lower.startsWith("rmnet") || lower.startsWith("ccmni") ||
-                lower.startsWith("pdp") || lower.startsWith("wwan") ||
-                lower.startsWith("seth") -> 1
-            else -> 0
+    /** Tunnel interfaces of active VPNs, plus loopback. */
+    private fun vpnInterfaces(): Set<String> {
+        val names = HashSet<String>()
+        names.add("lo")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (network in connectivityManager.allNetworks) {
+                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: continue
+                if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue
+                connectivityManager.getLinkProperties(network)?.interfaceName
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { names.add(it) }
+            }
         }
+        // A VPN that excludes this app is missing from allNetworks, but its
+        // tunnel interface is still listed here.
+        try {
+            NetworkInterface.getNetworkInterfaces()?.let { all ->
+                for (iface in all) {
+                    if (isTunnelName(iface.name)) names.add(iface.name)
+                }
+            }
+        } catch (_: Exception) {
+            // Keep what ConnectivityManager reported.
+        }
+        return names
     }
 
-    private fun isVirtualVpnInterface(name: String): Boolean {
+    private fun isTunnelName(name: String): Boolean {
         val lower = name.lowercase(Locale.ROOT)
-        return lower == "lo" ||
-            lower.startsWith("tun") ||
+        return lower.startsWith("tun") ||
             lower.startsWith("tap") ||
             lower.startsWith("wg") ||
-            lower.startsWith("vpn") ||
-            // 464xlat stacked interface: the sysfs (driver) counters of the
-            // underlying cellular interface already include its traffic.
-            lower.startsWith("v4-") ||
-            lower.startsWith("dummy")
+            lower.startsWith("ipsec") ||
+            lower.startsWith("vpn")
     }
 
-    private fun readInterfaceBytes(iface: String, file: String): Long {
+    private fun readInterface(iface: String): TrafficMath.Counters? {
         // TrafficStats.getRxBytes(String)/getTxBytes(String) are public only
         // since API 31; below that they are hidden APIs.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val fromTrafficStats = if (file == "rx_bytes") {
-                TrafficStats.getRxBytes(iface)
-            } else {
-                TrafficStats.getTxBytes(iface)
-            }
-
-            if (fromTrafficStats != TrafficStats.UNSUPPORTED.toLong() && fromTrafficStats >= 0L) {
-                return fromTrafficStats
-            }
+            val rx = TrafficStats.getRxBytes(iface)
+            val tx = TrafficStats.getTxBytes(iface)
+            return if (rx >= 0L && tx >= 0L) TrafficMath.Counters(rx, tx) else null
         }
-
-        return readSysFs(iface, file)
+        val rx = readSysFs(iface, "rx_bytes") ?: return null
+        val tx = readSysFs(iface, "tx_bytes") ?: return null
+        return TrafficMath.Counters(rx, tx)
     }
 
-    private fun readSysFs(iface: String, file: String): Long {
+    private fun readSysFs(iface: String, file: String): Long? {
         return try {
-            val f = java.io.File("/sys/class/net/$iface/statistics/$file")
-            if (f.exists()) {
-                f.readText().trim().toLong().coerceAtLeast(0L)
-            } else {
-                0L
-            }
+            java.io.File("/sys/class/net/$iface/statistics/$file")
+                .readText().trim().toLong().coerceAtLeast(0L)
         } catch (_: Exception) {
-            0L
+            null
         }
     }
 
@@ -391,29 +327,25 @@ class InternetService : Service() {
 
     private fun readAndApplyTrafficSampleLocked(): TrafficMath.Sample {
         val curTime = SystemClock.elapsedRealtime()
-        val readings = readHardwareTraffic()
-        val deltas = TrafficMath.interfaceDeltas(
-            ifaceBaselines,
-            readings.mapValues { it.value.counters }
-        )
+        val deltas = TrafficMath.interfaceDeltas(counterBaselines, readCounters())
 
-        var deltaRx = 0L
-        var deltaTx = 0L
-        var mobileBytes = 0L
-        var wifiBytes = 0L
-        var unknownBytes = 0L
-        for ((name, delta) in deltas) {
-            deltaRx = TrafficMath.safeAdd(deltaRx, delta.rx)
-            deltaTx = TrafficMath.safeAdd(deltaTx, delta.tx)
-            val bytes = TrafficMath.safeAdd(delta.rx, delta.tx)
-            when (readings[name]?.networkType) {
-                1 -> mobileBytes = TrafficMath.safeAdd(mobileBytes, bytes)
-                2 -> wifiBytes = TrafficMath.safeAdd(wifiBytes, bytes)
-                else -> unknownBytes = TrafficMath.safeAdd(unknownBytes, bytes)
-            }
+        var vpnRx = 0L
+        var vpnTx = 0L
+        for ((key, delta) in deltas) {
+            if (!key.startsWith(VPN_PREFIX)) continue
+            vpnRx = TrafficMath.safeAdd(vpnRx, delta.rx)
+            vpnTx = TrafficMath.safeAdd(vpnTx, delta.tx)
         }
+        val zero = TrafficMath.Counters(0L, 0L)
+        val split = TrafficMath.splitTraffic(
+            total = deltas[KEY_TOTAL] ?: zero,
+            vpn = TrafficMath.Counters(vpnRx, vpnTx),
+            mobile = deltas[KEY_MOBILE] ?: zero
+        )
+        val deltaRx = split.physical.rx
+        val deltaTx = split.physical.tx
 
-        allocateTrafficLocked(mobileBytes, wifiBytes, unknownBytes)
+        allocateTrafficLocked(split.mobileBytes, split.wifiBytes, 0L)
 
         // Android 15+ caches TrafficStats results for ~1 s (NetworkStatsService
         // DEFAULT_TRAFFIC_STATS_CACHE_EXPIRY_DURATION_MS). Polling every second
@@ -559,10 +491,8 @@ class InternetService : Service() {
     }
 
     private fun initHardwareCountersLocked() {
-        ifaceBaselines.clear()
-        for ((name, reading) in readHardwareTraffic()) {
-            ifaceBaselines[name] = reading.counters
-        }
+        counterBaselines.clear()
+        counterBaselines.putAll(readCounters())
         lastSpeedTime = SystemClock.elapsedRealtime()
     }
 
@@ -745,8 +675,9 @@ class InternetService : Service() {
     companion object {
         var instance: InternetService? = null
 
-        /** Name prefix of the 464xlat interface (Nat464Xlat.CLAT_PREFIX). */
-        private const val CLAT_PREFIX = "v4-"
+        private const val KEY_TOTAL = "total"
+        private const val KEY_MOBILE = "mobile"
+        private const val VPN_PREFIX = "vpn:"
     }
 
     fun getSessionInfo(): Pair<Long, Long> {
