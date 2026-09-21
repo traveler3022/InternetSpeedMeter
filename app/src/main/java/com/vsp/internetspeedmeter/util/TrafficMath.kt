@@ -1,7 +1,6 @@
 package com.vsp.internetspeedmeter.util
 
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Pure arithmetic for traffic-counter sampling.
@@ -61,27 +60,6 @@ object TrafficMath {
             if (deltaRx > 0L || deltaTx > 0L) deltas[name] = Counters(deltaRx, deltaTx)
         }
         return deltas
-    }
-
-    data class Split(val physical: Counters, val mobileBytes: Long, val wifiBytes: Long)
-
-    /**
-     * Splits one sample's deltas into traffic that crossed a real network.
-     *
-     * With a VPN every byte is counted on the tunnel interface and again,
-     * encrypted, on Wi-Fi or mobile, so the device total holds it twice;
-     * subtracting the tunnel delta leaves what went over the air. Mobile is
-     * capped at that amount because the mobile counter sums only the current
-     * cellular interfaces and can jump when that set changes.
-     */
-    fun splitTraffic(total: Counters, vpn: Counters, mobile: Counters): Split {
-        val physical = Counters(
-            rx = max(0L, total.rx - vpn.rx.coerceAtLeast(0L)),
-            tx = max(0L, total.tx - vpn.tx.coerceAtLeast(0L))
-        )
-        val physicalBytes = safeAdd(physical.rx, physical.tx)
-        val mobileBytes = min(safeAdd(mobile.rx, mobile.tx), physicalBytes)
-        return Split(physical, mobileBytes, physicalBytes - mobileBytes)
     }
 
     fun monotonicDelta(current: Long, previous: Long): Long =
