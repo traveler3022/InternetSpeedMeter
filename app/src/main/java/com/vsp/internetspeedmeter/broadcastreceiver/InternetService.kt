@@ -258,8 +258,25 @@ class InternetService : Service() {
                 tx = readInterfaceBytes(name, "tx_bytes")
             )
             result[name] = IfaceReading(counters, type)
+
+            // On IPv6-only networks (464xlat) the kernel-side counters that
+            // TrafficStats reports put all translated IPv4 traffic on the stacked
+            // "v4-<iface>" interface and none of it on the base interface
+            // (NetworkStatsService.updateIfacesLocked). The sysfs fallback below
+            // API 31 reads driver counters, which already include it.
+            stackedClatCounters(name)?.let { result[CLAT_PREFIX + name] = IfaceReading(it, type) }
         }
         return result
+    }
+
+    /** TrafficStats counters of the 464xlat interface stacked on [baseIface], if it exists. */
+    private fun stackedClatCounters(baseIface: String): TrafficMath.Counters? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+        val stacked = CLAT_PREFIX + baseIface
+        val rx = TrafficStats.getRxBytes(stacked)
+        val tx = TrafficStats.getTxBytes(stacked)
+        if (rx < 0L || tx < 0L) return null
+        return TrafficMath.Counters(rx, tx)
     }
 
     private fun networkTypeFromName(name: String): Int {
@@ -280,8 +297,8 @@ class InternetService : Service() {
             lower.startsWith("tap") ||
             lower.startsWith("wg") ||
             lower.startsWith("vpn") ||
-            // 464xlat stacked interface: its traffic is also counted on the
-            // underlying cellular interface.
+            // 464xlat stacked interface: the sysfs (driver) counters of the
+            // underlying cellular interface already include its traffic.
             lower.startsWith("v4-") ||
             lower.startsWith("dummy")
     }
@@ -406,7 +423,7 @@ class InternetService : Service() {
         // time, and the next change is divided by the real elapsed time.
         val downSpeed: Long
         val upSpeed: Long
-        if (deltaRx == 0L && deltaTx == 0L &&
+        if (Build.VERSION.SDK_INT >= 35 && deltaRx == 0L && deltaTx == 0L &&
             !heldStaleTick && (lastDownSpeed > 0L || lastUpSpeed > 0L)
         ) {
             heldStaleTick = true
@@ -727,6 +744,9 @@ class InternetService : Service() {
 
     companion object {
         var instance: InternetService? = null
+
+        /** Name prefix of the 464xlat interface (Nat464Xlat.CLAT_PREFIX). */
+        private const val CLAT_PREFIX = "v4-"
     }
 
     fun getSessionInfo(): Pair<Long, Long> {
