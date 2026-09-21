@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vsp.internetspeedmeter.broadcastreceiver.InternetService
 import com.vsp.internetspeedmeter.recyclerview.AppUsageAdapter
 import com.vsp.internetspeedmeter.recyclerview.AppUsageItem
+import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
 import kotlinx.coroutines.*
 import java.util.Calendar
@@ -145,9 +146,15 @@ class DialogActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return emptyList()
         return try {
             val nsm = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+            val startHour = DayCycle.startHour(this)
             val cal = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                if (get(Calendar.HOUR_OF_DAY) < startHour) {
+                    add(Calendar.DAY_OF_YEAR, -1)
+                }
+                set(Calendar.HOUR_OF_DAY, startHour)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
             }
             val type = if (wifi) ConnectivityManager.TYPE_WIFI else ConnectivityManager.TYPE_MOBILE
             val stats = nsm.querySummary(type, null, cal.timeInMillis, System.currentTimeMillis())

@@ -150,11 +150,6 @@ class InternetService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
-            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
-            return START_STICKY
-        }
-
         val initialNotification = buildNotification(0L, 0L)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -169,6 +164,11 @@ class InternetService : Service() {
             }
         } else {
             startForeground(SpeedNotification.NOTIFICATION_ID, initialNotification)
+        }
+
+        if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
+            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, initialNotification)
+            return START_STICKY
         }
 
         if (isScreenOn || !pauseWhenScreenOff()) {
@@ -292,22 +292,25 @@ class InternetService : Service() {
         val curRawTx = sanitizeBytes(TrafficStats.getTotalTxBytes())
         val curVpn = getVpnTraffic()
 
-        if (curRawRx >= lastHardwareTotalRx && curRawTx >= lastHardwareTotalTx) {
-            val rawDeltaRx = curRawRx - lastHardwareTotalRx
-            val rawDeltaTx = curRawTx - lastHardwareTotalTx
-            
-            val vpnDeltaRx = max(0L, curVpn.first - lastHardwareVpnRx)
-            val vpnDeltaTx = max(0L, curVpn.second - lastHardwareVpnTx)
-            
-            val deltaRx = max(0L, rawDeltaRx - vpnDeltaRx)
-            val deltaTx = max(0L, rawDeltaTx - vpnDeltaTx)
-            
-            val deltaTotal = deltaRx + deltaTx
-            if (deltaTotal > 0L) {
-                allocateTraffic(deltaTotal)
-                saveToPrefs()
-                persistDailyUsage()
-            }
+        if (curRawRx < lastHardwareTotalRx || curRawTx < lastHardwareTotalTx) {
+            initHardwareCounters()
+            return
+        }
+
+        val rawDeltaRx = curRawRx - lastHardwareTotalRx
+        val rawDeltaTx = curRawTx - lastHardwareTotalTx
+        
+        val vpnDeltaRx = max(0L, curVpn.first - lastHardwareVpnRx)
+        val vpnDeltaTx = max(0L, curVpn.second - lastHardwareVpnTx)
+        
+        val deltaRx = max(0L, rawDeltaRx - vpnDeltaRx)
+        val deltaTx = max(0L, rawDeltaTx - vpnDeltaTx)
+        
+        val deltaTotal = deltaRx + deltaTx
+        if (deltaTotal > 0L) {
+            allocateTraffic(deltaTotal)
+            saveToPrefs()
+            persistDailyUsage()
         }
 
         lastHardwareTotalRx = curRawRx

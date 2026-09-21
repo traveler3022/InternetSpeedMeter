@@ -112,6 +112,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMonitoringService() {
+        prefs.edit().putBoolean("isStarted", true).apply()
         val serviceIntent = Intent(this, InternetService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(serviceIntent)
         else startService(serviceIntent)
@@ -128,6 +129,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopMonitoringAndExit() {
+        prefs.edit().putBoolean("isStarted", false).apply()
         stopService(Intent(this, InternetService::class.java))
         finishAffinity()
     }
