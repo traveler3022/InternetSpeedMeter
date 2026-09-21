@@ -132,19 +132,13 @@ class MainActivity : AppCompatActivity() {
         else startService(serviceIntent)
     }
 
-    /** Asks first, then lets the service clear the table and its counters. */
-    private fun confirmResetStatistics() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setMessage(R.string.reset_confirm)
-            .setPositiveButton(R.string.menu_reset) { _, _ ->
-                val intent = Intent(this, InternetService::class.java)
-                    .setAction(InternetService.ACTION_RESET)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-                else startService(intent)
-                Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+    /** The service clears the table and its own counters. */
+    private fun resetStatistics() {
+        val intent = Intent(this, InternetService::class.java)
+            .setAction(InternetService.ACTION_RESET)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+        else startService(intent)
+        Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
     }
 
     private fun stopMonitoringAndExit() {
@@ -174,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java)); true
             }
             R.id.action_reset_stats -> {
-                confirmResetStatistics()
+                resetStatistics()
                 true
             }
             R.id.action_stop_exit -> { stopMonitoringAndExit(); true }

@@ -13,7 +13,6 @@
     <string name="menu_reset">Reset statistics</string>
     <string name="menu_stop_exit">Stop and exit</string>
     <string name="reset_done">Statistics cleared</string>
-    <string name="reset_confirm">Clear all usage statistics?</string>
 
     <string name="apps_need_permission">Grant Usage Access to see per-app usage</string>
     <string name="usage_access_needed">Grant "Usage Access" to this app to see per-app usage</string>

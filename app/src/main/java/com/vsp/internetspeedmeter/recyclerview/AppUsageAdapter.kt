@@ -37,7 +37,7 @@ class AppUsageAdapter : ListAdapter<AppUsageItem, AppUsageAdapter.VH>(Diff) {
             b.tvAppName.text = item.label
             val total = FormatUtils.formatBytes(item.bytesUsed)
             b.tvAppUsage.text = if (item.recentBytes > 0L) {
-                val now = "\u2191 " + FormatUtils.formatBytes(item.recentBytes)
+                val now = "\u2191"
                 SpannableString("$now   $total").apply {
                     val accent = Palette.color(b.root.context, R.attr.ismAccent)
                     setSpan(ForegroundColorSpan(accent), 0, now.length, 0)
