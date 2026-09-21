@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1.25"
-        android:background="@color/date_cell"
+        android:background="?attr/ismHeader"
         android:gravity="center"
         android:textColor="@color/White"
         android:textSize="15sp"
@@ -27,7 +27,7 @@
         android:layout_height="match_parent"
         android:layout_weight="0.9"
         android:gravity="center"
-        android:textColor="@color/cell_text"
+        android:textColor="?attr/ismCellText"
         android:textSize="15sp"
         tools:text="۶٬۰۴ گ ب" />
 
@@ -37,7 +37,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1.0"
         android:gravity="center"
-        android:textColor="@color/cell_text"
+        android:textColor="?attr/ismCellText"
         android:textSize="15sp"
         tools:text="۰ م ب" />
 
@@ -47,7 +47,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1.0"
         android:gravity="center"
-        android:textColor="@color/cell_text"
+        android:textColor="?attr/ismCellText"
         android:textSize="15sp"
         tools:text="۶٬۰۴ گ ب" />
 </LinearLayout>

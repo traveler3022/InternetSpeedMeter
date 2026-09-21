@@ -15,6 +15,7 @@
     <string name="menu_reset">تنظیم مجدد آمار</string>
     <string name="menu_stop_exit">توقف و خروج</string>
     <string name="reset_done">آمار پاک شد</string>
+    <string name="reset_confirm">همهٔ آمار مصرف پاک شود؟</string>
 
     <!-- Session dialog -->
     <string name="session_time" translatable="false">Session Time</string>

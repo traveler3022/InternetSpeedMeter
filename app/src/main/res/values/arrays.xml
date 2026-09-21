@@ -56,11 +56,13 @@
     </string-array>
 
     <string-array name="theme_entries">
-        <item>روشن</item>
+        <item>آبی روشن</item>
+        <item>بنفش</item>
         <item>تیره</item>
     </string-array>
     <string-array name="theme_values">
         <item>light</item>
+        <item>purple</item>
         <item>dark</item>
     </string-array>
 </resources>

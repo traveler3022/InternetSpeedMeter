@@ -23,9 +23,9 @@ import com.vsp.internetspeedmeter.room.UsageViewModel
 import androidx.core.os.ConfigurationCompat
 import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
+import com.vsp.internetspeedmeter.util.Palette
 import com.vsp.internetspeedmeter.util.PersianFormat
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -43,15 +43,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val defaultPrefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
-        if (defaultPrefs.getString("theme_color", "light") == "dark") {
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
-        }
+        Palette.applyNightMode(this)
         super.onCreate(savedInstanceState)
+        Palette.apply(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -69,12 +63,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun populateFutureMonthDays() {
-        val list = mutableListOf<Usage>()
-        for (i in 0..30) {
-            val c = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, i) }
-            list.add(Usage(date = dbDateFormat.format(c.time), mobile = 0L, wifi = 0L, total = 0L))
-        }
-        viewModel.insertAllIgnore(list)
+        viewModel.insertAllIgnore(DayCycle.upcomingDates().map { Usage(date = it) })
     }
 
     private fun setupRecyclerView() {
@@ -143,15 +132,19 @@ class MainActivity : AppCompatActivity() {
         else startService(serviceIntent)
     }
 
-    /** Clears the table, the cached counters and restarts the service from zero. */
-    private fun resetStatistics() {
-        stopService(Intent(this, InternetService::class.java))
-        viewModel.deleteAllNotes()
-        prefs.edit().clear().apply()
-        getSharedPreferences(TRAFFIC_PREF_NAME, Context.MODE_PRIVATE).edit().clear().apply()
-        populateFutureMonthDays()
-        startMonitoringService()
-        Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
+    /** Asks first, then lets the service clear the table and its counters. */
+    private fun confirmResetStatistics() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setMessage(R.string.reset_confirm)
+            .setPositiveButton(R.string.menu_reset) { _, _ ->
+                val intent = Intent(this, InternetService::class.java)
+                    .setAction(InternetService.ACTION_RESET)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                else startService(intent)
+                Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun stopMonitoringAndExit() {
@@ -181,7 +174,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java)); true
             }
             R.id.action_reset_stats -> {
-                resetStatistics()
+                confirmResetStatistics()
                 true
             }
             R.id.action_stop_exit -> { stopMonitoringAndExit(); true }
@@ -191,6 +184,5 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val PREF_NAME = "internetSpeed"
-        private const val TRAFFIC_PREF_NAME = "traffic_data"
     }
 }

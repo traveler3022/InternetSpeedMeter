@@ -166,6 +166,10 @@ class InternetService : Service() {
             startForeground(SpeedNotification.NOTIFICATION_ID, initialNotification)
         }
 
+        if (intent?.action == ACTION_RESET) {
+            resetStatistics()
+        }
+
         if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
             notificationManager.notify(SpeedNotification.NOTIFICATION_ID, initialNotification)
             return START_STICKY
@@ -485,6 +489,25 @@ class InternetService : Service() {
         persistDailyUsage()
     }
 
+    /**
+     * "تنظیم مجدد آمار". Done here rather than by stopping the service: a stopping
+     * service writes its in-memory totals back, which undid the reset.
+     */
+    private fun resetStatistics() {
+        synchronized(stateLock) {
+            dailyMobileBytes = 0L
+            dailyWifiBytes = 0L
+            monthlyMobileBase = 0L
+            sessionStartTimeMs = SystemClock.elapsedRealtime()
+            sessionBytes = 0L
+            speedHistory.fill(0L)
+            initHardwareCountersLocked()
+        }
+        saveToPrefs()
+        usageRepository.resetAsync(DayCycle.upcomingDates().map { Usage(date = it) })
+        notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
+    }
+
     private fun initHardwareCountersLocked() {
         counterBaselines.clear()
         counterBaselines.putAll(readCounters())
@@ -669,6 +692,8 @@ class InternetService : Service() {
 
     companion object {
         var instance: InternetService? = null
+
+        const val ACTION_RESET = "com.vsp.internetspeedmeter.RESET_STATS"
 
         private const val MOBILE_PREFIX = "mobile:"
         private const val WIFI_PREFIX = "wifi:"

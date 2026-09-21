@@ -2,11 +2,11 @@ package com.vsp.internetspeedmeter
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
+import com.vsp.internetspeedmeter.util.Palette
 
 class GraphView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -15,17 +15,17 @@ class GraphView @JvmOverloads constructor(
     private val dataPoints = LongArray(60)
     private val path = Path()
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#4285F4")
+        color = Palette.color(context, R.attr.ismAccent)
         strokeWidth = 4f
         style = Paint.Style.STROKE
     }
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E0E0E0")
+        color = Palette.color(context, R.attr.ismGrid)
         strokeWidth = 2f
         style = Paint.Style.STROKE
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#757575")
+        color = Palette.color(context, R.attr.ismMuted)
         textSize = 24f
     }
 
