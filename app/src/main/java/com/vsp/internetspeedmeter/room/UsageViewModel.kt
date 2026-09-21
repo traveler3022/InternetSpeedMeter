@@ -14,6 +14,10 @@ class UsageViewModel(application: Application) : AndroidViewModel(application) {
         repository.upsert(usage)
     }
 
+    fun insertAllIgnore(usages: List<Usage>) = viewModelScope.launch {
+        repository.insertAllIgnore(usages)
+    }
+
     fun update(usage: Usage) = viewModelScope.launch {
         repository.upsert(usage)
     }

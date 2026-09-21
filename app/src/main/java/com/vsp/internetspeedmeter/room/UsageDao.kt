@@ -19,6 +19,9 @@ interface UsageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(usage: Usage)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAllIgnore(usages: List<Usage>)
+
     @Update
     suspend fun update(usage: Usage)
 
