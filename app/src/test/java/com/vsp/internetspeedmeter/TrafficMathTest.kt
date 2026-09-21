@@ -89,43 +89,4 @@ class TrafficMathTest {
         assertTrue(deltas.isEmpty())
         assertEquals(TrafficMath.Counters(10L, 10L), baselines["wlan0"])
     }
-
-    @Test
-    fun splitTraffic_removesVpnDoubleCount() {
-        // 1 MB downloaded through a VPN over Wi-Fi: tunnel 1 MB + Wi-Fi 1.05 MB
-        val split = TrafficMath.splitTraffic(
-            total = TrafficMath.Counters(2_050_000L, 100_000L),
-            vpn = TrafficMath.Counters(1_000_000L, 40_000L),
-            mobile = TrafficMath.Counters(0L, 0L)
-        )
-
-        assertEquals(TrafficMath.Counters(1_050_000L, 60_000L), split.physical)
-        assertEquals(0L, split.mobileBytes)
-        assertEquals(1_110_000L, split.wifiBytes)
-    }
-
-    @Test
-    fun splitTraffic_capsMobileJumpAtPhysicalTraffic() {
-        // A new cellular interface brings its since-boot counter into the sum
-        val split = TrafficMath.splitTraffic(
-            total = TrafficMath.Counters(5_000L, 1_000L),
-            vpn = TrafficMath.Counters(0L, 0L),
-            mobile = TrafficMath.Counters(900_000_000L, 1_000L)
-        )
-
-        assertEquals(6_000L, split.mobileBytes)
-        assertEquals(0L, split.wifiBytes)
-    }
-
-    @Test
-    fun splitTraffic_neverNegative() {
-        val split = TrafficMath.splitTraffic(
-            total = TrafficMath.Counters(100L, 0L),
-            vpn = TrafficMath.Counters(500L, 10L),
-            mobile = TrafficMath.Counters(0L, 0L)
-        )
-
-        assertEquals(TrafficMath.Counters(0L, 0L), split.physical)
-        assertEquals(0L, split.wifiBytes)
-    }
 }

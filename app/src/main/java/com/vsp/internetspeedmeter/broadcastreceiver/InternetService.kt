@@ -29,8 +29,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.net.NetworkInterface
-import java.util.Locale
 import kotlin.math.max
 
 class InternetService : Service() {
@@ -184,68 +182,63 @@ class InternetService : Service() {
     }
 
     /**
-     * Counter snapshot, keyed for [TrafficMath.interfaceDeltas]:
-     * [KEY_TOTAL] = TrafficStats total (every interface, VPN tunnel included),
-     * [KEY_MOBILE] = TrafficStats mobile (all cellular interfaces, 464xlat too),
-     * [VPN_PREFIX] + name = each VPN tunnel and loopback, subtracted from the total.
+     * Counter snapshot, keyed for [TrafficMath.interfaceDeltas]. Mobile and
+     * Wi-Fi are read separately and never derived from each other:
      *
-     * The platform keeps the total and mobile counters correct as networking
-     * changes (464xlat, eBPF accounting, new modem interface names), so this code
-     * does not need to know about interfaces beyond spotting VPN tunnels.
-     * Order matters: total first, mobile last, so mobile never lags the total.
+     * [MOBILE_PREFIX] + cellular interfaces = TrafficStats mobile counter. The
+     * platform keeps it right (464xlat, modem interface names); the key holds
+     * the interface set, so a set change starts a new baseline instead of
+     * counting a since-boot counter as new traffic.
+     *
+     * [WIFI_PREFIX] + name = each interface of a connected Wi-Fi/Ethernet
+     * network, plus its 464xlat "v4-" interface. Nothing is read for Wi-Fi
+     * while no Wi-Fi network is connected.
+     *
+     * VPN tunnels are never read, so VPN traffic is counted once, on the
+     * network that carried it.
      */
     private fun readCounters(): Map<String, TrafficMath.Counters> {
         val result = HashMap<String, TrafficMath.Counters>()
-        val totalRx = TrafficStats.getTotalRxBytes()
-        val totalTx = TrafficStats.getTotalTxBytes()
-        if (totalRx < 0L || totalTx < 0L) return result
-        result[KEY_TOTAL] = TrafficMath.Counters(totalRx, totalTx)
+        val mobileIfaces = sortedSetOf<String>()
+        var wifiConnected = false
 
-        for (iface in vpnInterfaces()) {
-            readInterface(iface)?.let { result[VPN_PREFIX + iface] = it }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (network in connectivityManager.allNetworks) {
+                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: continue
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue
+                val iface = connectivityManager.getLinkProperties(network)?.interfaceName
+                    ?.takeIf { it.isNotBlank() } ?: continue
+                when {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                        mobileIfaces.add(iface)
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
+                        wifiConnected = true
+                        for (name in listOf(iface, CLAT_PREFIX + iface)) {
+                            readInterface(name)?.let { result[WIFI_PREFIX + name] = it }
+                        }
+                    }
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            wifiConnected = connectivityManager.activeNetworkInfo?.let {
+                it.isConnected && it.type != ConnectivityManager.TYPE_MOBILE
+            } == true
         }
 
-        result[KEY_MOBILE] = TrafficMath.Counters(
+        // Old devices where the Wi-Fi interface counters are unreadable.
+        if (wifiConnected && result.isEmpty()) {
+            val rx = TrafficStats.getTotalRxBytes() - TrafficStats.getMobileRxBytes()
+            val tx = TrafficStats.getTotalTxBytes() - TrafficStats.getMobileTxBytes()
+            if (rx >= 0L && tx >= 0L) result[WIFI_PREFIX + "*"] = TrafficMath.Counters(rx, tx)
+        }
+
+        result[MOBILE_PREFIX + mobileIfaces.joinToString(",")] = TrafficMath.Counters(
             TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
             TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
         )
         return result
-    }
-
-    /** Tunnel interfaces of active VPNs, plus loopback. */
-    private fun vpnInterfaces(): Set<String> {
-        val names = HashSet<String>()
-        names.add("lo")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (network in connectivityManager.allNetworks) {
-                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: continue
-                if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue
-                connectivityManager.getLinkProperties(network)?.interfaceName
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { names.add(it) }
-            }
-        }
-        // A VPN that excludes this app is missing from allNetworks, but its
-        // tunnel interface is still listed here.
-        try {
-            NetworkInterface.getNetworkInterfaces()?.let { all ->
-                for (iface in all) {
-                    if (isTunnelName(iface.name)) names.add(iface.name)
-                }
-            }
-        } catch (_: Exception) {
-            // Keep what ConnectivityManager reported.
-        }
-        return names
-    }
-
-    private fun isTunnelName(name: String): Boolean {
-        val lower = name.lowercase(Locale.ROOT)
-        return lower.startsWith("tun") ||
-            lower.startsWith("tap") ||
-            lower.startsWith("wg") ||
-            lower.startsWith("ipsec") ||
-            lower.startsWith("vpn")
     }
 
     private fun readInterface(iface: String): TrafficMath.Counters? {
@@ -327,25 +320,27 @@ class InternetService : Service() {
 
     private fun readAndApplyTrafficSampleLocked(): TrafficMath.Sample {
         val curTime = SystemClock.elapsedRealtime()
-        val deltas = TrafficMath.interfaceDeltas(counterBaselines, readCounters())
+        val readings = readCounters()
+        // The mobile counter is only comparable with the same interface set.
+        counterBaselines.keys.removeAll { it.startsWith(MOBILE_PREFIX) && it !in readings }
+        val deltas = TrafficMath.interfaceDeltas(counterBaselines, readings)
 
-        var vpnRx = 0L
-        var vpnTx = 0L
+        var deltaRx = 0L
+        var deltaTx = 0L
+        var mobileBytes = 0L
+        var wifiBytes = 0L
         for ((key, delta) in deltas) {
-            if (!key.startsWith(VPN_PREFIX)) continue
-            vpnRx = TrafficMath.safeAdd(vpnRx, delta.rx)
-            vpnTx = TrafficMath.safeAdd(vpnTx, delta.tx)
+            deltaRx = TrafficMath.safeAdd(deltaRx, delta.rx)
+            deltaTx = TrafficMath.safeAdd(deltaTx, delta.tx)
+            val bytes = TrafficMath.safeAdd(delta.rx, delta.tx)
+            if (key.startsWith(MOBILE_PREFIX)) {
+                mobileBytes = TrafficMath.safeAdd(mobileBytes, bytes)
+            } else {
+                wifiBytes = TrafficMath.safeAdd(wifiBytes, bytes)
+            }
         }
-        val zero = TrafficMath.Counters(0L, 0L)
-        val split = TrafficMath.splitTraffic(
-            total = deltas[KEY_TOTAL] ?: zero,
-            vpn = TrafficMath.Counters(vpnRx, vpnTx),
-            mobile = deltas[KEY_MOBILE] ?: zero
-        )
-        val deltaRx = split.physical.rx
-        val deltaTx = split.physical.tx
 
-        allocateTrafficLocked(split.mobileBytes, split.wifiBytes, 0L)
+        allocateTrafficLocked(mobileBytes, wifiBytes, 0L)
 
         // Android 15+ caches TrafficStats results for ~1 s (NetworkStatsService
         // DEFAULT_TRAFFIC_STATS_CACHE_EXPIRY_DURATION_MS). Polling every second
@@ -675,9 +670,11 @@ class InternetService : Service() {
     companion object {
         var instance: InternetService? = null
 
-        private const val KEY_TOTAL = "total"
-        private const val KEY_MOBILE = "mobile"
-        private const val VPN_PREFIX = "vpn:"
+        private const val MOBILE_PREFIX = "mobile:"
+        private const val WIFI_PREFIX = "wifi:"
+
+        /** Name prefix of the 464xlat interface (Nat464Xlat.CLAT_PREFIX). */
+        private const val CLAT_PREFIX = "v4-"
     }
 
     fun getSessionInfo(): Pair<Long, Long> {
