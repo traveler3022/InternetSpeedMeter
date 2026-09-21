@@ -15,7 +15,9 @@ object DayCycle {
 
     const val KEY_DAY_START_HOUR = "day_start_hour"
 
-    private val dbDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.US)
+    private val dbDateFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("dd-MM-yyyy", Locale.US)
+    }
 
     fun startHour(context: Context): Int {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -26,7 +28,7 @@ object DayCycle {
     fun currentDate(context: Context): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.HOUR_OF_DAY, -startHour(context))
-        return dbDateFormat.format(cal.time)
+        return dbDateFormat.get().format(cal.time)
     }
 
     /** "20-09-2026" -> "09-2026", the month bucket used for the monthly limit. */

@@ -7,14 +7,12 @@ import androidx.room.RoomDatabase
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
+import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 @Database(entities = [Usage::class], version = 2, exportSchema = false)
 abstract class UsageDatabase : RoomDatabase() {
@@ -34,8 +32,7 @@ abstract class UsageDatabase : RoomDatabase() {
                     "usage_database"
                 )
                     .addMigrations(MIGRATION_1_2)
-                    .fallbackToDestructiveMigration()
-                    .addCallback(RoomCallback())
+                    .addCallback(RoomCallback(context.applicationContext))
                     .build()
                 INSTANCE = instance
                 instance
@@ -46,40 +43,43 @@ abstract class UsageDatabase : RoomDatabase() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Usage_Table_new` (`date` TEXT NOT NULL, `mobile` INTEGER NOT NULL, `wifi` INTEGER NOT NULL, `total` INTEGER NOT NULL, PRIMARY KEY(`date`))")
                 
-                val cursor = database.query("SELECT date, mobile, wifi, total FROM Usage_Table")
-                if (cursor.moveToFirst()) {
-                    do {
-                        val date = cursor.getString(0)
-                        val mobileStr = cursor.getString(1)
-                        val wifiStr = cursor.getString(2)
-                        
-                        val mobileBytes = FormatUtils.parseDataToBytes(mobileStr)
-                        val wifiBytes = FormatUtils.parseDataToBytes(wifiStr)
-                        val totalBytes = mobileBytes + wifiBytes
-                        
-                        val values = ContentValues().apply {
-                            put("date", date)
-                            put("mobile", mobileBytes)
-                            put("wifi", wifiBytes)
-                            put("total", totalBytes)
-                        }
-                        database.insert("Usage_Table_new", SQLiteDatabase.CONFLICT_REPLACE, values)
-                    } while (cursor.moveToNext())
+                database.query("SELECT date, mobile, wifi, total FROM Usage_Table").use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        do {
+                            val date = cursor.getString(0)
+                            val mobileStr = cursor.getString(1)
+                            val wifiStr = cursor.getString(2)
+
+                            val mobileBytes = FormatUtils.parseDataToBytes(mobileStr)
+                            val wifiBytes = FormatUtils.parseDataToBytes(wifiStr)
+                            val totalBytes = if (Long.MAX_VALUE - mobileBytes < wifiBytes) {
+                                Long.MAX_VALUE
+                            } else {
+                                mobileBytes + wifiBytes
+                            }
+
+                            val values = ContentValues().apply {
+                                put("date", date)
+                                put("mobile", mobileBytes)
+                                put("wifi", wifiBytes)
+                                put("total", totalBytes)
+                            }
+                            database.insert("Usage_Table_new", SQLiteDatabase.CONFLICT_REPLACE, values)
+                        } while (cursor.moveToNext())
+                    }
                 }
-                cursor.close()
                 
                 database.execSQL("DROP TABLE `Usage_Table`")
                 database.execSQL("ALTER TABLE `Usage_Table_new` RENAME TO `Usage_Table`")
             }
         }
 
-        private class RoomCallback : Callback() {
+        private class RoomCallback(private val context: Context) : Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
                 INSTANCE?.let { database ->
                     CoroutineScope(Dispatchers.IO).launch {
-                        val today = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-                            .format(Calendar.getInstance().time)
+                        val today = DayCycle.currentDate(context)
                         database.usageDao().insert(Usage(date = today, mobile = 0L, wifi = 0L, total = 0L))
                     }
                 }
