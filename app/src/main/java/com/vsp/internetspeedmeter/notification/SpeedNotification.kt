@@ -21,6 +21,7 @@ import com.vsp.internetspeedmeter.MainActivity
 import com.vsp.internetspeedmeter.R
 import com.vsp.internetspeedmeter.util.FormatUtils
 import com.vsp.internetspeedmeter.util.PersianFormat
+import kotlin.math.abs
 
 /**
  * ORIGINAL look (do NOT replace with a custom RemoteViews layout):
@@ -151,7 +152,7 @@ object SpeedNotification {
         val builder = NotificationCompat.Builder(
             context, if (idle) CHANNEL_ID_IDLE else CHANNEL_ID
         )
-            .setSmallIcon(IconCompat.createWithBitmap(speedIcon(totalSpeed, useBits)))
+            .setSmallIcon(IconCompat.createWithBitmap(speedIcon(context, totalSpeed, useBits)))
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(pending)
@@ -187,10 +188,9 @@ object SpeedNotification {
     private fun isPersianUi(context: Context): Boolean =
         ConfigurationCompat.getLocales(context.resources.configuration)[0]?.language == "fa"
 
+    /** The speed number stays in Latin digits ("28 ک ب/ث"); only the unit is Persian. */
     private fun formatSpeed(context: Context, bytesPerSec: Long, bits: Boolean): String =
-        if (isPersianUi(context)) PersianFormat.toPersian(
-            FormatUtils.formatSpeedPersian(bytesPerSec, bits)
-        )
+        if (isPersianUi(context)) FormatUtils.formatSpeedPersian(bytesPerSec, bits)
         else FormatUtils.formatSpeed(if (bits) bytesPerSec * 8L else bytesPerSec)
             .let { if (bits) it.replace("B/s", "b/s") else it }
 
@@ -198,43 +198,47 @@ object SpeedNotification {
         if (isPersianUi(context)) PersianFormat.bytes(bytes) else FormatUtils.formatBytes(bytes)
 
     /**
-     * Status-bar icon: "28" over "KB/s". Both lines are condensed-bold and are
-     * scaled to fill the 96px canvas, so the glyphs come out as large and as
-     * heavy as the reference app's icon instead of thin and small.
+     * Status-bar icon: "28" over "KB/s", with the reference app's exact metrics:
+     * canvas 24/36/48/72/96 px by density, number at 0.78 x height (scaleX 0.9,
+     * 0.75 for three characters), unit at 0.42 x height, both DEFAULT_BOLD.
      */
-    private fun speedIcon(bytesPerSec: Long, bits: Boolean): Bitmap {
-        val size = 96
+    private fun speedIcon(context: Context, bytesPerSec: Long, bits: Boolean): Bitmap {
+        val size = when (context.resources.displayMetrics.densityDpi) {
+            120, 160 -> 24
+            240 -> 36
+            320 -> 48
+            640 -> 96
+            else -> 72
+        }
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val speed = FormatUtils.formatSpeedForIcon(bytesPerSec, bits)
 
-        val valuePaint = textPaint(67f)
-        fitWidth(valuePaint, speed.value, size - 4f)
+        val valueHeight = size * 0.65f
+        val unitHeight = size - valueHeight
+
+        val valuePaint = textPaint(valueHeight * 1.2f).apply {
+            textScaleX = if (speed.value.length == 3) 0.75f else 0.9f
+        }
+        val valueGlyph = abs(valuePaint.ascent() + valuePaint.descent())
+        val valueBaseline = abs((valueHeight - valueGlyph) / 3f) + valueGlyph
 
         val unitText = speed.unit + "/s"
-        val unitPaint = textPaint(38f).apply {
-            style = Paint.Style.FILL_AND_STROKE
-            strokeWidth = 1f
+        val unitPaint = textPaint(unitHeight * 1.2f).apply {
+            textScaleX = if (speed.unit.startsWith("K")) 1.05f else 1.0f
         }
-        fitWidth(unitPaint, unitText, size - 2f)
+        val unitGlyph = abs(unitPaint.ascent() + unitPaint.descent())
+        val unitBaseline = size - abs((unitHeight - unitGlyph) / 4f)
 
-        canvas.drawText(speed.value, size / 2f, 56f, valuePaint)
-        canvas.drawText(unitText, size / 2f, 94f, unitPaint)
+        canvas.drawText(speed.value, size / 2f, valueBaseline, valuePaint)
+        canvas.drawText(unitText, size / 2f, unitBaseline, unitPaint)
         return bmp
     }
 
     private fun textPaint(size: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
-        typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
-        isFakeBoldText = true
+        typeface = Typeface.DEFAULT_BOLD
         textSize = size
-    }
-
-    private fun fitWidth(paint: Paint, text: String, maxWidth: Float) {
-        val width = paint.measureText(text)
-        if (width > maxWidth && width > 0f) {
-            paint.textSize = paint.textSize * maxWidth / width
-        }
     }
 }
