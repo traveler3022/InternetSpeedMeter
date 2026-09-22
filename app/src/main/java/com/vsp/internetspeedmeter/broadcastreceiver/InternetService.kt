@@ -9,7 +9,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.TrafficStats
 import android.os.Build
 import android.os.IBinder
@@ -67,6 +70,29 @@ class InternetService : Service() {
     private var currentNetworkType = 0 // 0: None, 1: Mobile, 2: Wifi
     private var sessionStartTimeMs = 0L
     private var sessionBytes = 0L
+
+    /**
+     * Network layout used by every tick. Recomputing it takes several binder
+     * calls per network, so, like the reference app (which re-reads it only on
+     * connectivity changes), it is cached and rebuilt only after a
+     * NetworkCallback event or when it is older than [NETWORK_SNAPSHOT_MAX_AGE_MS].
+     */
+    private class NetworkSnapshot(
+        val mobileKey: String,
+        val wifiIfaces: List<String>,
+        val wifiConnected: Boolean,
+        val type: Int,
+        val connected: Boolean,
+        val takenAt: Long
+    )
+
+    @Volatile
+    private var networkDirty = true
+    private var networkSnapshot: NetworkSnapshot? = null
+    private var networkCallbacks = emptyList<ConnectivityManager.NetworkCallback>()
+
+    // Ticks since the notification was last posted even though it had not changed
+    private var ticksSinceForcedPost = 0
 
     // Graph Tracking
     val speedHistory = LongArray(60)
@@ -133,6 +159,7 @@ class InternetService : Service() {
             dailyWifiBytes = 0L
         }
 
+        registerNetworkCallbacks()
         initHardwareCounters()
         checkDateRollover()
         syncWithDatabase()
@@ -154,16 +181,17 @@ class InternetService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val initialNotification = buildNotification(0L, 0L)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                SpeedNotification.NOTIFICATION_ID,
-                initialNotification,
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(SpeedNotification.NOTIFICATION_ID, initialNotification)
+        networkDirty = true
+        postNotification(0L, 0L) { notification ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    SpeedNotification.NOTIFICATION_ID,
+                    notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(SpeedNotification.NOTIFICATION_ID, notification)
+            }
         }
 
         if (intent?.action == ACTION_RESET) {
@@ -171,7 +199,6 @@ class InternetService : Service() {
         }
 
         if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
-            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, initialNotification)
             return START_STICKY
         }
 
@@ -202,8 +229,43 @@ class InternetService : Service() {
      * network that carried it.
      */
     private fun readCounters(): Map<String, TrafficMath.Counters> {
+        val snapshot = currentNetworkSnapshot()
         val result = HashMap<String, TrafficMath.Counters>()
+        for (name in snapshot.wifiIfaces) {
+            readInterface(name)?.let { result[WIFI_PREFIX + name] = it }
+        }
+
+        // Old devices where the Wi-Fi interface counters are unreadable.
+        if (snapshot.wifiConnected && result.isEmpty()) {
+            val rx = TrafficStats.getTotalRxBytes() - TrafficStats.getMobileRxBytes()
+            val tx = TrafficStats.getTotalTxBytes() - TrafficStats.getMobileTxBytes()
+            if (rx >= 0L && tx >= 0L) result[WIFI_PREFIX + "*"] = TrafficMath.Counters(rx, tx)
+        }
+
+        result[MOBILE_PREFIX + snapshot.mobileKey] = TrafficMath.Counters(
+            TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
+            TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
+        )
+        return result
+    }
+
+    private fun currentNetworkSnapshot(): NetworkSnapshot = synchronized(stateLock) {
+        val now = SystemClock.elapsedRealtime()
+        val cached = networkSnapshot
+        if (cached != null && !networkDirty &&
+            now - cached.takenAt < NETWORK_SNAPSHOT_MAX_AGE_MS
+        ) {
+            return cached
+        }
+        // Cleared before reading, so an event that arrives meanwhile triggers
+        // another rebuild on the next tick.
+        networkDirty = false
+        takeNetworkSnapshot(now).also { networkSnapshot = it }
+    }
+
+    private fun takeNetworkSnapshot(now: Long): NetworkSnapshot {
         val mobileIfaces = sortedSetOf<String>()
+        val wifiIfaces = ArrayList<String>()
         var wifiConnected = false
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -218,9 +280,8 @@ class InternetService : Service() {
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
                         wifiConnected = true
-                        for (name in listOf(iface, CLAT_PREFIX + iface)) {
-                            readInterface(name)?.let { result[WIFI_PREFIX + name] = it }
-                        }
+                        wifiIfaces.add(iface)
+                        wifiIfaces.add(CLAT_PREFIX + iface)
                     }
                 }
             }
@@ -231,18 +292,69 @@ class InternetService : Service() {
             } == true
         }
 
-        // Old devices where the Wi-Fi interface counters are unreadable.
-        if (wifiConnected && result.isEmpty()) {
-            val rx = TrafficStats.getTotalRxBytes() - TrafficStats.getMobileRxBytes()
-            val tx = TrafficStats.getTotalTxBytes() - TrafficStats.getMobileTxBytes()
-            if (rx >= 0L && tx >= 0L) result[WIFI_PREFIX + "*"] = TrafficMath.Counters(rx, tx)
-        }
-
-        result[MOBILE_PREFIX + mobileIfaces.joinToString(",")] = TrafficMath.Counters(
-            TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
-            TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
+        return NetworkSnapshot(
+            mobileKey = mobileIfaces.joinToString(","),
+            wifiIfaces = wifiIfaces,
+            wifiConnected = wifiConnected,
+            type = detectNetworkType(),
+            connected = isConnected(),
+            takenAt = now
         )
-        return result
+    }
+
+    /**
+     * Marks the cached network layout stale on any network change. If the
+     * callbacks cannot be registered, [networkDirty] stays true and the layout
+     * is simply re-read every tick, as before.
+     */
+    private fun registerNetworkCallbacks() {
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { networkDirty = true }
+            override fun onLost(network: Network) { networkDirty = true }
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                networkDirty = true
+            }
+            override fun onLinkPropertiesChanged(network: Network, lp: LinkProperties) {
+                networkDirty = true
+            }
+        }
+        val registered = ArrayList<ConnectivityManager.NetworkCallback>()
+        try {
+            // Every non-restricted network, VPNs and networks without internet included.
+            val request = NetworkRequest.Builder()
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build()
+            connectivityManager.registerNetworkCallback(request, callback)
+            registered.add(callback)
+        } catch (_: Exception) {
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val defaultCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) { networkDirty = true }
+                override fun onLost(network: Network) { networkDirty = true }
+                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                    networkDirty = true
+                }
+            }
+            try {
+                connectivityManager.registerDefaultNetworkCallback(defaultCallback)
+                registered.add(defaultCallback)
+            } catch (_: Exception) {
+            }
+        }
+        networkCallbacks = registered
+        networkDirty = true
+    }
+
+    private fun unregisterNetworkCallbacks() {
+        for (callback in networkCallbacks) {
+            try {
+                connectivityManager.unregisterNetworkCallback(callback)
+            } catch (_: Exception) {
+            }
+        }
+        networkCallbacks = emptyList()
     }
 
     private fun readInterface(iface: String): TrafficMath.Counters? {
@@ -299,8 +411,12 @@ class InternetService : Service() {
                 speedHistory[speedHistoryIndex] = totalSpeed
             }
 
-            val notification = buildNotification(sample.downSpeed, sample.upSpeed)
-            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, notification)
+            // An unchanged notification is not re-posted, except every
+            // FORCED_POST_TICKS ticks so a dismissed one comes back.
+            val force = ++ticksSinceForcedPost >= FORCED_POST_TICKS
+            if (postNotification(sample.downSpeed, sample.upSpeed, force = force)) {
+                ticksSinceForcedPost = 0
+            }
 
             tickCount++
             if (tickCount % 5 == 0) {
@@ -402,7 +518,7 @@ class InternetService : Service() {
      * transport, or to the last known one when nothing is active.
      */
     private fun allocateTrafficLocked(mobileBytes: Long, wifiBytes: Long, unknownBytes: Long) {
-        val newNetworkType = detectNetworkType()
+        val newNetworkType = currentNetworkSnapshot().type
 
         if (newNetworkType != 0 && newNetworkType != currentNetworkType) {
             currentNetworkType = newNetworkType
@@ -483,7 +599,7 @@ class InternetService : Service() {
             monitorJob = null
         }
 
-        notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
+        postNotification(0L, 0L)
 
         saveToPrefs()
         persistDailyUsage()
@@ -505,7 +621,7 @@ class InternetService : Service() {
         }
         saveToPrefs()
         usageRepository.resetAsync(DayCycle.upcomingDates().map { Usage(date = it) })
-        notificationManager.notify(SpeedNotification.NOTIFICATION_ID, buildNotification(0L, 0L))
+        postNotification(0L, 0L)
     }
 
     private fun initHardwareCountersLocked() {
@@ -573,7 +689,15 @@ class InternetService : Service() {
     private fun monthlyMobileBytes(): Long =
         TrafficMath.safeAdd(monthlyMobileBase, dailyMobileBytes)
 
-    private fun buildNotification(downSpeed: Long, upSpeed: Long): Notification {
+    /** Builds and posts the notification; see [SpeedNotification.post]. */
+    private fun postNotification(
+        downSpeed: Long,
+        upSpeed: Long,
+        force: Boolean = true,
+        poster: (Notification) -> Unit = {
+            notificationManager.notify(SpeedNotification.NOTIFICATION_ID, it)
+        }
+    ): Boolean {
         val (mobile, wifi, monthly) = synchronized(stateLock) {
             Triple(
                 dailyMobileBytes,
@@ -581,14 +705,16 @@ class InternetService : Service() {
                 monthlyMobileBytes()
             )
         }
-        return SpeedNotification.build(
+        return SpeedNotification.post(
             this,
+            poster,
             downSpeed,
             upSpeed,
             mobile,
             wifi,
             monthly,
-            isNotificationIdle()
+            isNotificationIdle(),
+            force
         )
     }
 
@@ -597,7 +723,7 @@ class InternetService : Service() {
         val onlyWhenConnected = androidx.preference.PreferenceManager
             .getDefaultSharedPreferences(this)
             .getBoolean("notification_when_connected", false)
-        return onlyWhenConnected && !isConnected()
+        return onlyWhenConnected && !currentNetworkSnapshot().connected
     }
 
     private fun isConnected(): Boolean {
@@ -667,6 +793,8 @@ class InternetService : Service() {
 
         stopMonitoring()
 
+        unregisterNetworkCallbacks()
+
         try {
             unregisterReceiver(systemEventReceiver)
         } catch (_: Exception) {
@@ -700,6 +828,11 @@ class InternetService : Service() {
 
         /** Name prefix of the 464xlat interface (Nat464Xlat.CLAT_PREFIX). */
         private const val CLAT_PREFIX = "v4-"
+
+        /** Safety net in case a network change produced no callback. */
+        private const val NETWORK_SNAPSHOT_MAX_AGE_MS = 30_000L
+
+        private const val FORCED_POST_TICKS = 10
     }
 
     fun getSessionInfo(): Pair<Long, Long> {

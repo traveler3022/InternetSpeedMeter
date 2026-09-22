@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -86,19 +87,33 @@ object SpeedNotification {
         }
     }
 
+    /** Guards the shared icon bitmap and [lastKey]; build and post happen under it. */
+    private val lock = Any()
+    private var lastKey: String? = null
+    private val pendingIntents = HashMap<String, PendingIntent?>()
+
     /**
+     * Builds the notification and hands it to [poster] (notify/startForeground).
+     * As in the reference app nothing is rebuilt from scratch per tick: the icon
+     * bitmap, its paints and the click PendingIntent are reused, and when
+     * [force] is false an update identical to the last posted one is skipped,
+     * which saves the notify IPC and the SystemUI redraw while the speed is flat.
+     *
      * @param idle true while "تنها زمانی که به اینترنت متصل هستم" is on and there
      *   is no connection, which moves the notification to the silent channel.
+     * @return true when the notification was posted.
      */
-    fun build(
+    fun post(
         context: Context,
+        poster: (Notification) -> Unit,
         downBytesPerSec: Long,
         upBytesPerSec: Long,
         mobileTodayBytes: Long,
         wifiTodayBytes: Long,
         monthlyMobileBytes: Long = 0L,
-        idle: Boolean = false
-    ): Notification {
+        idle: Boolean = false,
+        force: Boolean = true
+    ): Boolean = synchronized(lock) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val hideOnLockscreen = prefs.getBoolean("hide_lockscreen", false)
         val showUpDown = prefs.getBoolean("show_up_down_speed", true)
@@ -136,23 +151,18 @@ object SpeedNotification {
             )
         }
 
-        val target = when (clickAction) {
-            "app" -> Intent(context, MainActivity::class.java)
-            "none" -> null
-            else -> Intent(context, DialogActivity::class.java)
-        }
-        val pending = target?.let {
-            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            PendingIntent.getActivity(
-                context, 0, it,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
+        val colorMode = prefs.getString("notification_color", "system")
+        val iconSpeed = FormatUtils.formatSpeedForIcon(totalSpeed, useBits)
+        val key = "$title\n$text\n${iconSpeed.value}${iconSpeed.unit}\n$idle" +
+            "\n$hideOnLockscreen\n$clickAction\n$colorMode"
+        if (!force && key == lastKey) return@synchronized false
+
+        val pending = contentIntent(context, clickAction ?: "dialog")
 
         val builder = NotificationCompat.Builder(
             context, if (idle) CHANNEL_ID_IDLE else CHANNEL_ID
         )
-            .setSmallIcon(IconCompat.createWithBitmap(speedIcon(context, totalSpeed, useBits)))
+            .setSmallIcon(IconCompat.createWithBitmap(speedIcon(context, iconSpeed)))
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(pending)
@@ -171,14 +181,33 @@ object SpeedNotification {
 
         // "رنگ اعلان": a foreground-service notification may be colorized, which
         // is the only way to tint the surface without a custom layout.
-        when (prefs.getString("notification_color", "system")) {
+        when (colorMode) {
             "light" -> builder.setColorized(true).setColor(Color.parseColor("#FAFAFA"))
             "dark" -> builder.setColorized(true).setColor(Color.parseColor("#282828"))
             else -> builder.setColor(Color.parseColor("#4285F4"))
         }
 
-        return builder.build()
+        poster(builder.build())
+        lastKey = key
+        true
     }
+
+    /** One PendingIntent per click action, created once instead of on every tick. */
+    private fun contentIntent(context: Context, clickAction: String): PendingIntent? =
+        pendingIntents.getOrPut(clickAction) {
+            val target = when (clickAction) {
+                "app" -> Intent(context, MainActivity::class.java)
+                "none" -> null
+                else -> Intent(context, DialogActivity::class.java)
+            }
+            target?.let {
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                PendingIntent.getActivity(
+                    context.applicationContext, 0, it,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+        }
 
     private fun monthlyLimitBytes(prefs: android.content.SharedPreferences): Long {
         val mb = prefs.getString("limit_data_warning", "0")?.trim()?.toLongOrNull() ?: 0L
@@ -197,12 +226,38 @@ object SpeedNotification {
     private fun formatBytes(context: Context, bytes: Long): String =
         if (isPersianUi(context)) PersianFormat.bytes(bytes) else FormatUtils.formatBytes(bytes)
 
+    /** Icon bitmap, canvas, paints and baselines; built once per canvas size. */
+    private class IconCanvas(val size: Int) {
+        // The status bar only uses the alpha channel of a small icon.
+        val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ALPHA_8)
+        val canvas = Canvas(bitmap)
+        val valuePaint: Paint
+        val unitPaint: Paint
+        val valueBaseline: Float
+        val unitBaseline: Float
+
+        init {
+            val valueHeight = size * 0.65f
+            val unitHeight = size - valueHeight
+            valuePaint = textPaint(valueHeight * 1.2f)
+            val valueGlyph = abs(valuePaint.ascent() + valuePaint.descent())
+            valueBaseline = abs((valueHeight - valueGlyph) / 3f) + valueGlyph
+            unitPaint = textPaint(unitHeight * 1.2f)
+            val unitGlyph = abs(unitPaint.ascent() + unitPaint.descent())
+            unitBaseline = size - abs((unitHeight - unitGlyph) / 4f)
+        }
+    }
+
+    private var iconCanvas: IconCanvas? = null
+
     /**
      * Status-bar icon: "28" over "KB/s", with the reference app's exact metrics:
      * canvas 24/36/48/72/96 px by density, number at 0.78 x height (scaleX 0.9,
      * 0.75 for three characters), unit at 0.42 x height, both DEFAULT_BOLD.
+     * The same bitmap is redrawn every tick; the caller holds [lock] until the
+     * notification is posted, which is when the bitmap is copied.
      */
-    private fun speedIcon(context: Context, bytesPerSec: Long, bits: Boolean): Bitmap {
+    private fun speedIcon(context: Context, speed: FormatUtils.SpeedUnit): Bitmap {
         val size = when (context.resources.displayMetrics.densityDpi) {
             120, 160 -> 24
             240 -> 36
@@ -210,29 +265,15 @@ object SpeedNotification {
             640 -> 96
             else -> 72
         }
-        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bmp)
-        val speed = FormatUtils.formatSpeedForIcon(bytesPerSec, bits)
+        val ic = iconCanvas?.takeIf { it.size == size } ?: IconCanvas(size).also { iconCanvas = it }
+        ic.canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
 
-        val valueHeight = size * 0.65f
-        val unitHeight = size - valueHeight
+        ic.valuePaint.textScaleX = if (speed.value.length == 3) 0.75f else 0.9f
+        ic.unitPaint.textScaleX = if (speed.unit.startsWith("K")) 1.05f else 1.0f
 
-        val valuePaint = textPaint(valueHeight * 1.2f).apply {
-            textScaleX = if (speed.value.length == 3) 0.75f else 0.9f
-        }
-        val valueGlyph = abs(valuePaint.ascent() + valuePaint.descent())
-        val valueBaseline = abs((valueHeight - valueGlyph) / 3f) + valueGlyph
-
-        val unitText = speed.unit + "/s"
-        val unitPaint = textPaint(unitHeight * 1.2f).apply {
-            textScaleX = if (speed.unit.startsWith("K")) 1.05f else 1.0f
-        }
-        val unitGlyph = abs(unitPaint.ascent() + unitPaint.descent())
-        val unitBaseline = size - abs((unitHeight - unitGlyph) / 4f)
-
-        canvas.drawText(speed.value, size / 2f, valueBaseline, valuePaint)
-        canvas.drawText(unitText, size / 2f, unitBaseline, unitPaint)
-        return bmp
+        ic.canvas.drawText(speed.value, size / 2f, ic.valueBaseline, ic.valuePaint)
+        ic.canvas.drawText(speed.unit + "/s", size / 2f, ic.unitBaseline, ic.unitPaint)
+        return ic.bitmap
     }
 
     private fun textPaint(size: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
