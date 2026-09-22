@@ -11,7 +11,7 @@ object FormatUtils {
         DecimalFormat("#.0", decimalSymbols)
     }
 
-    private fun decimal(value: Double): String = decimalFormat.get().format(value)
+    private fun decimal(value: Double): String = decimalFormat.get()!!.format(value)
 
     data class SpeedUnit(val value: String, val unit: String)
 
