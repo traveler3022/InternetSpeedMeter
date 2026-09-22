@@ -1,14 +1,18 @@
-# Internet Speed Meter (Android)
+# Internet Speed Meter
 
-An Android application that displays real-time download and upload speeds in the status bar and tracks daily mobile and Wi-Fi data usage.
+A lightweight Android app that shows your real-time internet speed in the status bar and tracks daily data usage for mobile and Wi-Fi.
 
-## Features
-- **Real-time Speed in Status Bar:** Custom dynamic notification icon showing current network speed.
-- **Detailed Notification:** Separate download and upload speeds, along with daily Mobile and Wi-Fi data usage breakdown.
-- **Battery Friendly:** Automatically pauses background polling when the screen is turned off (`ACTION_SCREEN_OFF`) and resumes when turned on.
-- **Daily Usage Tracking:** Persisted with Room Database and SharedPreferences.
-- **Auto-start on Boot:** Automatically launches the monitoring service when the device reboots.
-- **Modern Android Support:** Compatible with Android 14+ (API 34) with proper foreground service types and notification permissions.
+## Highlights
 
-## Repository
-- **GitHub:** [https://github.com/traveler3022/InternetSpeedMeter](https://github.com/traveler3022/InternetSpeedMeter)
+- **Live status bar speed**: Glance at your current upload and download speeds anytime.
+- **Daily usage history**: Clean table tracking your daily Wi-Fi and mobile data consumption.
+- **App usage breakdown**: Inspect which apps are using data in your current session.
+- **Battery friendly**: Automatically pauses monitoring when the screen turns off.
+- **Accurate accounting**: Handles network switches and VPN connections without double-counting traffic.
+
+## Build
+
+```bash
+./gradlew assembleDebug
+```
+The APK will be located at `app/build/outputs/apk/debug/app-debug.apk`.
