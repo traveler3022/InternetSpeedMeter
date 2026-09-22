@@ -31,6 +31,16 @@ object DayCycle {
         return dbDateFormat.get().format(cal.time)
     }
 
+    /** Today and the next 30 calendar days, the placeholder rows of the usage table. */
+    fun upcomingDates(): List<String> {
+        val cal = Calendar.getInstance()
+        return (0..30).map {
+            val date = dbDateFormat.get().format(cal.time)
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+            date
+        }
+    }
+
     /** "20-09-2026" -> "09-2026", the month bucket used for the monthly limit. */
     fun monthOf(dbDate: String): String =
         if (dbDate.length >= 10) dbDate.substring(3) else dbDate

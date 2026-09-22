@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/dialog_body"
+    android:background="?attr/ismDialogBody"
     android:layoutDirection="ltr"
     android:orientation="vertical">
 
@@ -11,7 +11,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/dialog_header"
+        android:background="?attr/ismHeader"
         android:orientation="horizontal"
         android:paddingVertical="11dp"
         android:weightSum="2">
@@ -70,7 +70,7 @@
         android:id="@+id/graph_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/White"
+        android:background="?attr/ismCard"
         android:orientation="vertical">
 
         <com.vsp.internetspeedmeter.GraphView
@@ -82,7 +82,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@color/dialog_footer"
+            android:background="?attr/ismFooter"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -90,20 +90,20 @@
                 android:id="@+id/btn_graph_mobile"
                 android:layout_width="110dp"
                 android:layout_height="32dp"
-                android:background="@color/White"
+                android:background="?attr/ismCard"
                 android:gravity="center"
                 android:text="@string/tab_mobile"
-                android:textColor="@color/app_row_text"
+                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/btn_graph_wifi"
                 android:layout_width="110dp"
                 android:layout_height="32dp"
-                android:background="@color/White"
+                android:background="?attr/ismCard"
                 android:gravity="center"
                 android:text="@string/tab_wifi"
-                android:textColor="@color/app_row_text"
+                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
         </LinearLayout>
     </LinearLayout>
@@ -113,7 +113,7 @@
         android:id="@+id/apps_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/dialog_body"
+        android:background="?attr/ismDialogBody"
         android:orientation="vertical"
         android:visibility="gone"
         tools:visibility="visible">
@@ -128,7 +128,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@color/dialog_footer"
+            android:background="?attr/ismFooter"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -136,7 +136,7 @@
                 android:id="@+id/btn_apps_mobile"
                 android:layout_width="110dp"
                 android:layout_height="32dp"
-                android:background="@color/dialog_header"
+                android:background="?attr/ismHeader"
                 android:gravity="center"
                 android:text="@string/tab_mobile"
                 android:textColor="@color/White"
@@ -146,10 +146,10 @@
                 android:id="@+id/btn_apps_wifi"
                 android:layout_width="110dp"
                 android:layout_height="32dp"
-                android:background="@color/White"
+                android:background="?attr/ismCard"
                 android:gravity="center"
                 android:text="@string/tab_wifi"
-                android:textColor="@color/app_row_text"
+                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
         </LinearLayout>
     </LinearLayout>

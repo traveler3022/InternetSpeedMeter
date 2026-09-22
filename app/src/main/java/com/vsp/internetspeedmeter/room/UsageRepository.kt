@@ -54,7 +54,17 @@ class UsageRepository(context: Context) {
         }
     }
 
-    // Fire-and-forget helpers for background tasks
+    // Fire-and-forget helpers for background tasks. They run one at a time in
+    // submission order, so a reset lands after the writes queued before it.
+    fun resetAsync(placeholders: List<Usage>) {
+        repositoryScope.launch {
+            writeMutex.withLock {
+                usageDao.deleteAll()
+                usageDao.insertAllIgnore(placeholders)
+            }
+        }
+    }
+
     fun insert(usage: Usage) {
         repositoryScope.launch {
             writeMutex.withLock {

@@ -25,13 +25,15 @@ import com.vsp.internetspeedmeter.recyclerview.AppUsageAdapter
 import com.vsp.internetspeedmeter.recyclerview.AppUsageItem
 import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.FormatUtils
+import com.vsp.internetspeedmeter.util.Palette
 import kotlinx.coroutines.*
 import java.util.Calendar
 
 /**
  * Two views in one dialog:
  *  GRAPH (default) -> live speed graph + [Mobile | Wifi]
- *  APPS            -> per-app usage list (scrolls inside a fixed box) + [Mobile | Wifi] under it
+ *  APPS            -> per-app usage list (scrolls inside a fixed box) + [Mobile | Wifi] under it;
+ *                     apps that used the network since the last refresh get an arrow
  * Mobile/Wifi enters APPS and swaps the dataset; it never resizes the dialog.
  */
 class DialogActivity : AppCompatActivity() {
@@ -53,7 +55,23 @@ class DialogActivity : AppCompatActivity() {
     private var appsMode = false
     private var showWifi = false
 
+    // Per-uid totals of the previous app-list refresh; the growth since then
+    // marks the apps that are using the network right now.
+    private var previousTotals: Map<Int, Long>? = null
+
     private val handler = Handler(Looper.getMainLooper())
+
+    /**
+     * Android refreshes per-app stats for a normal app at most once every 15 s,
+     * and an earlier request restarts that 15 s wait
+     * (NetworkStatsService.POLL_RATE_LIMIT_MS), so the list refreshes slower than that.
+     */
+    private val appsTick = object : Runnable {
+        override fun run() {
+            loadAppUsage()
+            handler.postDelayed(this, APPS_REFRESH_MS)
+        }
+    }
     private val tick = object : Runnable {
         override fun run() {
             updateSession()
@@ -63,6 +81,7 @@ class DialogActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Palette.apply(this, paintWindow = false)
         supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         window.setBackgroundDrawable(
             android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
@@ -102,22 +121,33 @@ class DialogActivity : AppCompatActivity() {
     }
 
     private fun enterApps(wifi: Boolean) {
+        if (wifi != showWifi) previousTotals = null
         appsMode = true
         showWifi = wifi
         graphContainer.visibility = View.GONE
         appsContainer.visibility = View.VISIBLE
         paintToggle(btnAppsMobile, !wifi)
         paintToggle(btnAppsWifi, wifi)
-        loadAppUsage()
+        handler.removeCallbacks(appsTick)
+        handler.post(appsTick)
     }
 
     private fun paintToggle(tv: TextView, active: Boolean) {
-        tv.setBackgroundColor(if (active) ACCENT else Color.WHITE)
-        tv.setTextColor(if (active) Color.WHITE else IDLE_TEXT)
+        tv.setBackgroundColor(Palette.color(this, if (active) R.attr.ismHeader else R.attr.ismCard))
+        tv.setTextColor(if (active) Color.WHITE else Palette.color(this, R.attr.ismMuted))
     }
 
-    override fun onResume() { super.onResume(); handler.post(tick) }
-    override fun onPause() { super.onPause(); handler.removeCallbacks(tick) }
+    override fun onResume() {
+        super.onResume()
+        handler.post(tick)
+        if (appsMode) handler.post(appsTick)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        handler.removeCallbacks(tick)
+        handler.removeCallbacks(appsTick)
+    }
     override fun onDestroy() { super.onDestroy(); scope.cancel() }
 
     private fun updateSession() {
@@ -137,13 +167,18 @@ class DialogActivity : AppCompatActivity() {
             appAdapter.submitList(emptyList())
             return@launch
         }
-        val items = withContext(Dispatchers.IO) { queryAppUsage(showWifi) }
+        val wifi = showWifi
+        val totals = withContext(Dispatchers.IO) { queryUidTotals(wifi) } ?: return@launch
+        if (wifi != showWifi) return@launch
+        val previous = previousTotals
+        previousTotals = totals
+        val items = withContext(Dispatchers.IO) { toItems(totals, previous) }
         appAdapter.submitList(items)
     }
 
-    /** Today's per-app bytes on the chosen transport. Needs Usage Access. */
-    private fun queryAppUsage(wifi: Boolean): List<AppUsageItem> {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return emptyList()
+    /** Today's bytes per uid on the chosen transport. Needs Usage Access. */
+    private fun queryUidTotals(wifi: Boolean): Map<Int, Long>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return null
         return try {
             val nsm = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
             val startHour = DayCycle.startHour(this)
@@ -165,17 +200,24 @@ class DialogActivity : AppCompatActivity() {
                 perUid[bucket.uid] = (perUid[bucket.uid] ?: 0L) + bucket.rxBytes + bucket.txBytes
             }
             stats.close()
+            perUid
+        } catch (_: Exception) { null }
+    }
 
-            val pm = packageManager
-            perUid.entries.filter { it.value > 0L }.mapNotNull { (uid, bytes) ->
-                val pkg = pm.getPackagesForUid(uid)?.firstOrNull() ?: return@mapNotNull null
-                val label = try {
-                    pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
-                } catch (_: Exception) { pkg }
-                val icon = try { pm.getApplicationIcon(pkg) } catch (_: Exception) { null }
-                AppUsageItem(uid, pkg, label, icon, bytes)
-            }.sortedByDescending { it.bytesUsed }.take(50)
-        } catch (_: Exception) { emptyList() }
+    /** Apps using the network right now first, then by today's usage. */
+    private fun toItems(totals: Map<Int, Long>, previous: Map<Int, Long>?): List<AppUsageItem> {
+        val pm = packageManager
+        return totals.entries.filter { it.value > 0L }.mapNotNull { (uid, bytes) ->
+            val pkg = pm.getPackagesForUid(uid)?.firstOrNull() ?: return@mapNotNull null
+            val label = try {
+                pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+            } catch (_: Exception) { pkg }
+            val icon = try { pm.getApplicationIcon(pkg) } catch (_: Exception) { null }
+            val recent = previous?.let { (bytes - (it[uid] ?: 0L)).coerceAtLeast(0L) } ?: 0L
+            AppUsageItem(uid, pkg, label, icon, bytes, recent)
+        }.sortedWith(
+            compareByDescending<AppUsageItem> { it.recentBytes }.thenByDescending { it.bytesUsed }
+        ).take(50)
     }
 
     private fun hasUsageAccess(): Boolean {
@@ -205,7 +247,6 @@ class DialogActivity : AppCompatActivity() {
 
     private companion object {
         const val PREF_ASKED_USAGE_ACCESS = "asked_usage_access"
-        val ACCENT: Int = Color.parseColor("#4A90D9")
-        val IDLE_TEXT: Int = Color.parseColor("#5A5A5A")
+        const val APPS_REFRESH_MS = 16_000L
     }
 }

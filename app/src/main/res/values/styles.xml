@@ -9,13 +9,13 @@
     </style>
 
     <style name="ToolbarBlack" parent="Widget.MaterialComponents.Toolbar">
-        <item name="android:background">@color/bar_black</item>
+        <item name="android:background">?attr/ismBar</item>
         <item name="titleTextColor">@color/White</item>
         <item name="android:theme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
         <item name="popupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
     </style>
 
-    <!-- Dark settings screen, matching the reference app -->
+    <!-- Settings screen; colors come from the ThemeOverlay.Ism.* palette -->
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
         <item name="colorPrimary">@color/bar_black</item>
@@ -24,8 +24,6 @@
         <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/settings_bg</item>
         <item name="android:statusBarColor">@color/bar_black</item>
-        <item name="android:textColorPrimary">@color/settings_title</item>
-        <item name="android:textColorSecondary">@color/settings_summary</item>
     </style>
 
     <style name="TableHeaderCell">
@@ -35,5 +33,60 @@
         <item name="android:textColor">@color/White</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- Palettes of the "تم" preference, applied with Palette.apply() -->
+    <style name="ThemeOverlay.Ism.Blue" parent="">
+        <item name="ismPage">#FFFFFF</item>
+        <item name="ismBar">#101010</item>
+        <item name="ismHeader">#3B86F0</item>
+        <item name="ismRowDark">#C3DBFA</item>
+        <item name="ismRowLight">#EEF5FD</item>
+        <item name="ismRowLighter">#F7FBFF</item>
+        <item name="ismCellText">#0B1220</item>
+        <item name="ismDialogBody">#F7F7F7</item>
+        <item name="ismCard">#FFFFFF</item>
+        <item name="ismFooter">#E0E0E0</item>
+        <item name="ismMuted">#5A5A5A</item>
+        <item name="ismGrid">#E0E0E0</item>
+        <item name="ismAccent">#4285F4</item>
+        <item name="android:textColorPrimary">#0B1220</item>
+        <item name="android:textColorSecondary">#5A5A5A</item>
+    </style>
+
+    <style name="ThemeOverlay.Ism.Purple" parent="">
+        <item name="ismPage">#FFFFFF</item>
+        <item name="ismBar">#1E1330</item>
+        <item name="ismHeader">#7E57C2</item>
+        <item name="ismRowDark">#DCCFF3</item>
+        <item name="ismRowLight">#F2EDFA</item>
+        <item name="ismRowLighter">#FAF7FD</item>
+        <item name="ismCellText">#1A1030</item>
+        <item name="ismDialogBody">#F8F6FB</item>
+        <item name="ismCard">#FFFFFF</item>
+        <item name="ismFooter">#E6E0F0</item>
+        <item name="ismMuted">#5C5470</item>
+        <item name="ismGrid">#E6E0F0</item>
+        <item name="ismAccent">#7E57C2</item>
+        <item name="android:textColorPrimary">#1A1030</item>
+        <item name="android:textColorSecondary">#5C5470</item>
+    </style>
+
+    <style name="ThemeOverlay.Ism.Dark" parent="">
+        <item name="ismPage">#121212</item>
+        <item name="ismBar">#000000</item>
+        <item name="ismHeader">#2B5797</item>
+        <item name="ismRowDark">#1F2733</item>
+        <item name="ismRowLight">#262F3C</item>
+        <item name="ismRowLighter">#2C3644</item>
+        <item name="ismCellText">#E6EAF0</item>
+        <item name="ismDialogBody">#1B1B1B</item>
+        <item name="ismCard">#242424</item>
+        <item name="ismFooter">#2E2E2E</item>
+        <item name="ismMuted">#C8C8C8</item>
+        <item name="ismGrid">#3A3A3A</item>
+        <item name="ismAccent">#5B9BF0</item>
+        <item name="android:textColorPrimary">#F2F2F2</item>
+        <item name="android:textColorSecondary">#B8B8B8</item>
     </style>
 </resources>
