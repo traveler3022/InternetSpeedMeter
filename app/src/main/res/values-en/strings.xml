@@ -89,6 +89,14 @@
     <string name="history_prev">Previous month</string>
     <string name="history_next">Next month</string>
     <string name="period_week">7 days</string>
+    <string name="history_period">Period</string>
+    <string name="period_7_days">7 days</string>
+    <string name="period_30_days">30 days</string>
+    <string name="period_90_days">90 days</string>
+    <string name="history_summary">Usage summary</string>
+    <string name="history_last_7">Last 7 days</string>
+    <string name="history_last_30">Last 30 days</string>
+    <string name="history_last_90">Last 90 days</string>
     <string name="apps_search">Search apps</string>
     <string name="apps_no_access">Grant Usage Access to see how much each app used</string>
     <string name="apps_grant">Grant access</string>
