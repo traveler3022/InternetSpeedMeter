@@ -7,16 +7,16 @@ on:
 
 jobs:
   emulator:
-    name: Android 13 (${{ matrix.ref }}, ${{ matrix.locale }})
+    name: Android 13 (${{ matrix.tag }}, ${{ matrix.locale }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { ref: 7cf003b, locale: en }
-          - { ref: 7cf003b, locale: fa-IR }
-          - { ref: 464545a, locale: fa-IR }
+          - { ref: 7cf003b2c5b224b7f339244c8bd28ede292ceb55, tag: 7cf003b, locale: en }
+          - { ref: 7cf003b2c5b224b7f339244c8bd28ede292ceb55, tag: 7cf003b, locale: fa-IR }
+          - { ref: 464545a5598500ff4927c6ecd44e5c42a71bea42, tag: 464545a, locale: fa-IR }
     steps:
       - name: Checkout scripts
         uses: actions/checkout@v4
@@ -62,5 +62,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: startup-${{ matrix.ref }}-${{ matrix.locale }}
+          name: startup-${{ matrix.tag }}-${{ matrix.locale }}
           path: app-src/out/
