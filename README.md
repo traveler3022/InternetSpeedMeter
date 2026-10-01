@@ -45,7 +45,7 @@ The APK ends up in `app/build/outputs/apk/debug/app-debug.apk`. CI (GitHub Actio
 ## Origins and credits
 
 This project is honest about where it comes from:
-- **Internet Speed Meter Lite** is a separate app by its own developers, and this project owes it a lot. The look of the notification (the speed drawn as the status-bar icon, its sizes and texts) and the way the speed is calculated (a one-second tick, the difference of the system counters per tick) are taken from it. To get them right we studied how it behaves and, in places
+- **Internet Speed Meter Lite** is a separate app by its own developers, and this project owes it a lot. The look of the notification (the speed drawn as the status-bar icon, its sizes and texts) and the way the speed is calculated (a one-second tick, the difference of the system counters per tick) are taken from it. To get them right we studied how it behaves and, in places, read its decompiled code. The rest of the code is our own work, and none of its images or branding is used here. Internet Speed Meter Lite remains the work and property of its authors. If you like the idea, go and look at it.
 
 If you are one of the people credited above and something here should be worded differently, please open an issue.
 
