@@ -14,8 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { ref: ui-redesign, tag: ui-redesign, locale: "" }
-          - { ref: ui-redesign, tag: ui-redesign, locale: fa-IR }
+          - { ref: b1e9b80, tag: before-fix, locale: fa-IR }
+          - { ref: 97c2579, tag: fix, locale: fa-IR }
+          - { ref: 97c2579, tag: fix, locale: "" }
     steps:
       - name: Checkout scripts
         uses: actions/checkout@v4

@@ -41,6 +41,39 @@ tabs() {
   done
 }
 
+# Swipes up so buttons at the bottom of a scrolling page come on screen
+scroll_down() {
+  local w h
+  read -r w h <<<"$(adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1 | tr x ' ')"
+  adb shell input swipe $((w / 2)) $((h * 4 / 5)) $((w / 2)) $((h / 5)) 300; sleep 1
+}
+
+# Stores a 10 GB / 30 day data package starting today, like a real phone has
+seed_package() {
+  local f="shared_prefs/${PKG}_preferences.xml" today
+  today=$(adb shell date +%d-%m-%Y | tr -d '\r')
+  adb shell am force-stop "$PKG"; sleep 1
+  adb shell "run-as $PKG cat $f" > /tmp/p.xml
+  sed -i '/name="package_/d' /tmp/p.xml
+  sed -i "s#</map>#    <long name=\"package_volume_bytes\" value=\"10737418240\" />\n    <string name=\"package_start\">$today</string>\n    <int name=\"package_days\" value=\"30\" />\n</map>#" /tmp/p.xml
+  adb shell "run-as $PKG sh -c 'cat > $f'" < /tmp/p.xml
+  echo "package now: $(adb shell "run-as $PKG cat $f" | grep package_ | tr -d '\n')"
+  adb shell am start -W -n "$PKG/.MainActivity"; sleep 8; shot home-with-package
+}
+
+# Dialogs and sheets the tab walk never opens
+extras() {
+  tap "$PKG:id/tv_package_edit"; sleep 3; shot package-dialog
+  adb shell input keyevent KEYCODE_BACK; sleep 2
+  tap "$PKG:id/nav_history"; sleep 4
+  tap "$PKG:id/tv_day"; sleep 4; shot day-sheet
+  adb shell input keyevent KEYCODE_BACK; sleep 2
+  adb shell su 0 am start -W -n "$PKG/.DialogActivity" || echo "!! DialogActivity not started"
+  sleep 5; shot graph-dialog
+  tap "$PKG:id/btn_graph_wifi"; sleep 5; shot graph-dialog-apps
+  adb shell input keyevent KEYCODE_BACK; sleep 2
+}
+
 status() {
   echo "== $1 | service running: $(adb shell dumpsys activity services "$PKG" | grep -c 'ServiceRecord.*InternetService')" \
     "| notification: $(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")"
@@ -74,6 +107,7 @@ sleep 8; shot first-start
 adb shell dumpsys activity activities | grep -E '^\s+\* Hist|ActivityRecord\{' | grep vsp | head -10
 taps=0
 while [ $taps -lt 4 ] && adb shell dumpsys window | grep -m1 mCurrentFocus | grep -q OnboardingActivity; do
+  scroll_down
   tap "$PKG:id/btn_onb_done"; taps=$((taps + 1)); sleep 6
 done
 echo "== start button taps needed: $taps"
@@ -84,6 +118,9 @@ tabs no-usage-access
 adb shell appops set "$PKG" GET_USAGE_STATS allow
 adb shell dumpsys deviceidle whitelist +"$PKG"
 tabs usage-access
+seed_package
+tabs with-package
+extras
 
 adb shell input keyevent KEYCODE_HOME; sleep 2
 adb shell am start -W -n "$PKG/.MainActivity"; sleep 8; shot second-start
@@ -101,6 +138,7 @@ cat "$OUT/events.txt" | head -40
 adb logcat -d -v threadtime > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"
 adb shell dumpsys activity services "$PKG" > "$OUT/services.txt"
+echo "===== fatal exceptions: $(grep -c 'FATAL EXCEPTION' "$OUT/crash.txt") ====="
 echo "===== crash buffer ====="
 cat "$OUT/crash.txt"
 echo "===== app lines ====="
