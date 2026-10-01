@@ -3,6 +3,7 @@ package com.vsp.internetspeedmeter.util
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.ColorDrawable
+import android.view.View
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatDelegate
@@ -35,8 +36,20 @@ object Palette {
         }
         activity.theme.applyStyle(overlay, true)
         if (paintWindow) {
-            activity.window.statusBarColor = color(activity, R.attr.ismBar)
-            activity.window.setBackgroundDrawable(ColorDrawable(color(activity, R.attr.ismPage)))
+            val dark = value(activity) == "dark"
+            val page = color(activity, R.attr.ismPage)
+            activity.window.statusBarColor = page
+            activity.window.navigationBarColor = page
+            activity.window.setBackgroundDrawable(ColorDrawable(page))
+            var flags = activity.window.decorView.systemUiVisibility
+            flags = if (dark) {
+                flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                    and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+            } else {
+                flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            }
+            activity.window.decorView.systemUiVisibility = flags
         }
     }
 
