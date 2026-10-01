@@ -14,7 +14,6 @@ import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.IconCompat
 import androidx.core.os.ConfigurationCompat
 import androidx.preference.PreferenceManager
 import com.vsp.internetspeedmeter.DialogActivity
