@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -60,6 +61,17 @@ class SettingsFragment : PreferenceFragmentCompat(),
             requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
         } catch (_: Exception) {
             null
+        }
+    }
+
+    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val list = view.findViewById<RecyclerView>(androidx.preference.R.id.recycler_view)
+        list?.apply {
+            setBackgroundColor(Palette.color(requireContext(), R.attr.ismPage))
+            setPadding(16, 8, 16, 18)
+            clipToPadding = false
+            itemAnimator = null
         }
     }
 
