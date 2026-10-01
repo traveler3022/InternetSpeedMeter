@@ -67,9 +67,11 @@ class SettingsFragment : PreferenceFragmentCompat(),
     override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val list = view.findViewById<RecyclerView>(androidx.preference.R.id.recycler_view)
+        val density = resources.displayMetrics.density
+        val inset = { dp: Int -> (dp * density + 0.5f).toInt() }
         list?.apply {
             setBackgroundColor(Palette.color(requireContext(), R.attr.ismPage))
-            setPadding(16, 8, 16, 18)
+            setPadding(inset(16), inset(8), inset(16), inset(18))
             clipToPadding = false
             itemAnimator = null
         }
