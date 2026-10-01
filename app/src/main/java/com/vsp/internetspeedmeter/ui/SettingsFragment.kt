@@ -84,6 +84,7 @@ class SettingsFragment : PreferenceFragmentCompat(),
         listView.apply {
             clipToPadding = false
             setPadding(12.dp(), 8.dp(), 12.dp(), 18.dp())
+            setBackgroundColor(Palette.color(requireContext(), R.attr.ismPage))
         }
     }
 
