@@ -18,8 +18,17 @@ object FormatUtils {
     /**
      * Formats network throughput speed (decimal units: 1000 B = 1 KB).
      */
-    fun formatSpeed(bytesPerSec: Long): String {
+    fun formatSpeed(bytesPerSec: Long, bits: Boolean = false): String {
         val safeBytes = if (bytesPerSec < 0L) 0L else bytesPerSec
+        if (bits) {
+            val b = TrafficMath.safeMultiplyBy8(safeBytes)
+            return when {
+                b >= 1_000_000_000L -> "${decimal(b.toDouble() / 1_000_000_000L)} Gb/s"
+                b >= 1_000_000L -> "${decimal(b.toDouble() / 1_000_000L)} Mb/s"
+                b >= 1_000L -> "${b / 1000L} Kb/s"
+                else -> "$b b/s"
+            }
+        }
         return when {
             safeBytes >= 1_000_000_000L -> "${decimal(safeBytes.toDouble() / 1_000_000_000L)} GB/s"
             safeBytes >= 1_000_000L -> "${decimal(safeBytes.toDouble() / 1_000_000L)} MB/s"
