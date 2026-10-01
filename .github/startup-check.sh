@@ -41,6 +41,24 @@ tabs() {
   done
 }
 
+status() {
+  echo "== $1 | service running: $(adb shell dumpsys activity services "$PKG" | grep -c 'ServiceRecord.*InternetService')" \
+    "| notification: $(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")"
+}
+
+# Switches the "تم" preference while the app is stopped, then opens every tab.
+theme() {
+  local f="shared_prefs/${PKG}_preferences.xml"
+  adb shell am force-stop "$PKG"; sleep 1
+  adb shell "run-as $PKG cat $f" > /tmp/p.xml
+  sed -i '/name="theme_color"/d' /tmp/p.xml
+  sed -i "s#</map>#    <string name=\"theme_color\">$1</string>\n</map>#" /tmp/p.xml
+  adb shell "run-as $PKG sh -c 'cat > $f'" < /tmp/p.xml
+  echo "theme now: $(adb shell "run-as $PKG cat $f" | grep theme_color)"
+  adb shell am start -W -n "$PKG/.MainActivity"; sleep 8; shot "theme-$1"
+  tabs "theme-$1"
+}
+
 adb install -r app/build/outputs/apk/debug/app-debug.apk || exit 1
 if [ "$APP_LOCALE" != "" ]; then
   adb shell cmd locale set-app-locales "$PKG" --locales "$APP_LOCALE"
@@ -53,6 +71,7 @@ sleep 6; shot first-start
 tap "$PKG:id/btn_onb_notif"; sleep 3; shot notif-dialog
 tap com.android.permissioncontroller:id/permission_allow_button; sleep 3; shot notif-allowed
 tap "$PKG:id/btn_onb_done"; sleep 12; shot after-onboarding
+status after-onboarding
 tabs no-usage-access
 
 adb shell appops set "$PKG" GET_USAGE_STATS allow
@@ -63,6 +82,11 @@ adb shell input keyevent KEYCODE_HOME; sleep 2
 adb shell am start -W -n "$PKG/.MainActivity"; sleep 8; shot second-start
 adb shell am force-stop "$PKG"; sleep 1
 adb shell am start -W -n "$PKG/.MainActivity"; sleep 20; shot cold-start
+status cold-start
+theme purple
+theme dark
+theme light
+status end
 
 adb logcat -d -v threadtime > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"
