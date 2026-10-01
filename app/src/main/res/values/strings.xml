@@ -75,7 +75,7 @@
     <string name="package_set">تعریف بستهٔ اینترنت</string>
     <string name="package_used_fmt">%1$s از %2$s مصرف شده</string>
     <string name="package_left_fmt">%1$s باقی‌مانده · %2$s روز مانده</string>
-    <string name="percent_fmt">%1$d٪</string>
+    <string name="percent_fmt">%1$s٪</string>
     <string name="package_expired">مدت بسته تمام شده است</string>
     <string name="package_not_started_fmt">از %1$s شروع می‌شود</string>
     <string name="package_volume">حجم بسته</string>

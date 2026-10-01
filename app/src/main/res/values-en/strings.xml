@@ -64,7 +64,7 @@
     <string name="package_set">Set up a data package</string>
     <string name="package_used_fmt">%1$s of %2$s used</string>
     <string name="package_left_fmt">%1$s left · %2$s days left</string>
-    <string name="percent_fmt">%1$d%%</string>
+    <string name="percent_fmt">%1$s%%</string>
     <string name="package_expired">The package period has ended</string>
     <string name="package_not_started_fmt">Starts on %1$s</string>
     <string name="package_volume">Package size</string>

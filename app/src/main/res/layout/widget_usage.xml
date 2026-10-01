@@ -22,10 +22,11 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <View
+        <ImageView
             android:layout_width="8dp"
             android:layout_height="8dp"
-            android:background="@drawable/w_dot_blue" />
+            android:importantForAccessibility="no"
+            android:src="@drawable/w_dot_blue" />
 
         <TextView
             android:id="@+id/w_mobile"
@@ -44,10 +45,11 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <View
+        <ImageView
             android:layout_width="8dp"
             android:layout_height="8dp"
-            android:background="@drawable/w_dot_teal" />
+            android:importantForAccessibility="no"
+            android:src="@drawable/w_dot_teal" />
 
         <TextView
             android:id="@+id/w_wifi"
