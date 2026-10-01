@@ -24,10 +24,11 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:elevation="8dp"
+        android:layout_height="72dp"
+        android:elevation="0dp"
         android:background="?attr/ismCard"
         app:itemIconSize="24dp"
+        app:itemHorizontalTranslationEnabled="false"
         app:itemIconTint="@color/nav_item"
         app:itemTextColor="@color/nav_item"
         app:labelVisibilityMode="labeled"
