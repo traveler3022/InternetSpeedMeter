@@ -926,6 +926,18 @@ class InternetService : Service() {
         private const val FORCED_POST_TICKS = 10
     }
 
+    data class LiveInfo(
+        val downloadBytesPerSec: Long,
+        val uploadBytesPerSec: Long,
+        val networkType: Int,
+        val connected: Boolean
+    )
+
+    fun getLiveInfo(): LiveInfo = synchronized(stateLock) {
+        val snapshot = currentNetworkSnapshot()
+        LiveInfo(lastDownSpeed, lastUpSpeed, snapshot.type, snapshot.connected)
+    }
+
     fun getSessionInfo(): Pair<Long, Long> {
         return synchronized(stateLock) {
             Pair(
