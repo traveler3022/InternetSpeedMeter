@@ -3,81 +3,143 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <CheckBoxPreference
-        android:key="hide_lockscreen"
-        android:defaultValue="false"
-        android:title="@string/pref_hide_lockscreen_title"
-        android:summary="@string/pref_hide_lockscreen_summary" />
+    <PreferenceCategory android:title="@string/cat_display">
 
-    <CheckBoxPreference
-        android:key="notification_when_connected"
-        android:defaultValue="false"
-        android:title="@string/pref_when_connected_title"
-        android:summary="@string/pref_when_connected_summary" />
+        <ListPreference
+            android:key="theme_color"
+            android:defaultValue="light"
+            android:title="@string/pref_theme_title"
+            android:summary="@string/pref_theme_summary"
+            android:entries="@array/theme_entries"
+            android:entryValues="@array/theme_values" />
 
-    <CheckBoxPreference
-        android:key="show_up_down_speed"
-        android:defaultValue="true"
-        android:title="@string/pref_up_down_title"
-        android:summary="@string/pref_up_down_summary" />
+        <ListPreference
+            android:key="app_language"
+            android:defaultValue="system"
+            android:title="@string/pref_language_title"
+            android:entries="@array/language_entries"
+            android:entryValues="@array/language_values"
+            app:useSimpleSummaryProvider="true" />
 
-    <ListPreference
-        android:key="notification_click_action"
-        android:defaultValue="dialog"
-        android:title="@string/pref_click_action_title"
-        android:entries="@array/click_action_entries"
-        android:entryValues="@array/click_action_values"
-        app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:key="calendar_type"
+            android:defaultValue="gregorian"
+            android:title="@string/pref_calendar_title"
+            android:entries="@array/calendar_entries"
+            android:entryValues="@array/calendar_values"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
 
-    <ListPreference
-        android:key="speed_unit"
-        android:defaultValue="byte"
-        android:title="@string/pref_speed_unit_title"
-        android:entries="@array/speed_unit_entries"
-        android:entryValues="@array/speed_unit_values"
-        app:useSimpleSummaryProvider="true" />
+    <PreferenceCategory android:title="@string/cat_package">
 
-    <EditTextPreference
-        android:key="limit_data_warning"
-        android:defaultValue="0"
-        android:title="@string/pref_limit_title"
-        android:summary="@string/pref_limit_summary"
-        android:inputType="number" />
+        <Preference
+            android:key="data_package"
+            android:title="@string/package_title" />
 
-    <ListPreference
-        android:key="day_start_hour"
-        android:defaultValue="0"
-        android:title="@string/pref_day_start_title"
-        android:summary="@string/pref_day_start_summary"
-        android:entries="@array/day_start_entries"
-        android:entryValues="@array/day_start_values" />
+        <ListPreference
+            android:key="day_start_hour"
+            android:defaultValue="0"
+            android:title="@string/pref_day_start_title"
+            android:summary="@string/pref_day_start_summary"
+            android:entries="@array/day_start_entries"
+            android:entryValues="@array/day_start_values" />
+    </PreferenceCategory>
 
-    <ListPreference
-        android:key="app_language"
-        android:defaultValue="system"
-        android:title="@string/pref_language_title"
-        android:entries="@array/language_entries"
-        android:entryValues="@array/language_values"
-        app:useSimpleSummaryProvider="true" />
+    <PreferenceCategory android:title="@string/cat_notification">
 
-    <ListPreference
-        android:key="notification_color"
-        android:defaultValue="system"
-        android:title="@string/pref_notification_color_title"
-        android:entries="@array/notification_color_entries"
-        android:entryValues="@array/notification_color_values"
-        app:useSimpleSummaryProvider="true" />
+        <CheckBoxPreference
+            android:key="hide_lockscreen"
+            android:defaultValue="false"
+            android:title="@string/pref_hide_lockscreen_title"
+            android:summary="@string/pref_hide_lockscreen_summary" />
 
-    <ListPreference
-        android:key="theme_color"
-        android:defaultValue="light"
-        android:title="@string/pref_theme_title"
-        android:summary="@string/pref_theme_summary"
-        android:entries="@array/theme_entries"
-        android:entryValues="@array/theme_values" />
+        <CheckBoxPreference
+            android:key="notification_when_connected"
+            android:defaultValue="false"
+            android:title="@string/pref_when_connected_title"
+            android:summary="@string/pref_when_connected_summary" />
 
-    <Preference
-        android:key="advanced_settings"
-        android:title="@string/pref_advanced_title"
-        android:summary="@string/pref_advanced_summary" />
+        <CheckBoxPreference
+            android:key="show_up_down_speed"
+            android:defaultValue="true"
+            android:title="@string/pref_up_down_title"
+            android:summary="@string/pref_up_down_summary" />
+
+        <ListPreference
+            android:key="notification_click_action"
+            android:defaultValue="dialog"
+            android:title="@string/pref_click_action_title"
+            android:entries="@array/click_action_entries"
+            android:entryValues="@array/click_action_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="speed_unit"
+            android:defaultValue="byte"
+            android:title="@string/pref_speed_unit_title"
+            android:entries="@array/speed_unit_entries"
+            android:entryValues="@array/speed_unit_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="limit_data_warning"
+            android:defaultValue="0"
+            android:title="@string/pref_limit_title"
+            android:summary="@string/pref_limit_summary"
+            android:inputType="number" />
+
+        <ListPreference
+            android:key="notification_color"
+            android:defaultValue="system"
+            android:title="@string/pref_notification_color_title"
+            android:entries="@array/notification_color_entries"
+            android:entryValues="@array/notification_color_values"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/cat_running">
+
+        <CheckBoxPreference
+            android:key="start_on_boot"
+            android:defaultValue="true"
+            android:title="@string/pref_boot_title"
+            android:summary="@string/pref_boot_summary" />
+
+        <CheckBoxPreference
+            android:key="pause_when_screen_off"
+            android:defaultValue="true"
+            android:title="@string/pref_screen_off_title"
+            android:summary="@string/pref_screen_off_summary" />
+
+        <Preference
+            android:key="battery_optimization"
+            android:title="@string/pref_battery_title"
+            android:summary="@string/pref_battery_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/cat_data">
+
+        <Preference
+            android:key="backup_export"
+            android:title="@string/backup_export_title"
+            android:summary="@string/backup_export_summary" />
+
+        <Preference
+            android:key="backup_import"
+            android:title="@string/backup_import_title"
+            android:summary="@string/backup_import_summary" />
+
+        <Preference
+            android:key="reset_stats"
+            android:title="@string/menu_reset"
+            android:summary="@string/reset_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/cat_about">
+
+        <Preference
+            android:key="about_version"
+            android:selectable="false"
+            android:title="@string/about_version" />
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -37,6 +37,12 @@ interface UsageDao {
     @Query("SELECT * FROM Usage_Table")
     fun getAllUsageFlow(): Flow<List<Usage>>
 
+    @Query("SELECT * FROM Usage_Table")
+    suspend fun getAllOnce(): List<Usage>
+
+    @Upsert
+    suspend fun upsertAll(usages: List<Usage>)
+
     @Query("SELECT * FROM Usage_Table WHERE date = :date LIMIT 1")
     suspend fun getUsageByDate(date: String): Usage?
 

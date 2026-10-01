@@ -2,14 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_preferences"
-        android:title="@string/menu_settings"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_reset_stats"
-        android:title="@string/menu_reset"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_stop_exit"
         android:title="@string/menu_stop_exit"
         app:showAsAction="never" />

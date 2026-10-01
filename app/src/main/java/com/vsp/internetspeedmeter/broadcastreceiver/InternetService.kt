@@ -24,6 +24,7 @@ import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.room.UsageRepository
 import com.vsp.internetspeedmeter.util.DayCycle
 import com.vsp.internetspeedmeter.util.TrafficMath
+import com.vsp.internetspeedmeter.widget.UsageWidget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -440,6 +441,8 @@ class InternetService : Service() {
                 saveToPrefs()
                 persistDailyUsage()
             }
+            // Home-screen widget, once a minute while measuring
+            if (tickCount % 60 == 0) UsageWidget.refresh(this@InternetService)
 
             val targetDelay = synchronized(stateLock) {
                 if (isPowerSaveMode) 3000L else 1000L

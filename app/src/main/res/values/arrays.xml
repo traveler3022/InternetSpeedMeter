@@ -65,4 +65,13 @@
         <item>purple</item>
         <item>dark</item>
     </string-array>
+    <string-array name="calendar_entries">
+        <item>@string/calendar_gregorian</item>
+        <item>@string/calendar_jalali</item>
+    </string-array>
+
+    <string-array name="calendar_values">
+        <item>gregorian</item>
+        <item>jalali</item>
+    </string-array>
 </resources>

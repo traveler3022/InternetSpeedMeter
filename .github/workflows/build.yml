@@ -37,25 +37,22 @@ jobs:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
 
+      # After the APK upload, so a failing test still leaves an APK to try
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
       - name: Publish Debug APK to GitHub Release
-        if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/deep-debug') && success()
+        if: github.ref == 'refs/heads/main' && success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "$GITHUB_REF" = "refs/heads/master" ]; then
-            TAG="v1.1-debug"
-            TITLE="Internet Meter (Debug APK)"
-          else
-            TAG="v1.1-deep-debug"
-            TITLE="Internet Meter 1.1 Deep Debug"
-          fi
+          TAG="v1.1-debug"
+          TITLE="Internet Meter (Debug APK)"
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           NOTES="### Internet Meter Debug Build
           - **Branch:** ${GITHUB_REF_NAME}
           - **Built on:** $(date -u '+%Y-%m-%d %H:%M UTC')
-          - **Commit:** ${GITHUB_SHA:0:7}
-          - **Features:** High-tech icons, Persian UI, TrafficMath overflow protection, Mutex DB concurrency, stateLock thread-safety
-          - **Signature:** Standard v2/v3 signing (Installs on Android 11+)"
+          - **Commit:** ${GITHUB_SHA:0:7}"
 
           # Delete existing release and tag so the tag points to the current commit
           gh release delete "$TAG" --yes --cleanup-tag || true

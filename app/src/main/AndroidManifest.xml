@@ -37,11 +37,8 @@
         </activity>
 
         <activity
-            android:name=".SettingsActivity"
-            android:label="@string/settings_title"
-            android:theme="@style/SettingsTheme"
-            android:parentActivityName=".MainActivity">
-        </activity>
+            android:name=".OnboardingActivity"
+            android:exported="false" />
 
         <service
             android:name=".broadcastreceiver.InternetService"
@@ -72,6 +69,30 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Home-screen widget: today's usage and the data package -->
+        <receiver
+            android:name=".widget.UsageWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/usage_widget_info" />
+        </receiver>
+
+        <!-- Quick-settings tile with today's total -->
+        <service
+            android:name=".widget.UsageTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_traffic_24"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name=".DialogActivity"

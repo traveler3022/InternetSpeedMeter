@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layoutDirection="rtl"
-    android:orientation="vertical"
     android:background="?attr/ismPage"
-    tools:context=".MainActivity">
+    android:orientation="vertical">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -17,80 +14,19 @@
         app:title="@string/app_name"
         app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
-    <!-- Table header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:background="?attr/ismHeader"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:weightSum="4.15">
-
-        <TextView style="@style/TableHeaderCell" android:layout_weight="1.25" android:text="@string/column_date" />
-        <TextView style="@style/TableHeaderCell" android:layout_weight="0.9" android:text="@string/column_mobile" />
-        <TextView style="@style/TableHeaderCell" android:layout_weight="1.0" android:text="@string/column_wifi" />
-        <TextView style="@style/TableHeaderCell" android:layout_weight="1.0" android:text="@string/column_total" />
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewUsage"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:scrollbars="vertical"
-        tools:listitem="@layout/item_usage_row" />
+        android:layout_weight="1" />
 
-    <!-- "This month" summary row, same colouring as a date row -->
-    <LinearLayout
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:weightSum="4.15">
-
-        <TextView
-            android:id="@+id/tvSummaryLabel"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.25"
-            android:background="?attr/ismHeader"
-            android:gravity="center"
-            android:text="@string/row_this_month"
-            android:textColor="@color/White"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tvTotalMobile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.9"
-            android:background="?attr/ismRowDark"
-            android:gravity="center"
-            android:textColor="?attr/ismCellText"
-            android:textSize="15sp"
-            tools:text="۶۵٬۷۴ گ ب" />
-
-        <TextView
-            android:id="@+id/tvTotalWifi"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.0"
-            android:background="?attr/ismRowLight"
-            android:gravity="center"
-            android:textColor="?attr/ismCellText"
-            android:textSize="15sp"
-            tools:text="۱ م ب" />
-
-        <TextView
-            android:id="@+id/tvGrandTotal"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.0"
-            android:background="?attr/ismRowDark"
-            android:gravity="center"
-            android:textColor="?attr/ismCellText"
-            android:textSize="15sp"
-            tools:text="۶۵٬۷۴ گ ب" />
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        android:background="?attr/ismCard"
+        app:itemIconTint="@color/nav_item"
+        app:itemTextColor="@color/nav_item"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav" />
 </LinearLayout>
