@@ -69,6 +69,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showTab(itemId: Int) {
+        supportActionBar?.title = when (itemId) {
+            R.id.nav_history -> getString(R.string.tab_history)
+            R.id.nav_apps -> getString(R.string.tab_apps)
+            R.id.nav_settings -> getString(R.string.settings_title)
+            else -> getString(R.string.app_name)
+        }
+
         val fragment: Fragment = when (itemId) {
             R.id.nav_history -> HistoryFragment()
             R.id.nav_apps -> AppsFragment()
