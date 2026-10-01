@@ -46,6 +46,7 @@ class InternetService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Default + serviceJob)
     private val stateLock = Any()
     private var monitorJob: Job? = null
+    private var startupFailed = false
 
     private var isScreenOn = true
     private var isPowerSaveMode = false
@@ -139,6 +140,15 @@ class InternetService : Service() {
         instance = this
         super.onCreate()
 
+        try {
+            initializeService()
+        } catch (t: Throwable) {
+            startupFailed = true
+            android.util.Log.e("InternetService", "Service initialization failed", t)
+        }
+    }
+
+    private fun initializeService() {
         powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         isScreenOn = powerManager.isInteractive
         isPowerSaveMode = powerManager.isPowerSaveMode
@@ -188,6 +198,21 @@ class InternetService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (startupFailed) {
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
+
+        return try {
+            startCommand(intent, flags, startId)
+        } catch (t: Throwable) {
+            android.util.Log.e("InternetService", "Service start failed", t)
+            stopSelf(startId)
+            START_NOT_STICKY
+        }
+    }
+
+    private fun startCommand(intent: Intent?, flags: Int, startId: Int): Int {
         networkDirty = true
         postNotification(0L, 0L) { notification ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -843,6 +868,13 @@ class InternetService : Service() {
     }
 
     override fun onDestroy() {
+        if (startupFailed) {
+            if (instance == this) instance = null
+            serviceScope.cancel()
+            super.onDestroy()
+            return
+        }
+
         synchronized(stateLock) {
             // Mark the screen state false so no new monitoring cycle is started
             // while the service is being torn down.
