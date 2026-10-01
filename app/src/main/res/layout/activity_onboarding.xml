@@ -27,8 +27,7 @@
                 android:layout_height="56dp"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_traffic_24"
-                app:tint="?attr/ismOnSoft" />
+                app:srcCompat="@drawable/ic_traffic_24" />
         </FrameLayout>
 
         <TextView
@@ -50,7 +49,7 @@
             android:gravity="center"
             android:text="@string/onb_subtitle" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Blue">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -63,9 +62,11 @@
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/bg_circle_soft"
+                    android:backgroundTint="@color/soft_accent"
                     android:importantForAccessibility="no"
                     android:padding="10dp"
-                    android:src="@drawable/ic_bell_24" />
+                    android:src="@drawable/ic_bell_24"
+                    app:tint="?attr/ismAccent" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -107,7 +108,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Teal">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -120,9 +121,11 @@
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/bg_circle_soft"
+                    android:backgroundTint="@color/soft_teal"
                     android:importantForAccessibility="no"
                     android:padding="10dp"
-                    android:src="@drawable/ic_apps_24" />
+                    android:src="@drawable/ic_apps_24"
+                    app:tint="@color/wifi_tint" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -164,7 +167,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Amber">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -177,9 +180,11 @@
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/bg_circle_soft"
+                    android:backgroundTint="@color/soft_amber"
                     android:importantForAccessibility="no"
                     android:padding="10dp"
-                    android:src="@drawable/ic_battery_24" />
+                    android:src="@drawable/ic_battery_24"
+                    app:tint="?attr/ismAmber" />
 
                 <LinearLayout
                     android:layout_width="0dp"

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material 3 color roles of the three "تم" palettes. Without them the
+     Material widgets (tonal buttons, chips, toggles, dialogs, switches) fall
+     back to the stock purple-gray Material colors. Kept as color resources,
+     not literals in the themes: some widgets load theme colors by resource id. -->
+<resources>
+    <!-- Blue (light) -->
+    <color name="m3b_primary_container">#D4E2FF</color>
+    <color name="m3b_on_primary_container">#0B2A6B</color>
+    <color name="m3b_secondary_container">#D4E2FF</color>
+    <color name="m3b_on_secondary_container">#0B2A6B</color>
+    <color name="m3b_tertiary">#7C3AED</color>
+    <color name="m3b_tertiary_container">#ECE5FF</color>
+    <color name="m3b_on_tertiary_container">#3B0F8C</color>
+    <color name="m3b_surface">#F3F6FC</color>
+    <color name="m3b_surface_variant">#E1E7F3</color>
+    <color name="m3b_on_surface_variant">#4A5874</color>
+    <color name="m3b_outline">#8391A9</color>
+    <color name="m3b_outline_variant">#CBD4E4</color>
+    <color name="m3b_container_lowest">#FBFCFF</color>
+    <color name="m3b_container_low">#EEF2FB</color>
+    <color name="m3b_container">#E8EEF9</color>
+    <color name="m3b_container_high">#E3E9F7</color>
+    <color name="m3b_container_highest">#DDE4F4</color>
+
+    <!-- Purple (light) -->
+    <color name="m3p_primary_container">#E6DBFF</color>
+    <color name="m3p_on_primary_container">#2E0A6E</color>
+    <color name="m3p_secondary_container">#E6DBFF</color>
+    <color name="m3p_on_secondary_container">#2E0A6E</color>
+    <color name="m3p_tertiary">#DB2777</color>
+    <color name="m3p_tertiary_container">#FCE4F0</color>
+    <color name="m3p_on_tertiary_container">#6B0F3A</color>
+    <color name="m3p_surface">#F6F3FC</color>
+    <color name="m3p_surface_variant">#E8E1F4</color>
+    <color name="m3p_on_surface_variant">#534A70</color>
+    <color name="m3p_outline">#8A80A6</color>
+    <color name="m3p_outline_variant">#D5CCE6</color>
+    <color name="m3p_container_lowest">#FCFAFF</color>
+    <color name="m3p_container_low">#F2EDFB</color>
+    <color name="m3p_container">#EDE7F8</color>
+    <color name="m3p_container_high">#E8E1F5</color>
+    <color name="m3p_container_highest">#E2DAF2</color>
+
+    <!-- Dark -->
+    <color name="m3d_on_primary">#08142B</color>
+    <color name="m3d_primary_container">#1E2A45</color>
+    <color name="m3d_on_primary_container">#C9DAFF</color>
+    <color name="m3d_secondary_container">#1E2A45</color>
+    <color name="m3d_on_secondary_container">#C9DAFF</color>
+    <color name="m3d_tertiary">#A78BFA</color>
+    <color name="m3d_tertiary_container">#2A2148</color>
+    <color name="m3d_on_tertiary_container">#E2D7FF</color>
+    <color name="m3d_surface">#0E1116</color>
+    <color name="m3d_surface_variant">#232B38</color>
+    <color name="m3d_on_surface_variant">#AAB5C8</color>
+    <color name="m3d_outline">#6B778C</color>
+    <color name="m3d_outline_variant">#2D3646</color>
+    <color name="m3d_container_lowest">#0A0D11</color>
+    <color name="m3d_container_low">#141820</color>
+    <color name="m3d_container">#181D26</color>
+    <color name="m3d_container_high">#1D232E</color>
+    <color name="m3d_container_highest">#232A36</color>
+</resources>

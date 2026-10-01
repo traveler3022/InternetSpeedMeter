@@ -128,7 +128,7 @@
         <!-- ====== Data package ====== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_package"
-            style="@style/IsmCard">
+            style="@style/IsmCard.Violet">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -154,12 +154,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_pill_soft"
+                        android:backgroundTint="@color/soft_violet"
                         android:paddingStart="14dp"
                         android:paddingTop="5dp"
                         android:paddingEnd="14dp"
                         android:paddingBottom="5dp"
                         android:text="@string/package_edit"
-                        android:textColor="?attr/ismOnSoft"
+                        android:textColor="?attr/ismViolet"
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -183,8 +184,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:max="1000"
-                            app:indicatorColor="?attr/ismAccent"
-                            app:trackColor="?attr/ismGrid"
+                            app:indicatorColor="?attr/ismViolet"
+                            app:trackColor="@color/soft_violet"
                             app:trackCornerRadius="6dp"
                             app:trackThickness="12dp" />
 
@@ -193,7 +194,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:textColor="?attr/ismOnSoft"
+                            android:textColor="?attr/ismViolet"
                             android:textSize="15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -227,7 +228,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- ====== This month ====== -->
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Amber">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -329,7 +330,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- ====== Last 7 days ====== -->
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard"
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Blue"
             android:layout_marginBottom="4dp">
 
             <LinearLayout

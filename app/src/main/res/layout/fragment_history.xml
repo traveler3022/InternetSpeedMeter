@@ -52,7 +52,7 @@
         </LinearLayout>
 
         <!-- ====== Chart + month totals ====== -->
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard.Blue">
 
             <LinearLayout
                 android:layout_width="match_parent"

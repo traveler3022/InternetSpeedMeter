@@ -18,4 +18,13 @@
     <attr name="ismAccentSoft" format="color" />
     <attr name="ismOnSoft" format="color" />
     <attr name="ismAccentDeep" format="color" />
+    <!-- Pastel card fills so the cards are not all plain white, and the
+         matching strong colors for icons on them (blue uses ismAccent,
+         teal uses @color/wifi_tint) -->
+    <attr name="ismCardBlue" format="color" />
+    <attr name="ismCardTeal" format="color" />
+    <attr name="ismCardViolet" format="color" />
+    <attr name="ismCardAmber" format="color" />
+    <attr name="ismViolet" format="color" />
+    <attr name="ismAmber" format="color" />
 </resources>

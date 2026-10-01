@@ -16,22 +16,48 @@
         <item name="android:navigationBarColor">?attr/ismBar</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
 
-        <item name="ismPage">#F4F7FC</item>
-        <item name="ismBar">#F4F7FC</item>
+        <item name="ismPage">#F3F6FC</item>
+        <item name="ismBar">#F3F6FC</item>
         <item name="ismHeader">#2563EB</item>
-        <item name="ismRowDark">#DBEAFE</item>
-        <item name="ismRowLight">#EFF4FE</item>
-        <item name="ismRowLighter">#FFFFFF</item>
+        <item name="ismRowDark">#DBE6FD</item>
+        <item name="ismRowLight">#F1ECFE</item>
+        <item name="ismRowLighter">#EAF1FE</item>
         <item name="ismCellText">#10192B</item>
-        <item name="ismDialogBody">#F8FAFD</item>
-        <item name="ismCard">#FFFFFF</item>
-        <item name="ismFooter">#EEF2F9</item>
+        <item name="ismDialogBody">#EEF3FD</item>
+        <item name="ismCard">#E9EFFC</item>
+        <item name="ismFooter">#DEE6F6</item>
         <item name="ismMuted">#5B6B84</item>
-        <item name="ismGrid">#E3E9F4</item>
+        <item name="ismGrid">#D6DEEE</item>
         <item name="ismAccent">#2563EB</item>
-        <item name="ismAccentSoft">#DBEAFE</item>
+        <item name="ismAccentSoft">#D4E2FF</item>
         <item name="ismOnSoft">#1E40AF</item>
-        <item name="ismAccentDeep">#1D4ED8</item>
+        <item name="ismAccentDeep">#7C3AED</item>
+        <item name="ismCardBlue">#E2ECFF</item>
+        <item name="ismCardTeal">#D9F4EE</item>
+        <item name="ismCardViolet">#ECE5FF</item>
+        <item name="ismCardAmber">#FFEFD9</item>
+        <item name="ismViolet">#7C3AED</item>
+        <item name="ismAmber">#D97706</item>
+        <item name="colorPrimaryContainer">@color/m3b_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/m3b_on_primary_container</item>
+        <item name="colorSecondaryContainer">@color/m3b_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/m3b_on_secondary_container</item>
+        <item name="colorTertiary">@color/m3b_tertiary</item>
+        <item name="colorOnTertiary">@color/White</item>
+        <item name="colorTertiaryContainer">@color/m3b_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/m3b_on_tertiary_container</item>
+        <item name="android:colorBackground">@color/m3b_surface</item>
+        <item name="colorSurface">@color/m3b_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/m3b_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/m3b_on_surface_variant</item>
+        <item name="colorOutline">@color/m3b_outline</item>
+        <item name="colorOutlineVariant">@color/m3b_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/m3b_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/m3b_container_low</item>
+        <item name="colorSurfaceContainer">@color/m3b_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3b_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/m3b_container_highest</item>
     </style>
 
     <!-- Dialog shown when the notification is tapped (DialogActivity) -->
@@ -80,6 +106,23 @@
         <item name="cardCornerRadius">24dp</item>
         <item name="cardElevation">2dp</item>
         <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- Pastel cards, one hue per kind of card -->
+    <style name="IsmCard.Blue">
+        <item name="cardBackgroundColor">?attr/ismCardBlue</item>
+    </style>
+
+    <style name="IsmCard.Teal">
+        <item name="cardBackgroundColor">?attr/ismCardTeal</item>
+    </style>
+
+    <style name="IsmCard.Violet">
+        <item name="cardBackgroundColor">?attr/ismCardViolet</item>
+    </style>
+
+    <style name="IsmCard.Amber">
+        <item name="cardBackgroundColor">?attr/ismCardAmber</item>
     </style>
 
     <style name="IsmCardTitle">
@@ -132,24 +175,52 @@
         <item name="colorPrimaryVariant">@color/brand_blue_deep</item>
         <item name="colorSecondary">@color/wifi_tint</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-        <item name="ismPage">#F4F7FC</item>
-        <item name="ismBar">#F4F7FC</item>
+        <item name="ismPage">#F3F6FC</item>
+        <item name="ismBar">#F3F6FC</item>
         <item name="ismHeader">#2563EB</item>
-        <item name="ismRowDark">#DBEAFE</item>
-        <item name="ismRowLight">#EFF4FE</item>
-        <item name="ismRowLighter">#FFFFFF</item>
+        <item name="ismRowDark">#DBE6FD</item>
+        <item name="ismRowLight">#F1ECFE</item>
+        <item name="ismRowLighter">#EAF1FE</item>
         <item name="ismCellText">#10192B</item>
-        <item name="ismDialogBody">#F8FAFD</item>
-        <item name="ismCard">#FFFFFF</item>
-        <item name="ismFooter">#EEF2F9</item>
+        <item name="ismDialogBody">#EEF3FD</item>
+        <item name="ismCard">#E9EFFC</item>
+        <item name="ismFooter">#DEE6F6</item>
         <item name="ismMuted">#5B6B84</item>
-        <item name="ismGrid">#E3E9F4</item>
+        <item name="ismGrid">#D6DEEE</item>
         <item name="ismAccent">#2563EB</item>
-        <item name="ismAccentSoft">#DBEAFE</item>
+        <item name="ismAccentSoft">#D4E2FF</item>
         <item name="ismOnSoft">#1E40AF</item>
-        <item name="ismAccentDeep">#1D4ED8</item>
+        <item name="ismAccentDeep">#7C3AED</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="ismCardBlue">#E2ECFF</item>
+        <item name="ismCardTeal">#D9F4EE</item>
+        <item name="ismCardViolet">#ECE5FF</item>
+        <item name="ismCardAmber">#FFEFD9</item>
+        <item name="ismViolet">#7C3AED</item>
+        <item name="ismAmber">#D97706</item>
+        <item name="colorOnPrimary">@color/White</item>
+        <item name="colorPrimaryContainer">@color/m3b_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/m3b_on_primary_container</item>
+        <item name="colorOnSecondary">@color/White</item>
+        <item name="colorSecondaryContainer">@color/m3b_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/m3b_on_secondary_container</item>
+        <item name="colorTertiary">@color/m3b_tertiary</item>
+        <item name="colorOnTertiary">@color/White</item>
+        <item name="colorTertiaryContainer">@color/m3b_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/m3b_on_tertiary_container</item>
+        <item name="android:colorBackground">@color/m3b_surface</item>
+        <item name="colorSurface">@color/m3b_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/m3b_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/m3b_on_surface_variant</item>
+        <item name="colorOutline">@color/m3b_outline</item>
+        <item name="colorOutlineVariant">@color/m3b_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/m3b_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/m3b_container_low</item>
+        <item name="colorSurfaceContainer">@color/m3b_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3b_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/m3b_container_highest</item>
     </style>
 
     <!-- Purple (light) -->
@@ -158,24 +229,52 @@
         <item name="colorPrimaryVariant">@color/brand_purple_deep</item>
         <item name="colorSecondary">@color/wifi_tint</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-        <item name="ismPage">#F7F5FC</item>
-        <item name="ismBar">#F7F5FC</item>
+        <item name="ismPage">#F6F3FC</item>
+        <item name="ismBar">#F6F3FC</item>
         <item name="ismHeader">#7C3AED</item>
-        <item name="ismRowDark">#EDE9FE</item>
-        <item name="ismRowLight">#F3EFFC</item>
-        <item name="ismRowLighter">#FFFFFF</item>
+        <item name="ismRowDark">#E8DEFC</item>
+        <item name="ismRowLight">#FCEBF4</item>
+        <item name="ismRowLighter">#F1EBFE</item>
         <item name="ismCellText">#1E1435</item>
-        <item name="ismDialogBody">#FAF8FE</item>
-        <item name="ismCard">#FFFFFF</item>
-        <item name="ismFooter">#F0EBF8</item>
+        <item name="ismDialogBody">#F3EEFC</item>
+        <item name="ismCard">#EFE9FB</item>
+        <item name="ismFooter">#E6DDF6</item>
         <item name="ismMuted">#625983</item>
-        <item name="ismGrid">#E7E1F4</item>
+        <item name="ismGrid">#DDD4EE</item>
         <item name="ismAccent">#7C3AED</item>
-        <item name="ismAccentSoft">#EDE9FE</item>
+        <item name="ismAccentSoft">#E6DBFF</item>
         <item name="ismOnSoft">#5B21B6</item>
-        <item name="ismAccentDeep">#6D28D9</item>
+        <item name="ismAccentDeep">#DB2777</item>
         <item name="android:textColorPrimary">@color/text_primary_purple</item>
         <item name="android:textColorSecondary">@color/text_secondary_purple</item>
+        <item name="ismCardBlue">#E4E6FF</item>
+        <item name="ismCardTeal">#D9F4EE</item>
+        <item name="ismCardViolet">#FBE3F1</item>
+        <item name="ismCardAmber">#FFEBDD</item>
+        <item name="ismViolet">#DB2777</item>
+        <item name="ismAmber">#EA580C</item>
+        <item name="colorOnPrimary">@color/White</item>
+        <item name="colorPrimaryContainer">@color/m3p_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/m3p_on_primary_container</item>
+        <item name="colorOnSecondary">@color/White</item>
+        <item name="colorSecondaryContainer">@color/m3p_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/m3p_on_secondary_container</item>
+        <item name="colorTertiary">@color/m3p_tertiary</item>
+        <item name="colorOnTertiary">@color/White</item>
+        <item name="colorTertiaryContainer">@color/m3p_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/m3p_on_tertiary_container</item>
+        <item name="android:colorBackground">@color/m3p_surface</item>
+        <item name="colorSurface">@color/m3p_surface</item>
+        <item name="colorOnSurface">@color/text_primary_purple</item>
+        <item name="colorSurfaceVariant">@color/m3p_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/m3p_on_surface_variant</item>
+        <item name="colorOutline">@color/m3p_outline</item>
+        <item name="colorOutlineVariant">@color/m3p_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/m3p_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/m3p_container_low</item>
+        <item name="colorSurfaceContainer">@color/m3p_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3p_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/m3p_container_highest</item>
     </style>
 
     <!-- Dark -->
@@ -188,19 +287,47 @@
         <item name="ismBar">#0E1116</item>
         <item name="ismHeader">#3B6FE0</item>
         <item name="ismRowDark">#212B3E</item>
-        <item name="ismRowLight">#1A2130</item>
-        <item name="ismRowLighter">#141924</item>
+        <item name="ismRowLight">#1D1A33</item>
+        <item name="ismRowLighter">#161D2B</item>
         <item name="ismCellText">#E7EDF7</item>
         <item name="ismDialogBody">#131820</item>
         <item name="ismCard">#171C24</item>
-        <item name="ismFooter">#1B2330</item>
+        <item name="ismFooter">#1F2633</item>
         <item name="ismMuted">#9AA7BC</item>
-        <item name="ismGrid">#232D3D</item>
+        <item name="ismGrid">#263042</item>
         <item name="ismAccent">#4F8EF7</item>
         <item name="ismAccentSoft">#1E2A45</item>
         <item name="ismOnSoft">#9DB8F5</item>
-        <item name="ismAccentDeep">#2E5FD0</item>
+        <item name="ismAccentDeep">#6D3FD0</item>
         <item name="android:textColorPrimary">@color/text_primary_dark</item>
         <item name="android:textColorSecondary">@color/text_secondary_dark</item>
+        <item name="ismCardBlue">#15213A</item>
+        <item name="ismCardTeal">#102A2B</item>
+        <item name="ismCardViolet">#211A3A</item>
+        <item name="ismCardAmber">#2A2116</item>
+        <item name="ismViolet">#A78BFA</item>
+        <item name="ismAmber">#FBBF24</item>
+        <item name="colorOnPrimary">@color/m3d_on_primary</item>
+        <item name="colorPrimaryContainer">@color/m3d_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/m3d_on_primary_container</item>
+        <item name="colorOnSecondary">@color/White</item>
+        <item name="colorSecondaryContainer">@color/m3d_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/m3d_on_secondary_container</item>
+        <item name="colorTertiary">@color/m3d_tertiary</item>
+        <item name="colorOnTertiary">@color/m3d_on_primary</item>
+        <item name="colorTertiaryContainer">@color/m3d_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/m3d_on_tertiary_container</item>
+        <item name="android:colorBackground">@color/m3d_surface</item>
+        <item name="colorSurface">@color/m3d_surface</item>
+        <item name="colorOnSurface">@color/text_primary_dark</item>
+        <item name="colorSurfaceVariant">@color/m3d_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/m3d_on_surface_variant</item>
+        <item name="colorOutline">@color/m3d_outline</item>
+        <item name="colorOutlineVariant">@color/m3d_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/m3d_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/m3d_container_low</item>
+        <item name="colorSurfaceContainer">@color/m3d_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3d_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/m3d_container_highest</item>
     </style>
 </resources>
