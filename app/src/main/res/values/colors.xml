@@ -8,6 +8,7 @@
     <color name="Black">#000000</color>
     <color name="Transparent">#00000000</color>
     <color name="success">#18864B</color>
+    <color name="error">#B42318</color>
 
     <!-- Internet Speed Meter Lite look -->
     <color name="bar_black">#101010</color>
