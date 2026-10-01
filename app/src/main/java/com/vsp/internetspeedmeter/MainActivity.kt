@@ -33,6 +33,14 @@ class MainActivity : AppCompatActivity() {
             if (granted) startMonitoringService()
         }
 
+    private val onboardingLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (OnboardingActivity.isDone(this)) {
+                startMonitoringWhenReady()
+                UsageWidget.refresh(this)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Palette.applyNightMode(this)
         super.onCreate(savedInstanceState)
@@ -53,18 +61,10 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) showTab(R.id.nav_home)
 
         if (OnboardingActivity.isDone(this)) {
-            checkAndRequestPermissions()
+            startMonitoringWhenReady()
             UsageWidget.refresh(this)
         } else {
-            startActivity(Intent(this, OnboardingActivity::class.java))
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (OnboardingActivity.isDone(this)) {
-            checkAndRequestPermissions()
-            UsageWidget.refresh(this)
+            onboardingLauncher.launch(Intent(this, OnboardingActivity::class.java))
         }
     }
 
@@ -97,14 +97,15 @@ class MainActivity : AppCompatActivity() {
         finishAffinity()
     }
 
-    private fun checkAndRequestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+    private fun startMonitoringWhenReady() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        ) {
+            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
         }
+        startMonitoringService()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
