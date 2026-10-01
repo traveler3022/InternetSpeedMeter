@@ -40,7 +40,7 @@
                 android:singleLine="true"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="15sp"
-                android:textStyle="medium" />
+                android:textStyle="normal" />
 
             <TextView
                 android:id="@+id/tv_active"
