@@ -14,9 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { ref: b1e9b80d37a2accd72933a5a0e74589300412dd2, tag: before-fix, locale: fa-IR }
-          - { ref: 97c25792fe752fce72b82f4bdb05a61cfcaf987f, tag: fix, locale: fa-IR }
-          - { ref: 97c25792fe752fce72b82f4bdb05a61cfcaf987f, tag: fix, locale: "" }
+          - { ref: b79f067415e6dce504b3a362ac8046fe582fdd52, tag: colors, locale: fa-IR }
+          - { ref: b79f067415e6dce504b3a362ac8046fe582fdd52, tag: colors, locale: "" }
     steps:
       - name: Checkout scripts
         uses: actions/checkout@v4
