@@ -54,6 +54,7 @@ class SettingsFragment : PreferenceFragmentCompat(),
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
+        setDividerEnabled(false)
         updateLimitTitle()
         updatePackageSummary()
         findPreference<Preference>("about_version")?.summary = try {
@@ -74,6 +75,14 @@ class SettingsFragment : PreferenceFragmentCompat(),
             else -> return super.onPreferenceTreeClick(preference)
         }
         return true
+    }
+
+    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        listView.apply {
+            clipToPadding = false
+            setPadding(12, 8, 12, 18)
+        }
     }
 
     override fun onResume() {
