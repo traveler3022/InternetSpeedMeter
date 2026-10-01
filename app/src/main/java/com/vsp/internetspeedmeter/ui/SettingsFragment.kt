@@ -79,9 +79,11 @@ class SettingsFragment : PreferenceFragmentCompat(),
 
     override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val density = resources.displayMetrics.density
+        fun Int.dp(): Int = (this * density + 0.5f).toInt()
         listView.apply {
             clipToPadding = false
-            setPadding(12, 8, 12, 18)
+            setPadding(12.dp(), 8.dp(), 12.dp(), 18.dp())
         }
     }
 
