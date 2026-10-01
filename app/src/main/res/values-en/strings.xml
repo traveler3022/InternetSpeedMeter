@@ -56,6 +56,15 @@
     <string name="tab_home">Home</string>
     <string name="tab_history">History</string>
     <string name="tab_apps">Apps</string>
+    <string name="connection_connected">Connected</string>
+    <string name="connection_disconnected">Disconnected</string>
+    <string name="network_wifi">Wi-Fi</string>
+    <string name="network_mobile">Mobile data</string>
+    <string name="network_unknown">Unknown network</string>
+    <string name="live">Live</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="home_today_hint">Recorded usage today</string>
     <string name="home_total_fmt">Total today: %1$s</string>
     <string name="home_month_fmt">This month · %1$s</string>
     <string name="home_week">Last 7 days</string>
