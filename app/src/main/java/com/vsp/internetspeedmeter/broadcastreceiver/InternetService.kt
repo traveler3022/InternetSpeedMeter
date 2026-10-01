@@ -84,6 +84,7 @@ class InternetService : Service() {
      */
     private class NetworkSnapshot(
         val mobileKey: String,
+        val mobileIfaces: List<String>,
         val wifiIfaces: List<String>,
         val wifiConnected: Boolean,
         val type: Int,
@@ -220,10 +221,15 @@ class InternetService : Service() {
      * Counter snapshot, keyed for [TrafficMath.interfaceDeltas]. Mobile and
      * Wi-Fi are read separately and never derived from each other:
      *
-     * [MOBILE_PREFIX] + cellular interfaces = TrafficStats mobile counter. The
-     * platform keeps it right (464xlat, modem interface names); the key holds
-     * the interface set, so a set change starts a new baseline instead of
-     * counting a since-boot counter as new traffic.
+     * [MOBILE_PREFIX] + name = each interface of a cellular network, plus its
+     * 464xlat "v4-" interface (Android 12+). A counter read by interface name
+     * only grows. The TrafficStats mobile counter used before sums the
+     * interfaces that are mobile at that moment, so it jumped by a whole
+     * since-boot counter whenever one joined it, e.g. "v4-rmnet_data0" each
+     * time 464xlat started again after mobile data reconnected.
+     * Below Android 12 interface counters are not public, so the mobile
+     * counter is still used there; its key holds the interface set, so a set
+     * change starts a new baseline instead of counting a since-boot counter.
      *
      * [WIFI_PREFIX] + name = each interface of a connected Wi-Fi/Ethernet
      * network, plus its 464xlat "v4-" interface. Nothing is read for Wi-Fi
@@ -246,10 +252,16 @@ class InternetService : Service() {
             if (rx >= 0L && tx >= 0L) result[WIFI_PREFIX + "*"] = TrafficMath.Counters(rx, tx)
         }
 
-        result[MOBILE_PREFIX + snapshot.mobileKey] = TrafficMath.Counters(
-            TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
-            TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            for (name in snapshot.mobileIfaces) {
+                readInterface(name)?.let { result[MOBILE_PREFIX + name] = it }
+            }
+        } else {
+            result[MOBILE_PREFIX + snapshot.mobileKey] = TrafficMath.Counters(
+                TrafficStats.getMobileRxBytes().coerceAtLeast(0L),
+                TrafficStats.getMobileTxBytes().coerceAtLeast(0L)
+            )
+        }
         return result
     }
 
@@ -298,6 +310,7 @@ class InternetService : Service() {
 
         return NetworkSnapshot(
             mobileKey = mobileIfaces.joinToString(","),
+            mobileIfaces = mobileIfaces.flatMap { listOf(it, CLAT_PREFIX + it) },
             wifiIfaces = wifiIfaces,
             wifiConnected = wifiConnected,
             type = detectNetworkType(),
@@ -445,8 +458,11 @@ class InternetService : Service() {
     private fun readAndApplyTrafficSampleLocked(): TrafficMath.Sample {
         val curTime = SystemClock.elapsedRealtime()
         val readings = readCounters()
-        // The mobile counter is only comparable with the same interface set.
-        counterBaselines.keys.removeAll { it.startsWith(MOBILE_PREFIX) && it !in readings }
+        // The pre-Android 12 mobile counter is only comparable with the same
+        // interface set. Per-interface keys keep their baseline, as Wi-Fi does.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            counterBaselines.keys.removeAll { it.startsWith(MOBILE_PREFIX) && it !in readings }
+        }
         val deltas = TrafficMath.interfaceDeltas(counterBaselines, readings)
 
         var deltaRx = 0L
