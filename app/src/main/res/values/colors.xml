@@ -32,4 +32,10 @@
     <color name="card_bg">#FFFFFF</color>
     <color name="text_primary">#0B1220</color>
     <color name="text_secondary">#5A5A5A</color>
+
+    <!-- Text colors of the purple and dark "تم" palettes -->
+    <color name="text_primary_purple">#1A1030</color>
+    <color name="text_secondary_purple">#5C5470</color>
+    <color name="text_primary_dark">#F2F2F2</color>
+    <color name="text_secondary_dark">#B8B8B8</color>
 </resources>

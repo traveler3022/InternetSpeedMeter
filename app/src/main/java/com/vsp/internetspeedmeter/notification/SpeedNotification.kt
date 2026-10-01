@@ -14,6 +14,7 @@ import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.os.ConfigurationCompat
 import androidx.preference.PreferenceManager
 import com.vsp.internetspeedmeter.DialogActivity
@@ -161,6 +162,7 @@ object SpeedNotification {
         val builder = NotificationCompat.Builder(
             context, if (idle) CHANNEL_ID_IDLE else CHANNEL_ID
         )
+            .setSmallIcon(IconCompat.createWithBitmap(speedIcon(context, iconSpeed)))
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(pending)
@@ -176,15 +178,6 @@ object SpeedNotification {
                 if (hideOnLockscreen) NotificationCompat.VISIBILITY_SECRET
                 else NotificationCompat.VISIBILITY_PUBLIC
             )
-
-        // Prefer the dynamic speed icon, but always keep a valid resource-backed
-        // small icon as a fallback. Some Android/SystemUI combinations reject
-        // bitmap-backed small icons during foreground-service startup.
-        try {
-            builder.setSmallIcon(IconCompat.createWithBitmap(speedIcon(context, iconSpeed)))
-        } catch (_: Exception) {
-            builder.setSmallIcon(R.drawable.ic_traffic_24)
-        }
 
         // "رنگ اعلان": a foreground-service notification may be colorized, which
         // is the only way to tint the surface without a custom layout.

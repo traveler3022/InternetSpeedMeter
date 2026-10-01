@@ -74,7 +74,10 @@
         <item name="android:textSize">15sp</item>
     </style>
 
-    <!-- Palettes of the "تم" preference, applied with Palette.apply() -->
+    <!-- Palettes of the "تم" preference, applied with Palette.apply().
+         The android:textColor* items must point to color resources: the
+         bottom navigation bar loads textColorSecondary by resource id, and a
+         plain #RRGGBB value there crashes the main screen on start. -->
     <style name="ThemeOverlay.Ism.Blue" parent="">
         <item name="ismPage">#FFFFFF</item>
         <item name="ismBar">#101010</item>
@@ -89,8 +92,8 @@
         <item name="ismMuted">#5A5A5A</item>
         <item name="ismGrid">#E0E0E0</item>
         <item name="ismAccent">#4285F4</item>
-        <item name="android:textColorPrimary">#0B1220</item>
-        <item name="android:textColorSecondary">#5A5A5A</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
     <style name="ThemeOverlay.Ism.Purple" parent="">
@@ -107,8 +110,8 @@
         <item name="ismMuted">#5C5470</item>
         <item name="ismGrid">#E6E0F0</item>
         <item name="ismAccent">#7E57C2</item>
-        <item name="android:textColorPrimary">#1A1030</item>
-        <item name="android:textColorSecondary">#5C5470</item>
+        <item name="android:textColorPrimary">@color/text_primary_purple</item>
+        <item name="android:textColorSecondary">@color/text_secondary_purple</item>
     </style>
 
     <style name="ThemeOverlay.Ism.Dark" parent="">
@@ -125,7 +128,7 @@
         <item name="ismMuted">#C8C8C8</item>
         <item name="ismGrid">#3A3A3A</item>
         <item name="ismAccent">#5B9BF0</item>
-        <item name="android:textColorPrimary">#F2F2F2</item>
-        <item name="android:textColorSecondary">#B8B8B8</item>
+        <item name="android:textColorPrimary">@color/text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
     </style>
 </resources>
