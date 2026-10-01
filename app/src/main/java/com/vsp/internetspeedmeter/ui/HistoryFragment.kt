@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.vsp.internetspeedmeter.R
@@ -30,6 +31,11 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
         binding = b
         month = savedInstanceState?.getInt(STATE_MONTH, NO_MONTH) ?: NO_MONTH
         b.listDays.layoutManager = LinearLayoutManager(requireContext())
+        b.listDays.addItemDecoration(
+            DividerItemDecoration(requireContext(), RecyclerView.VERTICAL).apply {
+                setDrawable(requireContext().getDrawable(R.drawable.divider_subtle)!!)
+            }
+        )
         b.listDays.adapter = adapter
         b.btnPrev.setOnClickListener { month--; render() }
         b.btnNext.setOnClickListener { month++; render() }
@@ -115,8 +121,6 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
             b.tvDayMobile.text = Fmt.bytes(ctx, t.mobile)
             b.tvDayWifi.text = Fmt.bytes(ctx, t.wifi)
             b.tvDayTotal.text = Fmt.bytes(ctx, t.total)
-            b.root.setBackgroundColor(
-                Palette.color(ctx, if (position % 2 == 0) R.attr.ismRowLighter else R.attr.ismRowLight))
             b.root.setOnClickListener { onClick(day) }
         }
 
