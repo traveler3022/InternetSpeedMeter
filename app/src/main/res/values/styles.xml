@@ -86,6 +86,17 @@
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
+    <style name="IsmListCard" parent="Widget.MaterialComponents.CardView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="cardBackgroundColor">?attr/ismCard</item>
+        <item name="cardCornerRadius">14dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">?attr/ismGrid</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
     <style name="TableHeaderCell">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
