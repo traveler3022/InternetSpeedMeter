@@ -34,6 +34,11 @@ class OnboardingActivity : AppCompatActivity() {
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        try {
+            binding.ivOnbIcon.setImageDrawable(packageManager.getApplicationIcon(packageName))
+        } catch (_: Exception) {
+        }
+
         binding.btnOnbNotif.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)

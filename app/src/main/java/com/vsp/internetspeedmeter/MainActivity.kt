@@ -54,11 +54,20 @@ class MainActivity : AppCompatActivity() {
 
         if (OnboardingActivity.isDone(this)) {
             checkAndRequestPermissions()
+            startMonitoringService()
+            UsageWidget.refresh(this)
         } else {
             startActivity(Intent(this, OnboardingActivity::class.java))
         }
-        startMonitoringService()
-        UsageWidget.refresh(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (OnboardingActivity.isDone(this)) {
+            checkAndRequestPermissions()
+            startMonitoringService()
+            UsageWidget.refresh(this)
+        }
     }
 
     private fun showTab(itemId: Int) {
@@ -76,8 +85,12 @@ class MainActivity : AppCompatActivity() {
     private fun startMonitoringService() {
         prefs.edit().putBoolean("isStarted", true).apply()
         val serviceIntent = Intent(this, InternetService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(serviceIntent)
-        else startService(serviceIntent)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(serviceIntent)
+            else startService(serviceIntent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun stopMonitoringAndExit() {

@@ -19,10 +19,11 @@ object Palette {
 
     /** Call before super.onCreate(). */
     fun applyNightMode(context: Context) {
-        AppCompatDelegate.setDefaultNightMode(
-            if (value(context) == "dark") AppCompatDelegate.MODE_NIGHT_YES
-            else AppCompatDelegate.MODE_NIGHT_NO
-        )
+        val target = if (value(context) == "dark") AppCompatDelegate.MODE_NIGHT_YES
+        else AppCompatDelegate.MODE_NIGHT_NO
+        if (AppCompatDelegate.getDefaultNightMode() != target) {
+            AppCompatDelegate.setDefaultNightMode(target)
+        }
     }
 
     /** Call after super.onCreate() and before setContentView(). */

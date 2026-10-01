@@ -6,6 +6,19 @@
         <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/White</item>
         <item name="android:statusBarColor">@color/bar_black</item>
+        <item name="ismPage">#FFFFFF</item>
+        <item name="ismBar">#101010</item>
+        <item name="ismHeader">#3B86F0</item>
+        <item name="ismRowDark">#C3DBFA</item>
+        <item name="ismRowLight">#EEF5FD</item>
+        <item name="ismRowLighter">#F7FBFF</item>
+        <item name="ismCellText">#0B1220</item>
+        <item name="ismDialogBody">#F7F7F7</item>
+        <item name="ismCard">#FFFFFF</item>
+        <item name="ismFooter">#E0E0E0</item>
+        <item name="ismMuted">#5A5A5A</item>
+        <item name="ismGrid">#E0E0E0</item>
+        <item name="ismAccent">#4285F4</item>
     </style>
 
     <style name="ToolbarBlack" parent="Widget.MaterialComponents.Toolbar">

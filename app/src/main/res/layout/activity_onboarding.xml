@@ -12,12 +12,14 @@
         android:padding="20dp">
 
         <ImageView
+            android:id="@+id/iv_onb_icon"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
             android:importantForAccessibility="no"
-            android:src="@mipmap/ic_launcher" />
+            app:srcCompat="@drawable/ic_traffic_24"
+            app:tint="?attr/ismAccent" />
 
         <TextView
             style="@style/IsmCardTitle"
