@@ -44,6 +44,25 @@ class FormatUtilsTest {
     }
 
     @Test
+    fun testFormatSpeedForIcon_neverMoreThanThreeCharacters() {
+        assertEquals("9.9", FormatUtils.formatSpeedForIcon(9_960_000L).value)
+        assertEquals("10", FormatUtils.formatSpeedForIcon(10_000_000L).value)
+        assertEquals("12", FormatUtils.formatSpeedForIcon(12_345_678L).value)
+        assertEquals("999", FormatUtils.formatSpeedForIcon(999_999_999L).value)
+        assertEquals("1.0", FormatUtils.formatSpeedForIcon(1_000_000_000L).value)
+
+        // 45 Mbit/s in the bits unit
+        val bits = FormatUtils.formatSpeedForIcon(5_625_000L, bits = true)
+        assertEquals("45", bits.value)
+        assertEquals("Mb", bits.unit)
+
+        for (speed in listOf(0L, 999L, 999_999L, 9_999_999L, 99_999_999L, Long.MAX_VALUE)) {
+            assertTrue(FormatUtils.formatSpeedForIcon(speed).value.length <= 3)
+            assertTrue(FormatUtils.formatSpeedForIcon(speed, bits = true).value.length <= 3)
+        }
+    }
+
+    @Test
     fun testFormatBytes_binaryUnits() {
         assertEquals("0 B", FormatUtils.formatBytes(0L))
         assertEquals("512 B", FormatUtils.formatBytes(512L))

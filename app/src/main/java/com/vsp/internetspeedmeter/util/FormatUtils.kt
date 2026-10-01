@@ -29,15 +29,15 @@ object FormatUtils {
     }
 
     /**
-     * Formats speed for the compact status bar icon (max 3 digits + 2-letter unit).
+     * Formats speed for the compact status bar icon (max 3 characters + 2-letter unit).
      */
     fun formatSpeedForIcon(bytesPerSec: Long, bits: Boolean = false): SpeedUnit {
         val safeBytes = if (bytesPerSec < 0L) 0L else bytesPerSec
         if (bits) {
             val b = TrafficMath.safeMultiplyBy8(safeBytes)
             return when {
-                b >= 1_000_000_000L -> SpeedUnit(decimal(b.toDouble() / 1_000_000_000L), "Gb")
-                b >= 1_000_000L -> SpeedUnit(decimal(b.toDouble() / 1_000_000L), "Mb")
+                b >= 1_000_000_000L -> SpeedUnit(iconValue(b, 1_000_000_000L), "Gb")
+                b >= 1_000_000L -> SpeedUnit(iconValue(b, 1_000_000L), "Mb")
                 b >= 1_000L -> {
                     val kb = b / 1000L
                     SpeedUnit((if (kb > 999L) 999L else kb).toString(), "Kb")
@@ -46,14 +46,26 @@ object FormatUtils {
             }
         }
         return when {
-            safeBytes >= 1_000_000_000L -> SpeedUnit(decimal(safeBytes.toDouble() / 1_000_000_000L), "GB")
-            safeBytes >= 1_000_000L -> SpeedUnit(decimal(safeBytes.toDouble() / 1_000_000L), "MB")
+            safeBytes >= 1_000_000_000L -> SpeedUnit(iconValue(safeBytes, 1_000_000_000L), "GB")
+            safeBytes >= 1_000_000L -> SpeedUnit(iconValue(safeBytes, 1_000_000L), "MB")
             safeBytes >= 1_000L -> {
                 val kb = safeBytes / 1000L
                 SpeedUnit((if (kb > 999L) 999L else kb).toString(), "KB")
             }
             else -> SpeedUnit("0", "KB")
         }
+    }
+
+    /**
+     * Icon number for [amount] >= [unit]: one decimal below 10 ("9.9"), whole
+     * numbers from 10 ("12", "999"), as the reference app shows it. The icon
+     * only fits three characters; "12.3" was drawn wider than the icon and
+     * clipped. Truncated, so 9.96 stays "9.9" instead of rounding to "10.0".
+     */
+    private fun iconValue(amount: Long, unit: Long): String {
+        val tenths = amount / (unit / 10L)
+        return if (tenths < 100L) "${tenths / 10L}.${tenths % 10L}"
+        else minOf(amount / unit, 999L).toString()
     }
 
     /**
