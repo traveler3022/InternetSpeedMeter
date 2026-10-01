@@ -17,22 +17,34 @@ import com.vsp.internetspeedmeter.util.AppCalendar
 import com.vsp.internetspeedmeter.util.Palette
 import com.vsp.internetspeedmeter.util.UsageSummary
 
-/** "تاریخچه": one month at a time, a daily chart and the past days, newest first. */
+/** Design 2 history: period filters, usage chart, summary and daily breakdown. */
 class HistoryFragment : Fragment(R.layout.fragment_history) {
 
     private var binding: FragmentHistoryBinding? = null
     private var rows: List<Usage> = emptyList()
-    private var month = NO_MONTH
+    private var periodDays = 30
     private val adapter = DayAdapter { day -> openDay(day) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val b = FragmentHistoryBinding.bind(view)
         binding = b
-        month = savedInstanceState?.getInt(STATE_MONTH, NO_MONTH) ?: NO_MONTH
+        periodDays = savedInstanceState?.getInt(STATE_PERIOD, 30) ?: 30
+
         b.listDays.layoutManager = LinearLayoutManager(requireContext())
         b.listDays.adapter = adapter
-        b.btnPrev.setOnClickListener { month--; render() }
-        b.btnNext.setOnClickListener { month++; render() }
+        b.chipsPeriod.setOnCheckedStateChangeListener { _, ids ->
+            periodDays = when (ids.firstOrNull()) {
+                R.id.chip_7_days -> 7
+                R.id.chip_90_days -> 90
+                else -> 30
+            }
+            render()
+        }
+        when (periodDays) {
+            7 -> b.chipsPeriod.check(R.id.chip_7_days)
+            90 -> b.chipsPeriod.check(R.id.chip_90_days)
+            else -> b.chipsPeriod.check(R.id.chip_30_days)
+        }
 
         ViewModelProvider(requireActivity())[UsageViewModel::class.java].allNotes
             .observe(viewLifecycleOwner) {
@@ -43,7 +55,7 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt(STATE_MONTH, month)
+        outState.putInt(STATE_PERIOD, periodDays)
     }
 
     override fun onDestroyView() {
@@ -60,33 +72,44 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
         val b = binding ?: return
         val ctx = requireContext()
         val today = AppCalendar.today(ctx)
-        val current = AppCalendar.monthIndex(ctx, today)
-        if (month == NO_MONTH || month > current) month = current
-
         val byDay = UsageSummary.byDay(rows)
-        val days = AppCalendar.monthDays(ctx, month)
-        b.tvMonth.text = AppCalendar.monthTitle(ctx, month)
-        b.btnNext.isEnabled = month < current
-        b.btnNext.alpha = if (month < current) 1f else 0.3f
+        val first = today - periodDays + 1
+        val days = first..today
 
-        b.chartMonth.bars = days.map { d ->
+        b.tvChartTitle.text = getString(
+            when (periodDays) {
+                7 -> R.string.history_last_7
+                90 -> R.string.history_last_90
+                else -> R.string.history_last_30
+            }
+        )
+
+        b.chartPeriod.bars = days.mapIndexed { index, d ->
             val t = byDay[d] ?: UsageSummary.Totals()
-            val dom = AppCalendar.dayOfMonth(ctx, d)
-            val n = d - days.first + 1
-            val label = if (n == 1 || n % 5 == 0 || d == today) dom else ""
-            BarChartView.Bar(label, t.mobile, t.wifi, highlight = d == today)
+            val label = when {
+                periodDays <= 7 -> AppCalendar.dayOfMonth(ctx, d)
+                index == 0 || index == days.count() - 1 || index % 5 == 0 ->
+                    AppCalendar.dayOfMonth(ctx, d)
+                else -> ""
+            }
+            BarChartView.Bar(
+                label.toString(),
+                t.mobile,
+                t.wifi,
+                highlight = d == today
+            )
         }
-        b.chartMonth.onBarClick = { i -> openDay(days.first + i) }
+        b.chartPeriod.onBarClick = { index -> openDay(first + index) }
 
         val totals = UsageSummary.sum(byDay, days)
         b.tvHistMobile.text = Fmt.bytes(ctx, totals.mobile)
         b.tvHistWifi.text = Fmt.bytes(ctx, totals.wifi)
         b.tvHistTotal.text = Fmt.bytes(ctx, totals.total)
 
-        val shown = days.filter { it <= today }.reversed()
-            .map { it to (byDay[it] ?: UsageSummary.Totals()) }
+        val shown = days.reversed().map { it to (byDay[it] ?: UsageSummary.Totals()) }
         adapter.submit(shown, today)
-        b.tvHistoryEmpty.visibility = if (totals.total == 0L) View.VISIBLE else View.GONE
+        b.tvHistoryEmpty.visibility =
+            if (totals.total == 0L) View.VISIBLE else View.GONE
     }
 
     private class DayAdapter(private val onClick: (Int) -> Unit) :
@@ -111,12 +134,18 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
             val (day, t) = items[position]
             val b = holder.b
             val ctx = b.root.context
-            b.tvDay.text = if (day == today) ctx.getString(R.string.row_today) else AppCalendar.dayLabel(ctx, day)
+            b.tvDay.text =
+                if (day == today) ctx.getString(R.string.row_today)
+                else AppCalendar.dayLabel(ctx, day)
             b.tvDayMobile.text = Fmt.bytes(ctx, t.mobile)
             b.tvDayWifi.text = Fmt.bytes(ctx, t.wifi)
             b.tvDayTotal.text = Fmt.bytes(ctx, t.total)
             b.root.setBackgroundColor(
-                Palette.color(ctx, if (position % 2 == 0) R.attr.ismRowLighter else R.attr.ismRowLight))
+                Palette.color(
+                    ctx,
+                    if (position % 2 == 0) R.attr.ismRowLighter else R.attr.ismRowLight
+                )
+            )
             b.root.setOnClickListener { onClick(day) }
         }
 
@@ -124,7 +153,6 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private companion object {
-        const val NO_MONTH = Int.MIN_VALUE
-        const val STATE_MONTH = "month"
+        const val STATE_PERIOD = "history_period"
     }
 }
