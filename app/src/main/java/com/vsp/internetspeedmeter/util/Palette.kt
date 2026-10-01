@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.WindowCompat
 import androidx.preference.PreferenceManager
 import com.vsp.internetspeedmeter.R
 
@@ -28,6 +29,7 @@ object Palette {
 
     /** Call after super.onCreate() and before setContentView(). */
     fun apply(activity: Activity, paintWindow: Boolean = true) {
+        val dark = value(activity) == "dark"
         val overlay = when (value(activity)) {
             "purple" -> R.style.ThemeOverlay_Ism_Purple
             "dark" -> R.style.ThemeOverlay_Ism_Dark
@@ -38,6 +40,9 @@ object Palette {
             activity.window.statusBarColor = color(activity, R.attr.ismBar)
             activity.window.setBackgroundDrawable(ColorDrawable(color(activity, R.attr.ismPage)))
         }
+        // Light pages need dark status-bar icons, the dark page light ones.
+        WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+            .isAppearanceLightStatusBars = !dark
     }
 
     fun color(context: Context, @AttrRes attr: Int): Int {

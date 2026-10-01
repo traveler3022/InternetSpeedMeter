@@ -2,99 +2,130 @@
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
 
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <!-- ====== Hero: today's usage on a gradient ====== -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            app:cardBackgroundColor="@color/Transparent"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_hero"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
-                    style="@style/IsmCardTitle"
+                    style="@style/IsmHeroLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/row_today" />
+                    android:text="@string/row_today"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginBottom="4dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_cell_tower_24"
-                    app:tint="?attr/ismAccent" />
 
-                <TextView
-                    android:id="@+id/tv_today_mobile"
-                    style="@style/IsmBigNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/column_mobile" />
-            </LinearLayout>
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_hero_icon"
+                            android:contentDescription="@string/column_mobile"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_cell_tower_24"
+                            app:tint="@color/White" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginBottom="4dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_wifi_24"
-                    app:tint="#26A69A" />
+                        <TextView
+                            android:id="@+id/tv_today_mobile"
+                            style="@style/IsmHeroNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" />
 
-                <TextView
-                    android:id="@+id/tv_today_wifi"
-                    style="@style/IsmBigNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                        <TextView
+                            style="@style/IsmHeroLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/column_mobile" />
+                    </LinearLayout>
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/column_wifi" />
-            </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_hero_icon"
+                            android:contentDescription="@string/column_wifi"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_wifi_24"
+                            app:tint="@color/White" />
+
+                        <TextView
+                            android:id="@+id/tv_today_wifi"
+                            style="@style/IsmHeroNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" />
+
+                        <TextView
+                            style="@style/IsmHeroLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/column_wifi" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/tv_today_total"
-                    style="@style/IsmCaption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center" />
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_hero_chip"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/White"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ====== Data package ====== -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_package"
             style="@style/IsmCard">
@@ -103,7 +134,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -122,10 +153,14 @@
                         android:id="@+id/tv_package_edit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:padding="4dp"
+                        android:background="@drawable/bg_pill_soft"
+                        android:paddingStart="14dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="5dp"
                         android:text="@string/package_edit"
-                        android:textColor="?attr/ismAccent"
+                        android:textColor="?attr/ismOnSoft"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -135,24 +170,42 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progress_package"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:max="1000"
-                        app:indicatorColor="?attr/ismAccent"
-                        app:trackColor="?attr/ismGrid"
-                        app:trackCornerRadius="5dp"
-                        app:trackThickness="10dp" />
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/progress_package"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="1000"
+                            app:indicatorColor="?attr/ismAccent"
+                            app:trackColor="?attr/ismGrid"
+                            app:trackCornerRadius="6dp"
+                            app:trackThickness="12dp" />
+
+                        <TextView
+                            android:id="@+id/tv_package_percent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:textColor="?attr/ismOnSoft"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tv_package_used"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="10dp"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_package_left"
@@ -164,21 +217,23 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_package_set"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    app:cornerRadius="16dp"
                     android:text="@string/package_set" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ====== This month ====== -->
         <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:id="@+id/tv_month_title"
@@ -189,79 +244,99 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tv_month_mobile"
-                    style="@style/IsmBigNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/column_mobile" />
-            </LinearLayout>
+                        <TextView
+                            android:id="@+id/tv_month_mobile"
+                            style="@style/IsmBigNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/ismAccent" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                        <TextView
+                            style="@style/IsmCaption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/column_mobile" />
+                    </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_month_wifi"
-                    style="@style/IsmBigNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="?attr/ismGrid" />
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/column_wifi" />
-            </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/tv_month_wifi"
+                            style="@style/IsmBigNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/wifi_tint" />
 
-                <TextView
-                    android:id="@+id/tv_month_total"
-                    style="@style/IsmBigNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                        <TextView
+                            style="@style/IsmCaption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/column_wifi" />
+                    </LinearLayout>
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/column_total" />
-            </LinearLayout>
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="?attr/ismGrid" />
 
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_month_total"
+                            style="@style/IsmBigNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            style="@style/IsmCaption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/column_total" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+        <!-- ====== Last 7 days ====== -->
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard"
+            android:layout_marginBottom="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     style="@style/IsmCardTitle"
@@ -272,42 +347,42 @@
                 <com.vsp.internetspeedmeter.ui.BarChartView
                     android:id="@+id/chart_week"
                     android:layout_width="match_parent"
-                    android:layout_height="140dp"
-                    android:layout_marginTop="12dp" />
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    android:layout_height="150dp"
+                    android:layout_marginTop="14dp" />
 
-                <View
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="?attr/ismAccent" />
-
-                <TextView
-                    style="@style/IsmCaption"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="16dp"
-                    android:text="@string/column_mobile" />
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <View
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="#26A69A" />
+                    <View
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:background="@drawable/bg_dot_accent" />
 
-                <TextView
-                    style="@style/IsmCaption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/column_wifi" />
-            </LinearLayout>
+                    <TextView
+                        style="@style/IsmCaption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="@string/column_mobile" />
 
+                    <View
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:background="@drawable/bg_dot_wifi" />
+
+                    <TextView
+                        style="@style/IsmCaption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/column_wifi" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

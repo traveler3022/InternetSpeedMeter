@@ -9,21 +9,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="12dp"
+        android:paddingStart="16dp"
         android:paddingTop="8dp"
-        android:paddingEnd="12dp">
+        android:paddingEnd="16dp">
+
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_search_24"
+            android:drawablePadding="10dp"
+            android:hint="@string/apps_search"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:singleLine="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?attr/ismMuted"
+            android:textSize="15sp" />
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chips_period"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:chipSpacingHorizontal="8dp"
             app:selectionRequired="true"
             app:singleLine="true"
             app:singleSelection="true">
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_today"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -31,14 +50,14 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_week"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/period_week" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_month"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/row_this_month" />
@@ -48,13 +67,14 @@
             android:id="@+id/toggle_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             app:checkedButton="@id/btn_type_mobile"
             app:selectionRequired="true"
             app:singleSelection="true">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_type_mobile"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -62,24 +82,12 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_type_wifi"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/column_wifi" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
-
-        <EditText
-            android:id="@+id/et_search"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:hint="@string/apps_search"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:singleLine="true"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textColorHint="?android:attr/textColorSecondary" />
     </LinearLayout>
 
     <TextView
@@ -93,9 +101,12 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_grant_access"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        app:cornerRadius="16dp"
         android:text="@string/apps_grant"
         android:visibility="gone" />
 
@@ -105,5 +116,6 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="8dp" />
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp" />
 </LinearLayout>

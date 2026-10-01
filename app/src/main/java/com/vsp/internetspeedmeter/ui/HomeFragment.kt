@@ -63,6 +63,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             val status = pkg.status(byDay, today)
             val permille = (status.used.toDouble() / pkg.volume * 1000).toInt().coerceIn(0, 1000)
             b.progressPackage.setProgressCompat(permille, false)
+            b.tvPackagePercent.text = getString(
+                R.string.percent_fmt, AppCalendar.digits(ctx, (permille / 10)))
             b.tvPackageUsed.text = getString(
                 R.string.package_used_fmt, Fmt.bytes(ctx, status.used), Fmt.bytes(ctx, pkg.volume))
             b.tvPackageLeft.text = when {

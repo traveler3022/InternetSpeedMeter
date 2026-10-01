@@ -14,4 +14,8 @@
     <attr name="ismMuted" format="color" />
     <attr name="ismGrid" format="color" />
     <attr name="ismAccent" format="color" />
+    <!-- M3 redesign extras: soft accent container, text on it, gradient end -->
+    <attr name="ismAccentSoft" format="color" />
+    <attr name="ismOnSoft" format="color" />
+    <attr name="ismAccentDeep" format="color" />
 </resources>

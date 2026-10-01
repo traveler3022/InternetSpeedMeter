@@ -133,7 +133,9 @@ class DialogActivity : AppCompatActivity() {
     }
 
     private fun paintToggle(tv: TextView, active: Boolean) {
-        tv.setBackgroundColor(Palette.color(this, if (active) R.attr.ismHeader else R.attr.ismCard))
+        // Tint the rounded pill instead of replacing its drawable
+        tv.backgroundTintList = android.content.res.ColorStateList.valueOf(
+            Palette.color(this, if (active) R.attr.ismHeader else R.attr.ismCard))
         tv.setTextColor(if (active) Color.WHITE else Palette.color(this, R.attr.ismMuted))
     }
 

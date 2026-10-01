@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/ismDialogBody"
+    android:background="@drawable/bg_dialog_rounded"
+    android:clipToOutline="true"
     android:layoutDirection="ltr"
     android:orientation="vertical">
 
-    <!-- Session header -->
+    <!-- Session header on the gradient -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/ismHeader"
+        android:background="@drawable/bg_hero"
         android:orientation="horizontal"
-        android:paddingVertical="11dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:weightSum="2">
 
         <LinearLayout
@@ -27,16 +32,18 @@
                 android:id="@+id/tv_session_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
                 android:text="00:00:00"
                 android:textColor="@color/White"
-                android:textSize="25sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/session_time"
-                android:textColor="#E2E2E2"
+                android:textColor="#B3FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -51,16 +58,18 @@
                 android:id="@+id/tv_session_usage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
                 android:text="0 B"
                 android:textColor="@color/White"
-                android:textSize="25sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/session_usage"
-                android:textColor="#E2E2E2"
+                android:textColor="#B3FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
@@ -70,40 +79,39 @@
         android:id="@+id/graph_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/ismCard"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <com.vsp.internetspeedmeter.GraphView
             android:id="@+id/graph_view"
             android:layout_width="match_parent"
-            android:layout_height="190dp"
-            android:padding="8dp" />
+            android:layout_height="190dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="?attr/ismFooter"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_toggle_track"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
 
             <TextView
                 android:id="@+id/btn_graph_mobile"
                 android:layout_width="110dp"
-                android:layout_height="32dp"
-                android:background="?attr/ismCard"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_toggle_pill"
                 android:gravity="center"
                 android:text="@string/tab_mobile"
-                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/btn_graph_wifi"
                 android:layout_width="110dp"
-                android:layout_height="32dp"
-                android:background="?attr/ismCard"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_toggle_pill"
                 android:gravity="center"
                 android:text="@string/tab_wifi"
-                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
         </LinearLayout>
     </LinearLayout>
@@ -113,7 +121,6 @@
         android:id="@+id/apps_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/ismDialogBody"
         android:orientation="vertical"
         android:visibility="gone"
         tools:visibility="visible">
@@ -122,34 +129,37 @@
             android:id="@+id/recycler_view_apps"
             android:layout_width="match_parent"
             android:layout_height="300dp"
+            android:clipToPadding="false"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             android:scrollbars="vertical"
             tools:listitem="@layout/item_app_usage" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="?attr/ismFooter"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_toggle_track"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
 
             <TextView
                 android:id="@+id/btn_apps_mobile"
                 android:layout_width="110dp"
-                android:layout_height="32dp"
-                android:background="?attr/ismHeader"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_toggle_pill"
                 android:gravity="center"
                 android:text="@string/tab_mobile"
-                android:textColor="@color/White"
                 android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/btn_apps_wifi"
                 android:layout_width="110dp"
-                android:layout_height="32dp"
-                android:background="?attr/ismCard"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_toggle_pill"
                 android:gravity="center"
                 android:text="@string/tab_wifi"
-                android:textColor="?attr/ismMuted"
                 android:textSize="15sp" />
         </LinearLayout>
     </LinearLayout>

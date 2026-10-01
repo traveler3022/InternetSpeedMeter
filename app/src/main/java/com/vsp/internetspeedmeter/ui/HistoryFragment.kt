@@ -115,7 +115,8 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
             b.tvDayMobile.text = Fmt.bytes(ctx, t.mobile)
             b.tvDayWifi.text = Fmt.bytes(ctx, t.wifi)
             b.tvDayTotal.text = Fmt.bytes(ctx, t.total)
-            b.root.setBackgroundColor(
+            // Tint (not replace) the rounded row background
+            b.root.backgroundTintList = android.content.res.ColorStateList.valueOf(
                 Palette.color(ctx, if (position % 2 == 0) R.attr.ismRowLighter else R.attr.ismRowLight))
             b.root.setOnClickListener { onClick(day) }
         }

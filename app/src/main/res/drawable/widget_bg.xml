@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Static dark gradient: widgets render in the launcher's context,
+     so theme attrs cannot be used here. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <corners android:radius="16dp" />
-    <solid android:color="#E6101010" />
+    <gradient
+        android:angle="315"
+        android:startColor="#FF1D4ED8"
+        android:endColor="#FF0F2A6E"
+        android:type="linear" />
+    <corners android:radius="24dp" />
 </shape>

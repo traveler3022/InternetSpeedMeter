@@ -5,22 +5,28 @@
     android:layout_height="wrap_content"
     android:background="?attr/selectableItemBackground"
     android:gravity="center_vertical"
+    android:minHeight="64dp"
     android:orientation="horizontal"
     android:paddingStart="16dp"
-    android:paddingTop="10dp"
+    android:paddingTop="8dp"
     android:paddingEnd="16dp"
-    android:paddingBottom="10dp">
+    android:paddingBottom="8dp">
 
-    <ImageView
-        android:id="@+id/iv_icon"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:importantForAccessibility="no" />
+    <FrameLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp">
+
+        <ImageView
+            android:id="@+id/iv_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="14dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -55,6 +61,7 @@
                 android:id="@+id/tv_usage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -63,11 +70,11 @@
             android:id="@+id/progress_usage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:max="1000"
             app:indicatorColor="?attr/ismAccent"
             app:trackColor="?attr/ismGrid"
-            app:trackCornerRadius="2dp"
-            app:trackThickness="4dp" />
+            app:trackCornerRadius="3dp"
+            app:trackThickness="6dp" />
     </LinearLayout>
 </LinearLayout>

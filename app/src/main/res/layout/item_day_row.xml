@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
+    android:layout_marginStart="2dp"
+    android:layout_marginEnd="2dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_day_row"
     android:gravity="center_vertical"
-    android:minHeight="44dp"
+    android:minHeight="52dp"
     android:orientation="horizontal"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp">
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="10dp">
 
     <TextView
         android:id="@+id/tv_day"
@@ -16,32 +20,35 @@
         android:layout_height="wrap_content"
         android:layout_weight="1.4"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="?attr/ismCellText"
         android:textSize="14sp"
         android:textStyle="bold" />
+
     <TextView
         android:id="@+id/tv_day_mobile"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="?attr/ismCellText"
         android:textSize="14sp" />
+
     <TextView
         android:id="@+id/tv_day_wifi"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="?attr/ismCellText"
         android:textSize="14sp" />
+
     <TextView
         android:id="@+id/tv_day_total"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="?attr/ismOnSoft"
         android:textSize="14sp"
         android:textStyle="bold" />
 </LinearLayout>

@@ -8,11 +8,12 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        style="@style/ToolbarBlack"
+        style="@style/IsmToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="@string/app_name"
-        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+        android:paddingStart="10dp"
+        android:paddingEnd="4dp"
+        app:title="@string/app_name" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
@@ -24,8 +25,11 @@
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/ismCard"
+        android:background="@drawable/bg_bottom_nav"
+        app:itemActiveIndicatorStyle="@style/IsmNavIndicator"
         app:itemIconTint="@color/nav_item"
+        app:itemTextAppearanceActive="@style/IsmNavText"
+        app:itemTextAppearanceInactive="@style/IsmNavText"
         app:itemTextColor="@color/nav_item"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav" />

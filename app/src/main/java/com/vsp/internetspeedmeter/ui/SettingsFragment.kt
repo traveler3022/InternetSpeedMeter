@@ -63,6 +63,15 @@ class SettingsFragment : PreferenceFragmentCompat(),
         }
     }
 
+    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Modern spacing: the preference list floats off the edges
+        val dp = resources.displayMetrics.density
+        listView.clipToPadding = false
+        listView.setPadding(
+            (6 * dp).toInt(), (8 * dp).toInt(), (6 * dp).toInt(), (12 * dp).toInt())
+    }
+
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
             "data_package" -> PackageDialog.show(requireContext()) { updatePackageSummary() }

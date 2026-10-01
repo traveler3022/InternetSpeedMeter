@@ -5,14 +5,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingStart="24dp"
-    android:paddingTop="8dp"
+    android:paddingTop="4dp"
     android:paddingEnd="24dp">
 
     <TextView
         style="@style/IsmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="0dp"
+        android:layout_marginBottom="6dp"
         android:text="@string/package_volume" />
 
     <LinearLayout
@@ -24,31 +24,36 @@
         <EditText
             android:id="@+id/et_volume"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_weight="1"
+            android:background="@drawable/bg_input"
+            android:hint="20"
             android:importantForAutofill="no"
             android:inputType="numberDecimal"
-            android:hint="20" />
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?attr/ismMuted" />
 
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/toggle_unit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="10dp"
             app:checkedButton="@id/btn_unit_gb"
             app:selectionRequired="true"
             app:singleSelection="true">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_unit_mb"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/unit_mb" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_unit_gb"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/unit_gb" />
@@ -59,34 +64,46 @@
         style="@style/IsmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="6dp"
         android:text="@string/package_days" />
 
     <EditText
         android:id="@+id/et_days"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_input"
         android:importantForAutofill="no"
-        android:inputType="number" />
+        android:inputType="number"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="?android:attr/textColorPrimary" />
 
     <TextView
         style="@style/IsmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="6dp"
         android:text="@string/package_started_ago" />
 
     <EditText
         android:id="@+id/et_started_ago"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_input"
         android:importantForAutofill="no"
-        android:inputType="number" />
+        android:inputType="number"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="?android:attr/textColorPrimary" />
 
     <TextView
         android:id="@+id/tv_start_preview"
-        style="@style/IsmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="10dp"
+        android:textColor="?attr/ismOnSoft"
+        android:textSize="13sp"
+        android:textStyle="bold" />
 </LinearLayout>

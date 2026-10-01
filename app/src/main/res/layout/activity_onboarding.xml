@@ -3,39 +3,50 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/ismPage">
+    android:background="?attr/ismPage"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
 
-        <ImageView
-            android:id="@+id/iv_onb_icon"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+        <FrameLayout
+            android:layout_width="96dp"
+            android:layout_height="96dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:importantForAccessibility="no"
-            app:srcCompat="@drawable/ic_traffic_24"
-            app:tint="?attr/ismAccent" />
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_circle_soft">
+
+            <ImageView
+                android:id="@+id/iv_onb_icon"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_traffic_24"
+                app:tint="?attr/ismOnSoft" />
+        </FrameLayout>
 
         <TextView
-            style="@style/IsmCardTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
             android:text="@string/onb_title"
-            android:textSize="22sp" />
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
 
         <TextView
             style="@style/IsmCaption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:text="@string/onb_subtitle" />
 
@@ -46,11 +57,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_circle_soft"
+                    android:importantForAccessibility="no"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_bell_24" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -73,15 +93,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/onb_granted"
-                    android:textColor="#26A69A"
+                    android:textColor="@color/success_green"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_onb_notif"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/onb_grant" />
+                    android:text="@string/onb_grant"
+                    android:visibility="visible" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -92,11 +114,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_circle_soft"
+                    android:importantForAccessibility="no"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_apps_24" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -119,15 +150,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/onb_granted"
-                    android:textColor="#26A69A"
+                    android:textColor="@color/success_green"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_onb_usage"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/onb_grant" />
+                    android:text="@string/onb_grant"
+                    android:visibility="visible" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -138,11 +171,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_circle_soft"
+                    android:importantForAccessibility="no"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_battery_24" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -165,23 +207,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/onb_granted"
-                    android:textColor="#26A69A"
+                    android:textColor="@color/success_green"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_onb_battery"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/onb_grant" />
+                    android:text="@string/onb_grant"
+                    android:visibility="visible" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_onb_done"
+            style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/onb_done" />
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            app:cornerRadius="18dp"
+            android:text="@string/onb_done"
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </ScrollView>
