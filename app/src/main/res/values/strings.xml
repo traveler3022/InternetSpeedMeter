@@ -100,6 +100,14 @@
     <string name="history_prev">ماه قبل</string>
     <string name="history_next">ماه بعد</string>
     <string name="period_week">۷ روز</string>
+    <string name="history_period">بازه زمانی</string>
+    <string name="period_7_days">۷ روز</string>
+    <string name="period_30_days">۳۰ روز</string>
+    <string name="period_90_days">۹۰ روز</string>
+    <string name="history_summary">خلاصه مصرف</string>
+    <string name="history_last_7">۷ روز اخیر</string>
+    <string name="history_last_30">۳۰ روز اخیر</string>
+    <string name="history_last_90">۹۰ روز اخیر</string>
     <string name="apps_search">جستجوی برنامه</string>
     <string name="apps_no_access">برای دیدن مصرف برنامه‌ها، دسترسی «مصرف برنامه‌ها» (Usage Access) را بدهید</string>
     <string name="apps_grant">دادن دسترسی</string>
