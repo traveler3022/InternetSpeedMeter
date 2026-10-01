@@ -30,8 +30,6 @@
         app:itemIconSize="24dp"
         app:itemIconTint="@color/nav_item"
         app:itemTextColor="@color/nav_item"
-        app:itemHorizontalTranslationEnabled="false"
-        app:itemVerticalTranslationEnabled="false"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav" />
 </LinearLayout>
