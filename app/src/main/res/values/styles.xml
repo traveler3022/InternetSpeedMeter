@@ -5,8 +5,11 @@
         <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
         <item name="colorOnPrimary">@color/White</item>
         <item name="colorSecondary">@color/colorAccent</item>
-        <item name="android:windowBackground">@color/White</item>
-        <item name="android:statusBarColor">@color/bar_black</item>
+        <item name="android:windowBackground">?attr/ismPage</item>
+        <item name="android:statusBarColor">?attr/ismPage</item>
+        <item name="android:navigationBarColor">?attr/ismPage</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="ismPage">#F5F7FB</item>
         <item name="ismBar">#0D1B2A</item>
         <item name="ismHeader">#3B86F0</item>
@@ -45,22 +48,22 @@
     <style name="IsmCard" parent="Widget.MaterialComponents.CardView">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginBottom">14dp</item>
+        <item name="android:layout_marginBottom">12dp</item>
         <item name="cardBackgroundColor">?attr/ismCard</item>
-        <item name="cardCornerRadius">18dp</item>
+        <item name="cardCornerRadius">14dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeColor">?attr/ismGrid</item>
         <item name="strokeWidth">1dp</item>
     </style>
 
     <style name="IsmCardTitle">
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
     </style>
 
     <style name="IsmBigNumber">
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
     </style>
