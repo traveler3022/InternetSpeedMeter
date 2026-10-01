@@ -11,7 +11,7 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-                val isStarted = prefs.getBoolean(PREF_IS_STARTED, true)
+                val isStarted = prefs.getBoolean(PREF_IS_STARTED, false)
                 val startOnBoot = androidx.preference.PreferenceManager
                     .getDefaultSharedPreferences(context)
                     .getBoolean("start_on_boot", true)
