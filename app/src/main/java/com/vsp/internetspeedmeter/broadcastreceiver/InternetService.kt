@@ -206,6 +206,7 @@ class InternetService : Service() {
         return try {
             startCommand(intent, flags, startId)
         } catch (t: Throwable) {
+            startupFailed = true
             android.util.Log.e("InternetService", "Service start failed", t)
             stopSelf(startId)
             START_NOT_STICKY
