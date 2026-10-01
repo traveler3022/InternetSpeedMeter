@@ -15,7 +15,6 @@ import com.vsp.internetspeedmeter.databinding.ItemDayRowBinding
 import com.vsp.internetspeedmeter.room.Usage
 import com.vsp.internetspeedmeter.room.UsageViewModel
 import com.vsp.internetspeedmeter.util.AppCalendar
-import com.vsp.internetspeedmeter.util.Palette
 import com.vsp.internetspeedmeter.util.UsageSummary
 
 /** "تاریخچه": one month at a time, a daily chart and the past days, newest first. */
