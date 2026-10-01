@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
 
         if (OnboardingActivity.isDone(this)) {
             checkAndRequestPermissions()
-            startMonitoringService()
             UsageWidget.refresh(this)
         } else {
             startActivity(Intent(this, OnboardingActivity::class.java))
