@@ -3,6 +3,9 @@ package com.vsp.internetspeedmeter.util
 /**
  * Solar Hijri (Jalali) <-> Gregorian conversion, the jalaali-js algorithm
  * (Borkowski's leap-year breaks), valid for Jalali years -61 .. 3177.
+ *
+ * Ported from jalaali-js, Copyright (c) 2020 Behrang Norouzinia, MIT license;
+ * see THIRD_PARTY_NOTICES.md.
  */
 object Jalali {
 
