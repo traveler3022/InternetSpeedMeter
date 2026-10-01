@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/ismPage"
-    android:fillViewport="true"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,43 +14,52 @@
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="18dp">
 
         <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="64dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp">
-
-                <ImageButton
-                    android:id="@+id/btn_prev"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/history_prev"
-                    android:src="@drawable/ic_chevron_left_24"
-                    app:tint="?attr/ismAccent" />
+                android:orientation="vertical"
+                android:padding="12dp">
 
                 <TextView
-                    android:id="@+id/tv_month"
                     style="@style/IsmCardTitle"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center" />
+                    android:text="@string/history_period" />
 
-                <ImageButton
-                    android:id="@+id/btn_next"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/history_next"
-                    android:src="@drawable/ic_chevron_right_24"
-                    app:tint="?attr/ismAccent" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chips_period"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_7_days"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/period_7_days" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_30_days"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/period_30_days" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_90_days"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/period_90_days" />
+                </com.google.android.material.chip.ChipGroup>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -61,16 +70,23 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <TextView
+                    android:id="@+id/tv_chart_title"
+                    style="@style/IsmCardTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
                 <com.vsp.internetspeedmeter.ui.BarChartView
-                    android:id="@+id/chart_month"
+                    android:id="@+id/chart_period"
                     android:layout_width="match_parent"
-                    android:layout_height="160dp" />
+                    android:layout_height="172dp"
+                    android:layout_marginTop="10dp" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -99,11 +115,26 @@
                         android:layout_marginStart="6dp"
                         android:text="@string/column_wifi" />
                 </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView style="@style/IsmCard">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    style="@style/IsmCardTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/history_summary" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -123,12 +154,13 @@
                             style="@style/IsmCaption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="@string/column_mobile" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
-                        android:layout_height="56dp"
+                        android:layout_height="52dp"
                         android:background="?attr/ismGrid" />
 
                     <LinearLayout
@@ -148,12 +180,13 @@
                             style="@style/IsmCaption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="@string/column_wifi" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
-                        android:layout_height="56dp"
+                        android:layout_height="52dp"
                         android:background="?attr/ismGrid" />
 
                     <LinearLayout
@@ -173,6 +206,7 @@
                             style="@style/IsmCaption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="@string/column_total" />
                     </LinearLayout>
                 </LinearLayout>
@@ -187,7 +221,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="42dp"
                     android:background="?attr/ismHeader"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
