@@ -203,10 +203,9 @@ class InternetService : Service() {
             resetStatistics()
         }
 
-        if (intent?.action == "UPDATE_NOTIFICATION_SETTINGS") {
-            return START_STICKY
-        }
-
+        // Any start command, a settings refresh included, may be the one that
+        // created the service, so it must start the loop as well; a running
+        // loop is left as it is.
         val shouldMonitor = synchronized(stateLock) {
             isScreenOn || !pauseWhenScreenOff()
         }
