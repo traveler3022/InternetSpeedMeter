@@ -67,6 +67,15 @@
     <string name="tab_home">خانه</string>
     <string name="tab_history">تاریخچه</string>
     <string name="tab_apps">برنامه‌ها</string>
+    <string name="connection_connected">متصل</string>
+    <string name="connection_disconnected">قطع اتصال</string>
+    <string name="network_wifi">وای‌فای</string>
+    <string name="network_mobile">دادهٔ موبایل</string>
+    <string name="network_unknown">شبکه نامشخص</string>
+    <string name="live">زنده</string>
+    <string name="download">دریافت</string>
+    <string name="upload">ارسال</string>
+    <string name="home_today_hint">مصرف ثبت‌شده امروز</string>
     <string name="home_total_fmt">مجموع امروز: %1$s</string>
     <string name="home_month_fmt">این ماه · %1$s</string>
     <string name="home_week">۷ روز اخیر</string>
