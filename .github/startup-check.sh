@@ -63,14 +63,21 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk || exit 1
 if [ "$APP_LOCALE" != "" ]; then
   adb shell cmd locale set-app-locales "$PKG" --locales "$APP_LOCALE"
 fi
+# The emulator's permission dialog dies on its own, so grant it up front
+adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS
 adb logcat -c
 adb logcat -b crash -c
+adb logcat -b events -c
 
 adb shell am start -W -n "$PKG/.MainActivity"
-sleep 6; shot first-start
-tap "$PKG:id/btn_onb_notif"; sleep 3; shot notif-dialog
-tap com.android.permissioncontroller:id/permission_allow_button; sleep 3; shot notif-allowed
-tap "$PKG:id/btn_onb_done"; sleep 12; shot after-onboarding
+sleep 8; shot first-start
+adb shell dumpsys activity activities | grep -E '^\s+\* Hist|ActivityRecord\{' | grep vsp | head -10
+taps=0
+while [ $taps -lt 4 ] && adb shell dumpsys window | grep -m1 mCurrentFocus | grep -q OnboardingActivity; do
+  tap "$PKG:id/btn_onb_done"; taps=$((taps + 1)); sleep 6
+done
+echo "== start button taps needed: $taps"
+sleep 6; shot after-onboarding
 status after-onboarding
 tabs no-usage-access
 
@@ -81,13 +88,16 @@ tabs usage-access
 adb shell input keyevent KEYCODE_HOME; sleep 2
 adb shell am start -W -n "$PKG/.MainActivity"; sleep 8; shot second-start
 adb shell am force-stop "$PKG"; sleep 1
-adb shell am start -W -n "$PKG/.MainActivity"; sleep 20; shot cold-start
+adb shell am start -W -n "$PKG/.MainActivity"; sleep 15; shot cold-start
 status cold-start
 theme purple
 theme dark
 theme light
 status end
 
+adb logcat -d -b events | grep -E 'vsp' | grep -E 'wm_(on_create_called|on_destroy_called|relaunch|finish)|am_proc_died|am_kill' > "$OUT/events.txt"
+echo "===== activity events ====="
+cat "$OUT/events.txt" | head -40
 adb logcat -d -v threadtime > "$OUT/logcat.txt"
 adb logcat -d -b crash > "$OUT/crash.txt"
 adb shell dumpsys activity services "$PKG" > "$OUT/services.txt"
