@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.vsp.internetspeedmeter.R
 import com.vsp.internetspeedmeter.databinding.FragmentAppsBinding
@@ -45,6 +46,11 @@ class AppsFragment : Fragment(R.layout.fragment_apps) {
         val b = FragmentAppsBinding.bind(view)
         binding = b
         b.listApps.layoutManager = LinearLayoutManager(requireContext())
+        b.listApps.addItemDecoration(
+            DividerItemDecoration(requireContext(), androidx.recyclerview.widget.RecyclerView.VERTICAL).apply {
+                setDrawable(requireContext().getDrawable(R.drawable.divider_subtle)!!)
+            }
+        )
         b.listApps.adapter = adapter
 
         b.chipsPeriod.setOnCheckedStateChangeListener { _, ids ->
