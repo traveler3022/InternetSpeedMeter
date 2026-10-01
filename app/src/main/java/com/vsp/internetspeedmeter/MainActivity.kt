@@ -64,7 +64,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (OnboardingActivity.isDone(this)) {
             checkAndRequestPermissions()
-            startMonitoringService()
             UsageWidget.refresh(this)
         }
     }
