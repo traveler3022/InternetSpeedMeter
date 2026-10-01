@@ -61,6 +61,11 @@ class InternetService : Service() {
     private var dailyWifiBytes = 0L
     private var lastRecordedDate = ""
 
+    // Set by a day rollover until the stored row of the new day has been read
+    // (see loadStoredDay); the day's counters miss that row until then, so
+    // they must not be written over it.
+    private var dayLoadPending = false
+
     // Mobile bytes of the current month, excluding today (today is added live)
     @Volatile
     private var monthlyMobileBase = 0L
@@ -613,6 +618,8 @@ class InternetService : Service() {
         synchronized(stateLock) {
             dailyMobileBytes = 0L
             dailyWifiBytes = 0L
+            // A pending loadStoredDay would add back the row being deleted.
+            dayLoadPending = false
             monthlyMobileBase = 0L
             sessionStartTimeMs = SystemClock.elapsedRealtime()
             sessionBytes = 0L
@@ -637,33 +644,64 @@ class InternetService : Service() {
     }
 
     private fun checkDateRollover() {
-        val rollover = synchronized(stateLock) {
+        val previous = synchronized(stateLock) {
             val today = DayCycle.currentDate(this)
-            if (today == lastRecordedDate) {
-                null
-            } else {
-                val previous = Usage(
-                    date = lastRecordedDate,
-                    mobile = dailyMobileBytes,
-                    wifi = dailyWifiBytes,
-                    total = TrafficMath.safeAdd(dailyMobileBytes, dailyWifiBytes)
-                )
+            if (today == lastRecordedDate) return
 
-                lastRecordedDate = today
-                dailyMobileBytes = 0L
-                dailyWifiBytes = 0L
+            // A day whose stored row was not read yet is not written: its
+            // counters do not include that row.
+            val finished = if (dayLoadPending) null else Usage(
+                date = lastRecordedDate,
+                mobile = dailyMobileBytes,
+                wifi = dailyWifiBytes,
+                total = TrafficMath.safeAdd(dailyMobileBytes, dailyWifiBytes)
+            )
 
-                val current = Usage(date = today)
-                previous to current
-            }
-        } ?: return
+            lastRecordedDate = today
+            dailyMobileBytes = 0L
+            dailyWifiBytes = 0L
+            dayLoadPending = true
+            finished
+        }
 
-        // Persist immutable snapshots so a later state change cannot overwrite
+        // Persist an immutable snapshot so a later state change cannot overwrite
         // the record that belonged to the previous accounting day.
-        persistDailyUsage(rollover.first)
-        persistDailyUsage(rollover.second)
+        previous?.let { persistDailyUsage(it) }
         saveToPrefs()
+        loadStoredDay()
         refreshMonthlyBase()
+    }
+
+    /**
+     * Continues the day entered by a rollover from its stored row. That row is
+     * empty after midnight, but not when the clock or a later "ساعت شروع روز"
+     * moves back to a day that already has usage; starting that day from zero
+     * overwrote its whole record.
+     */
+    private fun loadStoredDay() {
+        val date = synchronized(stateLock) { lastRecordedDate }
+
+        serviceScope.launch(Dispatchers.IO) {
+            val stored = try {
+                usageRepository.getUsageByDate(date)
+            } catch (_: Exception) {
+                null
+            }
+
+            val loaded = synchronized(stateLock) {
+                if (date != lastRecordedDate || !dayLoadPending) return@synchronized false
+                if (stored != null) {
+                    dailyMobileBytes = TrafficMath.safeAdd(dailyMobileBytes, stored.mobile)
+                    dailyWifiBytes = TrafficMath.safeAdd(dailyWifiBytes, stored.wifi)
+                }
+                dayLoadPending = false
+                true
+            }
+            if (loaded) {
+                saveToPrefs()
+                persistDailyUsage()
+            }
+        }
     }
 
     /** Monthly mobile usage of the completed days, used by the "محدودیت" preference. */
@@ -774,6 +812,8 @@ class InternetService : Service() {
 
     private fun persistDailyUsage(snapshot: Usage? = null) {
         val usage = snapshot ?: synchronized(stateLock) {
+            // Until loadStoredDay has run, the counters miss the stored row.
+            if (dayLoadPending) return
             Usage(
                 date = lastRecordedDate,
                 mobile = dailyMobileBytes,
